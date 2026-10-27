@@ -27,6 +27,7 @@ DSH Desktop 是 Electron 宿主，复用 Harness runtime 和 Web UI。保持这�
 - DSH Desktop 与上游 Harness 的版本号独立维护，不要求同步，也不得因为 Harness 升级而自动改写 Desktop 版本号。
 - Desktop 版本以根 `package.json` 为准，发布或显式改版本时同步根 `package-lock.json`；Harness 版本以实际依赖声明和锁文件为准。交付说明分别记录两者，不把一方当作另一方的前缀或映射。
 - 升级 Harness 时只更新上游依赖、锁文件、补丁兼容和迁移验收；除非本次任务明确要求，不得顺带修改 Desktop 版本号。历史升级记录中的当时版本保持原样。
+- 每次发布必须在根 `CHANGELOG.md` 增加对应版本条目，并同步 GitHub Release 正文；更新日志写实际功能、修复、验证和已知限制，不用占位文字代替。
 
 ## 2. 代码规范
 
