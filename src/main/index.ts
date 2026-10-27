@@ -91,6 +91,7 @@ import {
 import { secureWindow } from './security'
 import { SafeModeFrame } from './safe-mode-frame'
 import { desktopResourceUrl, installDesktopProtocol, registerDesktopScheme, SAFE_MODE_PAGE } from './desktop-protocol'
+import { shouldShowNativeSplash, type StartupSplashReason } from './startup-presentation'
 import { ensureLaunchRoot } from './state/launch-root'
 import { electronNodeExecutable } from './runtime/electron-node-executable'
 import { initializeDesktopInstall } from './state/desktop-startup-install'
@@ -1143,7 +1144,7 @@ async function maybeImportWebHome(dshHome: string): Promise<void> {
         }
       })
       runtime.note('[desktop] imported web Harness home')
-      await showSplash()
+      await showSplash('web-import')
       return
     } catch (error) {
       notice = error instanceof Error ? error.message : String(error)
@@ -1186,9 +1187,10 @@ async function showWebHomeImport(
   return actionPromise
 }
 
-async function showSplash(): Promise<void> {
+async function showSplash(reason: StartupSplashReason): Promise<void> {
   if (quitting || gpuFallbackRelaunching) return
   clearProfileBootConfirmation()
+  if (!shouldShowNativeSplash(reason)) return
   const window = mainWindow && !mainWindow.isDestroyed() ? mainWindow : createWindow()
   const navigationVersion = ++mainWindowNavigationVersion
   window.webContents.stop()
@@ -1396,8 +1398,8 @@ function launchHarness(): Promise<void> {
     safeModeVisible = false
     runtime.beginLaunch('web profile')
     const dshHome = join(app.getPath('userData'), 'harness')
-    await showSplash()
-    runtime.note('[desktop] splash shown')
+    await showSplash('normal-launch')
+    runtime.note('[desktop] native splash skipped; Harness startup animation will cover boot')
     // Migration and generation projection only hold on a stopped Harness, and
     // a restart still has the previous one running: start() stops it, but that
     // is after maintenance. Stopping here owns that mutation window.
@@ -1532,7 +1534,7 @@ function launchSafeHarness(): Promise<void> {
     runtime.beginLaunch('safe mode')
     const dshHome = join(app.getPath('userData'), 'harness')
     await refreshMigrationRecoveryLock(dshHome)
-    await showSplash()
+    await showSplash('safe-mode')
     await runtime.stop()
     await ensureSafeModeProfile(dshHome)
     runtime.note('[desktop] safe mode: third-party web profile bundles are blocked')
@@ -1689,7 +1691,7 @@ async function removeMarket(dshHome: string): Promise<{ ok: boolean; detail?: st
  */
 async function uninstallMarketAndRestart(): Promise<{ ok: boolean }> {
   const dshHome = join(app.getPath('userData'), 'harness')
-  await showSplash()
+  await showSplash('normal-launch')
   await runtime.stop()
   const result = await removeMarket(dshHome)
   await launchHarness()
@@ -3437,6 +3439,19 @@ async function bootstrap(): Promise<void> {
     }
     const errorMessage = await shell.openPath(path)
     if (errorMessage) throw new Error(errorMessage)
+    return { ok: true }
+  })
+  ipcMain.removeHandler('harness:open-external')
+  ipcMain.handle('harness:open-external', async (event, url?: unknown) => {
+    assertTrustedMainWindowEvent(event)
+    if (typeof url !== 'string' || url.length === 0) {
+      throw new Error('A URL is required.')
+    }
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password) {
+      throw new Error('Only HTTPS links may be opened externally.')
+    }
+    await shell.openExternal(parsed.href)
     return { ok: true }
   })
   ipcMain.removeHandler('harness:renderer-healthy')

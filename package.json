@@ -283,6 +283,7 @@
     "dsh-desktop-preset-transfer": "file:packages/dsh-desktop-preset-transfer",
     "dsh-desktop-workbenches": "file:packages/dsh-desktop-workbenches",
     "dsh-image-generation": "file:packages/dsh-image-generation",
+    "dsh-startup-screen": "file:packages/dsh-startup-screen",
     "dsh-ppt": "file:packages/ppt-runtime/core",
     "dsh-ppt-composer": "file:packages/ppt-runtime/adapter",
     "electron-updater": "^6.8.9",

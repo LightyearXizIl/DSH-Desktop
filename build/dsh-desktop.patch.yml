@@ -18,13 +18,26 @@
 - id: ui-brand-official
   disabled: true
 
-# Keep the v0.9.2 settings launcher and model setup without upstream account UI.
+# Keep the upstream account UI and its login entry, but skip the first-run
+# welcome overlay so the workspace is the first screen on a fresh install.
 - id: ui-settings-account
-  disabled: true
+  config:
+    version: 1
+    step: done
+    purpose: null
+    process: standard
+    completion: skipped
+    usage: compact
+    developerTools: false
 
 - insert:
     - id: dsh-desktop-client-ui
       name: dsh-desktop-client-ui
+
+    # Startup animation shared with the Harness web profile. It mounts before
+    # the application paints, then hands off to the normal Desktop UI.
+    - id: dsh-startup-screen
+      name: dsh-startup-screen
 
     - id: dsh-desktop-workbenches
       name: dsh-desktop-workbenches

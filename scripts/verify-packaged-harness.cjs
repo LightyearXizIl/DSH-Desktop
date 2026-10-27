@@ -135,10 +135,81 @@ async function verifyHarness(appRoot, resources, executable) {
   }
 }
 
+/** Launch the packaged Harness with the normal web profile and the startup-screen probe patch. */
+async function verifyStartupScreen(appRoot, resources, executable) {
+  const home = await fsp.realpath(await fsp.mkdtemp(path.join(os.tmpdir(), 'dsh-packaged-startup-')))
+  const launchRoot = path.join(home, 'launch-root')
+  await fsp.mkdir(launchRoot, { recursive: true })
+  const profile = path.join(home, 'harness', 'profiles', 'web')
+  await fsp.mkdir(profile, { recursive: true })
+  await fsp.writeFile(path.join(profile, 'package.json'), JSON.stringify({ name: 'packaged-startup-probe', private: true,
+    dependencies: {}, dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'] } } }))
+  const patch = path.join(home, 'startup-screen.patch.yml')
+  const startupEntry = pathToFileURL(path.join(appRoot, 'node_modules', 'dsh-startup-screen', 'index.js')).href
+  await fsp.writeFile(patch, `- insert:\n    - id: dsh-startup-screen\n      name: "${startupEntry}"\n`)
+  const entry = path.join(appRoot, 'node_modules', '@deepseek-ai', 'dsh', 'lib', 'bin.js')
+  const child = spawn(executable, ['--expose-internals', path.join(resources, 'harness-node-entry.mjs'), entry,
+    '--profile', 'web', '--patch', patch, '--no-open', '--host', '127.0.0.1', '--port', '0'], {
+    cwd: launchRoot, windowsHide: true,
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', DSH_HOME: path.join(home, 'harness'),
+      DSH_DESKTOP_HOST_RESOLVED: '1', DEEPSEEK_BASE_URL: 'https://api.deepseek.com/anthropic' },
+    stdio: ['ignore', 'pipe', 'pipe']
+  })
+  let output = ''
+  let failure
+  const append = chunk => { output = `${output}${chunk}`.slice(-64_000) }
+  child.stdout.on('data', append)
+  child.stderr.on('data', append)
+  child.once('error', error => { failure = error })
+  const closed = new Promise(resolve => child.once('close', resolve))
+  try {
+    const deadline = Date.now() + 90_000
+    let url
+    while (Date.now() < deadline && child.exitCode === null && !failure) {
+      url = /dsh web: (http:\/\/127\.0\.0\.1:\d+\/\?token=[^\s]+)/u.exec(output)?.[1]
+      if (url) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    if (!url) throw new Error('Packaged startup probe did not become ready', { cause: failure })
+    const exchange = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(10_000) })
+    const cookie = exchange.headers.getSetCookie().map(value => value.split(';')[0]).join('; ')
+    if (!cookie) throw new Error('Packaged startup probe did not create a session')
+    const response = await fetch(new URL('/', url), { headers: { Cookie: cookie }, signal: AbortSignal.timeout(10_000) })
+    if (!response.ok) throw new Error('Packaged startup probe authenticated HTML failed')
+    const html = await response.text()
+    if (!html.includes('id="dsh-startup-root"')) throw new Error('Packaged startup screen root is missing from HTML')
+    const configResponse = await fetch(new URL('/dsh-startup/config', url), { headers: { Cookie: cookie }, signal: AbortSignal.timeout(10_000) })
+    if (!configResponse.ok) throw new Error(`Packaged startup screen config failed with HTTP ${String(configResponse.status)}`)
+    const config = await configResponse.json()
+    if (config?.version !== '1.1.2' || config?.config?.enabled !== true) {
+      throw new Error('Packaged startup screen config is missing or disabled')
+    }
+    const assets = ['line-1.mp3', 'line-2.mp3', 'line-3.mp3', 'line-4.mp3', 'line-5.mp3', 'line-6.mp3', 'sfx-tick.mp3', 'sfx-ticks-run.mp3']
+    for (const asset of assets) {
+      const assetResponse = await fetch(new URL(`/dsh-startup/asset/${asset}`, url), { headers: { Cookie: cookie }, signal: AbortSignal.timeout(10_000) })
+      if (!assetResponse.ok || !(assetResponse.headers.get('content-type') ?? '').includes('audio/mpeg')) {
+        throw new Error(`Packaged startup screen asset failed: ${asset}`)
+      }
+    }
+  } catch (error) {
+    throw new Error(`${error.message}\n${output.replace(/token=[^\s]+/gu, 'token=[redacted]')}`, { cause: error })
+  } finally {
+    if (child.exitCode === null) {
+      try { child.kill(process.platform === 'win32' ? 'SIGKILL' : 'SIGTERM') } catch {}
+    }
+    let timer
+    await Promise.race([closed, new Promise(resolve => { timer = setTimeout(() => { try { child.kill('SIGKILL') } catch {}; resolve() }, 5_000) })])
+    clearTimeout(timer)
+    await closed
+    await fsp.rm(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
+  }
+}
+
 async function verifyRuntime(appRoot, resources, executable) {
   const count = verifyDependencyClosure(appRoot)
   await verifyTerminal(appRoot)
   await verifyHarness(appRoot, resources, executable)
+  await verifyStartupScreen(appRoot, resources, executable)
   console.log(`Packaged Harness, bootstrap, native modules, terminal and ${count} dependency manifests passed`)
 }
 
