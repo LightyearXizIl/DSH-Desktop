@@ -6,7 +6,7 @@
 
 ## 基线与范围
 
-Desktop 版本保持 `0.12.1`，Harness 从 `0.2.1-rc.1` 升至 npm 发布的
+升级时 Desktop 版本为 `0.12.1`（与 Harness 版本独立维护），Harness 从 `0.2.1-rc.1` 升至 npm 发布的
 `0.2.1-rc.2`。上游 tag 为 `dsh-v0.2.1-rc.2`，提交
 `687f282e8625c6b8d11ff58211a90524be2e4317`。
 

@@ -22,6 +22,12 @@ DSH Desktop 是 Electron 宿主，复用 Harness runtime 和 Web UI。保持这�
 
 先阅读受影响模块和测试；涉及架构时阅读 `docs/architecture.md`，开发和发布分别参考 `docs/development.md`、`docs/release-runbook.md`。实际依赖与命令以当前 `package.json`、锁文件、构建配置和 workflow 为准；发现文档过期时修正文档，不按旧版本描述修改代码。
 
+### 版本号边界
+
+- DSH Desktop 与上游 Harness 的版本号独立维护，不要求同步，也不得因为 Harness 升级而自动改写 Desktop 版本号。
+- Desktop 版本以根 `package.json` 为准，发布或显式改版本时同步根 `package-lock.json`；Harness 版本以实际依赖声明和锁文件为准。交付说明分别记录两者，不把一方当作另一方的前缀或映射。
+- 升级 Harness 时只更新上游依赖、锁文件、补丁兼容和迁移验收；除非本次任务明确要求，不得顺带修改 Desktop 版本号。历史升级记录中的当时版本保持原样。
+
 ## 2. 代码规范
 
 - `src/` 新代码使用 TypeScript，保留 `strict` 和 `noUncheckedIndexedAccess`。JS 插件、Node 脚本及 HTML 的例外见目录规则，不为统一后缀改变加载协议。
