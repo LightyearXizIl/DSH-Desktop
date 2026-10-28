@@ -85,6 +85,7 @@ describe('desktop update presentation at the IPC boundary', () => {
     expect(ui.shadow.querySelector('[role="dialog"]')).toBeNull()
     expect(ui.host.style.right).toBe('20px')
     expect(ui.host.style.bottom).toBe('20px')
+    expect(ui.host.parentElement).toBe(document.body)
     ui.shadow.querySelector<HTMLButtonElement>('.details')?.click()
     expect(ui.shadow.querySelector('[role="dialog"]')).not.toBeNull()
     ui.emit(status('downloading', { manual: false, source, availableVersion: '1.1.0', percent: 25 }))
@@ -157,6 +158,32 @@ describe('desktop update presentation at the IPC boundary', () => {
     await Promise.resolve()
     expect(ipc.invoke.mock.calls.filter(([channel]) => channel === 'updates:download')).toHaveLength(2)
     expect(ui.shadow.querySelector('[role="dialog"]')?.textContent).toContain('Download connection interrupted')
+  })
+
+  it('keeps progress copy, accessibility value, and fill width on one rounded percent', async () => {
+    const ui = await mount(Promise.resolve(status('idle', { manual: false })))
+    ui.emit(status('downloading', {
+      manual: false,
+      source: 'runtime',
+      availableVersion: '1.1.0',
+      percent: 42.6
+    }))
+    const progress = required(ui.shadow.querySelector<HTMLElement>('[role="progressbar"]'))
+    const fill = required(ui.shadow.querySelector<HTMLElement>('.progressValue'))
+    expect(ui.shadow.textContent).toContain('v1.1.0 · 43%')
+    expect(progress.getAttribute('aria-valuenow')).toBe('43')
+    expect(progress.getAttribute('aria-valuetext')).toBe('43%')
+    expect(fill.style.width).toBe('43%')
+  })
+
+  it('uses the theme glass tokens only outside compatibility mode', async () => {
+    const ui = await mount(Promise.resolve(status('idle', { manual: false })))
+    const style = required(ui.shadow.querySelector('style')).textContent
+    expect(style).toContain(':host-context([data-dsh-desktop-theme]:not([data-dsh-desktop-compat]))')
+    expect(style).toContain('--dsh-update-card-radius: var(--dsw-radius-panel, 28px)')
+    expect(style).toContain('backdrop-filter:blur(var(--dsh-desktop-blur, 0px))')
+    expect(style).toContain('transition:width .12s linear')
+    expect(style).not.toContain('border-radius:16px')
   })
 
   it('does not suppress a new download failure with an old dismissed error, or replay the new error after closing it', async () => {

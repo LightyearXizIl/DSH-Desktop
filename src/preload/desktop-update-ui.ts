@@ -5,6 +5,7 @@ import {
   isNewManualPresentation,
   shouldShowUpdate,
   updateHeadline,
+  updatePercent,
   comparePreloadVersions,
   rollbackReleases,
   rollbackEmptyMessage,
@@ -60,7 +61,9 @@ function mount(): void {
   style.textContent = styles
   content = document.createElement('div')
   shadow.append(style, content)
-  document.documentElement.appendChild(host)
+  // Harness defines its design tokens on <body>; a host under <html> would
+  // lose those variables and render the update card with fallback colors.
+  document.body.appendChild(host)
   render()
 }
 
@@ -161,13 +164,15 @@ function render(): void {
     body.appendChild(details)
   }
   if (status.phase === 'downloading') {
+    const percent = updatePercent(status)
     const progress = element('div', 'progress')
     progress.setAttribute('role', 'progressbar')
     progress.setAttribute('aria-valuemin', '0')
     progress.setAttribute('aria-valuemax', '100')
-    progress.setAttribute('aria-valuenow', String(Math.round(status.percent ?? 0)))
+    progress.setAttribute('aria-valuenow', String(percent))
+    progress.setAttribute('aria-valuetext', `${percent}%`)
     const value = element('div', 'progressValue')
-    value.style.width = `${status.percent ?? 0}%`
+    value.style.width = `${percent}%`
     progress.appendChild(value)
     body.appendChild(progress)
   }
@@ -314,7 +319,7 @@ function mountAbout(): void {
   const style = document.createElement('style')
   style.textContent = aboutStyles
   aboutShadow.appendChild(style)
-  document.documentElement.appendChild(aboutHost)
+  document.body.appendChild(aboutHost)
   renderAbout()
 }
 
@@ -506,9 +511,42 @@ function button(label: string, className: string): HTMLButtonElement {
 }
 
 const styles = `
-  :host { color-scheme: light dark; }
+  :host {
+    color-scheme: light dark;
+    --dsh-update-card-radius: var(--dsw-radius-panel, 28px);
+    --dsh-update-card-fill: var(--dsw-alias-bg-layer-1, #fff);
+    --dsh-update-card-stroke: var(--dsw-alias-border-l2, #e5e7eb);
+    --dsh-update-card-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    --dsh-update-progress-track: var(--dsw-alias-bg-layer-2, #e5e7eb);
+    --dsh-update-progress-fill: var(--dsw-alias-button-primary-fill, #000);
+  }
+  :host-context([data-dsh-desktop-theme]:not([data-dsh-desktop-compat])) {
+    --dsh-update-card-fill: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-desktop-surface-frost, 1)), transparent);
+    --dsh-update-card-stroke: rgba(19, 45, 83, .26);
+    --dsh-update-card-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 10px 34px rgba(19, 45, 83, .16);
+    --dsh-update-progress-track: rgba(19, 45, 83, .14);
+  }
+  :host-context([data-dsh-desktop-theme]:not([data-dsh-desktop-compat])):host-context([data-ds-dark-theme]) {
+    --dsh-update-card-fill: color-mix(in srgb, rgb(34 38 47) calc(50% * var(--dsh-desktop-frost, 1)), transparent);
+    --dsh-update-card-stroke: rgba(148, 180, 220, .32);
+    --dsh-update-card-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 30px rgba(2, 6, 14, .32);
+    --dsh-update-progress-track: rgba(148, 180, 220, .15);
+  }
   * { box-sizing: border-box; }
-  .card, .about-card { pointer-events:auto; width:100%; color:var(--dsw-alias-label-primary,#202124); background:var(--dsw-alias-bg-layer-1,#fff); border:1px solid var(--dsw-alias-border-l2,#e5e7eb); border-radius:16px; padding:24px; box-shadow:0 8px 24px rgba(0,0,0,.12); max-height:calc(100vh - 48px); overflow:auto; overflow-wrap:anywhere; }
+  .card, .about-card {
+    pointer-events:auto;
+    width:100%;
+    color:var(--dsw-alias-label-primary,#202124);
+    background:var(--dsh-update-card-fill);
+    border:1px solid var(--dsh-update-card-stroke);
+    border-radius:var(--dsh-update-card-radius);
+    padding:24px;
+    box-shadow:var(--dsh-update-card-shadow);
+    max-height:calc(100vh - 48px);
+    overflow:auto;
+    overflow-wrap:anywhere;
+    backdrop-filter:blur(var(--dsh-desktop-blur, 0px));
+  }
   .row { display:flex; gap:12px; align-items:center; }
   .body { min-width:0; flex:1; }
   .centered .row { display:block; }
@@ -554,21 +592,21 @@ const styles = `
   .version-group-title,.version-status-text { margin:6px; font-size:12px; line-height:18px; color:var(--dsw-alias-label-secondary,#666b73); }
   .version-tag-btn { display:block; width:100%; padding:6px 8px; text-align:left; background:transparent; color:inherit; font-size:13px; }
   .version-tag-btn:hover { background:var(--dsw-alias-interactive-bg-hover,#f0f2f5); }
-  .progress { height:5px; background:var(--dsw-alias-bg-layer-2,#e5e7eb); border-radius:4px; overflow:hidden; margin:12px 0; }
-  .progressValue { height:100%; background:var(--dsw-alias-button-primary-fill,#000); }
+  .progress { height:5px; background:var(--dsh-update-progress-track); border-radius:999px; overflow:hidden; margin:12px 0; }
+  .progressValue { height:100%; background:var(--dsh-update-progress-fill); border-radius:inherit; transition:width .12s linear; }
   .spinner { position:absolute; inset:16px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin .75s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
   @media (prefers-color-scheme:dark) {
-    .card,.about-card,.version-picker-container { background:var(--dsw-alias-bg-layer-1,#1f2023); color:var(--dsw-alias-label-primary,#f3f4f6); border-color:var(--dsw-alias-border-l2,#41434a); }
+    .card,.about-card,.version-picker-container { color:var(--dsw-alias-label-primary,#f3f4f6); }
     .description,.about-line,.release-notes,.notes-label,.current-version,.secondary,.version-switch,.version-group-title,.version-status-text { color:var(--dsw-alias-label-secondary,#a9adb5); }
     .tooltip { background:var(--dsw-alias-bg-layer-2,#34363b); color:var(--dsw-alias-label-primary,#f3f4f6); }
     .primary { background:var(--dsw-alias-button-primary-fill,#f9fafb); color:var(--dsw-alias-label-primary-inverted,#191b1f); }
     .primary:hover:not(:disabled) { background:var(--dsw-alias-button-primary-hover,#e6e8eb); }
     button:focus-visible { outline-color:var(--dsw-alias-label-primary,#f3f4f6); }
     .details { color:var(--dsw-alias-label-primary,#f3f4f6); }
-    .progressValue { background:var(--dsw-alias-button-primary-fill,#f9fafb); }
+    :host { --dsh-update-progress-fill: var(--dsw-alias-button-primary-fill, #f9fafb); }
   }
-  @media (prefers-reduced-motion:reduce) { .spinner { animation:none; } }
+  @media (prefers-reduced-motion:reduce) { .spinner { animation:none; } .progressValue { transition:none; } }
 `
 const aboutStyles = styles
 

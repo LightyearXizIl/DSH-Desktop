@@ -2,6 +2,13 @@ import type { AvailableRelease, UpdateStatus } from '../shared/contracts'
 
 export type UpdateLocale = 'en' | 'zh'
 
+/** One bounded integer for copy, accessibility, and the visual fill. */
+export function updatePercent(status: Pick<UpdateStatus, 'percent'>): number {
+  const value = status.percent
+  if (value === undefined || !Number.isFinite(value)) return 0
+  return Math.round(Math.min(100, Math.max(0, value)))
+}
+
 export function shouldShowUpdate(status: UpdateStatus, allowManualPresentation = true): boolean {
   if (['available', 'downloading', 'downloaded'].includes(status.phase)) return true
   return allowManualPresentation && status.manual && ['checking', 'up-to-date', 'error', 'unsupported'].includes(status.phase)
@@ -66,7 +73,7 @@ export function updateHeadline(status: UpdateStatus, locale: UpdateLocale): Upda
     case 'downloading':
       return {
         title: zh ? '正在下载更新' : 'Downloading update',
-        description: zh ? `${version} · ${Math.round(status.percent ?? 0)}%` : `${version} · ${Math.round(status.percent ?? 0)}%`
+        description: `${version} · ${updatePercent(status)}%`
       }
     case 'downloaded':
       return {
@@ -100,7 +107,7 @@ export function updateMessage(status: UpdateStatus, locale: UpdateLocale): strin
   const version = status.availableVersion ? ` ${status.availableVersion}` : ''
 
   if (status.downgrade && status.availableVersion) {
-    const percent = Math.round(status.percent ?? 0)
+    const percent = updatePercent(status)
     if (status.phase === 'downloading') {
       return zh ? `正在降级到 ${status.availableVersion}（${percent}%）` : `Downgrading to ${status.availableVersion} (${percent}%)`
     }
@@ -120,7 +127,7 @@ export function updateMessage(status: UpdateStatus, locale: UpdateLocale): strin
         ? `发现新版本${version}，是否更新？`
         : `DSH Desktop${version} is available. Update now?`
     case 'downloading': {
-      const percent = Math.round(status.percent ?? 0)
+      const percent = updatePercent(status)
       return zh ? `正在下载更新 ${percent}%` : `Downloading update ${percent}%`
     }
     case 'downloaded':

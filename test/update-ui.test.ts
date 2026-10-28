@@ -7,7 +7,8 @@ import {
   isNewManualPresentation,
   shouldShowUpdate,
   updateHeadline,
-  updateMessage
+  updateMessage,
+  updatePercent
 } from '../src/preload/update-view'
 
 const downloading: UpdateStatus = {
@@ -52,6 +53,12 @@ describe('desktop update card visibility', () => {
   it('formats localized progress copy', () => {
     expect(updateMessage(downloading, 'zh')).toBe('正在下载更新 42%')
     expect(updateMessage(downloading, 'en')).toBe('Downloading update 42%')
+    expect(updatePercent(downloading)).toBe(42)
+    expect(updatePercent({ percent: 42.9 })).toBe(43)
+    expect(updatePercent({ percent: -3 })).toBe(0)
+    expect(updatePercent({ percent: 140 })).toBe(100)
+    expect(updatePercent({ percent: Number.NaN })).toBe(0)
+    expect(updateHeadline(downloading, 'zh').description).toBe('v1.1.0 · 42%')
   })
 })
 
