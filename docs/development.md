@@ -8,12 +8,12 @@ This guide covers local development, validation, patch maintenance, and target-n
 - npm
 - macOS on Apple Silicon or Intel, or Windows x64
 
-This baseline pins `@deepseek-ai/dsh@0.2.1-rc.2`. Windows packages run Harness in Electron Node mode, while macOS uses an Electron UtilityProcess. Both are independent of the Node.js version used to run development commands.
+This baseline pins `@deepseek-ai/dsh@0.2.1-rc.4`. Windows packages run Harness in Electron Node mode, while macOS uses an Electron UtilityProcess. Both are independent of the Node.js version used to run development commands.
 
 ## Local setup
 
 ```bash
-git clone https://github.com/dataelement/dsh-desktop.git
+git clone https://github.com/LightyearXizIl/DSH-Desktop.git
 cd dsh-desktop
 npm ci
 npm run dev
@@ -88,6 +88,12 @@ When upgrading Harness:
 
 Harness includes architecture-specific native dependencies. Build each installer on the operating system and architecture where it will run.
 
+Routine development tasks do not include packaging by default. Stop after the
+source change, focused regression, type check, production build, and any
+required real application verification. Run the commands below only when the
+user explicitly asks for an installer or a formal release artifact; do not
+treat a changelog or release checklist as implicit packaging approval.
+
 ```bash
 # macOS Apple Silicon, on an Apple Silicon Mac or runner
 npm run package:mac:arm64
@@ -98,6 +104,29 @@ npm run package:mac:x64
 # Windows x64 NSIS installer, on a Windows x64 machine or runner
 npm run package:win
 ```
+
+Windows packaging must reuse the Electron distribution already installed in the
+repository. `npm run package:win` invokes electron-builder without an explicit
+`electronDist`, so electron-builder may re-download the same Electron archive
+even when `node_modules/electron/dist` is present. For local Windows builds,
+check that the local distribution matches `package.json`, then pass it to the
+same packaging adapter:
+
+```powershell
+# Verify that the local Electron distribution is the pinned version.
+Get-Content node_modules/electron/dist/version
+
+# Reuse node_modules/electron/dist instead of downloading Electron again.
+npm run build
+node scripts/electron-builder-windows.mjs --win --x64 --publish never `
+  "--config.electronDist=$PWD/node_modules/electron/dist"
+```
+
+Do not use the local distribution when its version differs from the locked
+`electron` dependency. A version mismatch must fail the build or be resolved
+explicitly; never substitute an older or newer Electron to avoid a download.
+CI may use its own Electron cache, but it must still package the locked
+version.
 
 Do not invoke `electron-builder --win` from macOS or Linux for a distributable Windows package. The target verification scripts intentionally reject host/target mismatches.
 

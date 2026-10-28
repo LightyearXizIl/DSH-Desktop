@@ -113,4 +113,5 @@ git diff --check
 - 当前 `typecheck` 只覆盖配置及 `src/main`、`src/preload`、`src/shared`、TS 测试；插件 JS、脚本和 HTML 不在其覆盖范围。当前没有 `npm run lint` 或 `npm run format:check`，不得报告它们通过。
 - 涉及启动、IPC、UI、安装迁移、更新或打包，补充对应真实流程验收。Windows 路径/进程/安装行为必须有 Windows 验证；其他平台通过不能代替。
 - 发版遵循 release runbook 和目标原生构建脚本，不绕过 `verify-target`。PR 检查通过或本地打包成功不等于正式发布。
+- 完成常规开发任务时默认不生成安装包：只改代码、补测试并执行必要的类型检查、构建和真实运行验收。只有用户明确要求“打包”“出安装包”或“构建安装包”时，才运行 `package:*` 或 `electron-builder`；不得因交付说明中的“打包验收”要求而自动扩大本次任务范围。
 - 交付写清改动、原因、实际运行的检查、未完成的验收与限制。不得把尚未执行的检查写成通过。

@@ -24,6 +24,10 @@ describe('workspace Open in file manager integration', () => {
     })
     plugin.apply({
       effect: vi.fn(),
+      locale: {
+        bind: () => (key: string) => key,
+        register: vi.fn()
+      },
       slots: {
         inject: (_name: string, callback: () => unknown) => callback(),
         register: (config: (typeof registrations)[number]['config'], component: (props: Record<string, unknown>) => unknown) => {

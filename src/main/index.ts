@@ -33,6 +33,11 @@ import {
   resolveShellEnvironment,
   prewarmShellEnvironment
 } from './runtime/harness-runtime'
+import {
+  ensureLocalModelService,
+  localModelConfigPath,
+  probeLocalModel
+} from './runtime/local-model-launcher'
 import { launchDisclaimedUtilityProcess } from './runtime/disclaimed-utility-process'
 import {
   installProfileDependenciesWithDsh,
@@ -1400,6 +1405,17 @@ function launchHarness(): Promise<void> {
     const dshHome = join(app.getPath('userData'), 'harness')
     await showSplash('normal-launch')
     runtime.note('[desktop] native splash skipped; Harness startup animation will cover boot')
+    const localModel = await ensureLocalModelService({
+      configPath: localModelConfigPath(app.getPath('userData')),
+      probe: (port) => probeLocalModel(port),
+      note: (line) => runtime.note(line)
+    }).catch((error: unknown) => ({
+      status: 'failed' as const,
+      reason: error instanceof Error ? error.message : String(error)
+    }))
+    if (localModel.status === 'failed') {
+      runtime.note(`[desktop] local model auto-start failed: ${localModel.reason}`)
+    }
     // Migration and generation projection only hold on a stopped Harness, and
     // a restart still has the previous one running: start() stops it, but that
     // is after maintenance. Stopping here owns that mutation window.

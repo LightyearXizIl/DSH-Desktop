@@ -26,5 +26,6 @@ describe('packaged conversation input CSS', () => {
     expect(styles[0]?.textContent).toContain('.uV2eYG_promptRow>.uV2eYG_accessory:has(>[data-slot]:only-child:empty){display:none}')
     expect(styles[0]?.textContent).toContain('.uV2eYG_input{padding-left:12px}')
     expect(styles[0]?.textContent).toContain('.uV2eYG_placeholder{left:12px}')
+    expect(styles[0]?.textContent).toContain('.uV2eYG_card[data-pre-session=true]:after')
   })
 })

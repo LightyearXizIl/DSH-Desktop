@@ -14,7 +14,7 @@ beforeEach(async () => {
   vi.resetModules(); vi.clearAllMocks(); mocks.handlers.clear()
   mocks.updater.on.mockImplementation((event, callback) => { mocks.handlers.set(event, callback) })
   mocks.skipped.mockReturnValue(undefined)
-  mocks.catalog.mockResolvedValue([{ version: '0.7.0', tag: 'v0.7.0', archiveUrl: 'https://dshdesktop.com/updates/archive/0.7.0/' }])
+  mocks.catalog.mockResolvedValue([{ version: '0.7.0', tag: 'v0.7.0', archiveUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.7.0/' }])
   mocks.updater.downloadUpdate.mockResolvedValue([])
   manager = await import('../src/main/update/update-manager')
   manager.startUpdateManager({ prepareToInstall: async () => {} })
@@ -41,17 +41,17 @@ it('pins the archive, holds the existing lock, and waits for user acceptance to 
   const checking = manager.checkForUpdates()
   const manualChecking = manager.checkForUpdates(true)
   expect(mocks.policy).toHaveBeenCalledTimes(1)
-  resolve({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.9.0/' })
+  resolve({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.9.0/' })
   await Promise.all([checking, manualChecking])
   expect(mocks.policy.mock.calls.map(args => args[0])).toEqual([false, true])
-  expect(mocks.updater.setFeedURL).toHaveBeenCalledWith({ provider: 'generic', url: 'https://dshdesktop.com/updates/archive/0.9.0/' })
+  expect(mocks.updater.setFeedURL).toHaveBeenCalledWith({ provider: 'generic', url: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.9.0/' })
   expect(manager.getUpdateStatus().phase).toBe('available')
   expect(manager.getUpdateStatus().source).toBe('manual')
   expect(mocks.updater.downloadUpdate).not.toHaveBeenCalled()
   await manager.downloadAvailableUpdate(); expect(mocks.updater.downloadUpdate).toHaveBeenCalledTimes(1)
 })
 it('blocks mismatched metadata before it can enter the download UI', async () => {
-  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.9.0/' })
+  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.9.0/' })
   mocks.updater.checkForUpdates.mockImplementation(async () => { mocks.handlers.get('update-available')!({ version: '0.10.0' }); expect(manager.getUpdateStatus().phase).toBe('error'); return { updateInfo: { version: '0.10.0' } } })
   await manager.checkForUpdates()
   await manager.downloadAvailableUpdate()
@@ -64,7 +64,7 @@ it('preserves explicitly selected history installs and validates version input',
   await manager.installSpecificVersion('0.7.0')
   expect(mocks.policy).not.toHaveBeenCalled()
   expect(mocks.updater.downloadUpdate).toHaveBeenCalledTimes(1)
-  expect(mocks.updater.setFeedURL).toHaveBeenCalledWith({ provider: 'generic', url: 'https://dshdesktop.com/updates/archive/0.7.0/' })
+  expect(mocks.updater.setFeedURL).toHaveBeenCalledWith({ provider: 'generic', url: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.7.0/' })
   expect(mocks.updater.allowDowngrade).toBe(false)
 })
 
@@ -82,7 +82,7 @@ it('keeps a manual no-update result until the user dismisses it', async () => {
 })
 
 it('rechecks an available update under manual policy without starting a download', async () => {
-  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.9.0/' })
+  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.9.0/' })
   mocks.updater.checkForUpdates.mockImplementation(async () => {
     mocks.handlers.get('update-available')!({ version: '0.9.0', releaseNotes: [{ note: 'Improved stability' }] })
     return { updateInfo: { version: '0.9.0' } }
@@ -100,7 +100,7 @@ it('rechecks an available update under manual policy without starting a download
 
 
 it.each(['downloading', 'downloaded'] as const)('reopens a manual result while %s without losing progress', async (phase) => {
-  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.9.0/' })
+  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.9.0/' })
   mocks.updater.checkForUpdates.mockImplementation(async () => {
     mocks.handlers.get('update-available')!({ version: '0.9.0' })
     return { updateInfo: { version: '0.9.0' } }
@@ -117,7 +117,7 @@ it.each(['downloading', 'downloaded'] as const)('reopens a manual result while %
 
 
 it('changes presentation only for another explicit request, not progress events', async () => {
-  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.9.0/' })
+  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.9.0/' })
   mocks.updater.checkForUpdates.mockImplementation(async () => {
     mocks.handlers.get('checking-for-update')!()
     mocks.handlers.get('update-available')!({ version: '0.9.0' })
@@ -155,7 +155,7 @@ it('uses the current Harness locale for status reads and broadcasts', async () =
 it('rechecks manually after an in-flight automatic cohort miss and shares the lock', async () => {
   let resolveAutomatic: ((value: { updateAvailable: false }) => void) | undefined
   mocks.policy.mockImplementation((manual: boolean) => manual
-    ? Promise.resolve({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.9.0/' })
+    ? Promise.resolve({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.9.0/' })
     : new Promise(resolve => { resolveAutomatic = resolve }))
   mocks.updater.checkForUpdates.mockImplementation(async () => {
     mocks.handlers.get('update-available')!({ version: '0.9.0' })
@@ -186,7 +186,7 @@ it('rejects forward/current versions and unpublished rollback versions before ar
 it('replaces an automatic older offer with the newest enabled manual offer', async () => {
   mocks.policy.mockImplementation(async (manual: boolean) => {
     const version = manual ? '0.10.0' : '0.9.0'
-    return { updateAvailable: true, version, feedUrl: `https://dshdesktop.com/updates/archive/${version}/` }
+    return { updateAvailable: true, version, feedUrl: `https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v${version}/` }
   })
   mocks.updater.checkForUpdates.mockImplementation(async () => {
     const version = mocks.policy.mock.calls.at(-1)?.[0] ? '0.10.0' : '0.9.0'
@@ -203,7 +203,7 @@ it('replaces an automatic older offer with the newest enabled manual offer', asy
 
 it('recovers a manually requested skipped version after an automatic archive check', async () => {
   mocks.skipped.mockReturnValue('0.9.0')
-  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.9.0/' })
+  mocks.policy.mockResolvedValue({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.9.0/' })
   let finishArchive: (() => void) | undefined
   mocks.updater.checkForUpdates.mockImplementationOnce(() => new Promise(resolve => {
     finishArchive = () => {
@@ -231,7 +231,7 @@ it.each([true, false])('keeps consent bound to the clicked offer across a locked
   let finishArchive: (() => void) | undefined
   mocks.policy.mockImplementation(async (manual: boolean) => {
     const version = manual && replacement ? '0.10.0' : '0.9.0'
-    return { updateAvailable: true, version, feedUrl: `https://dshdesktop.com/updates/archive/${version}/` }
+    return { updateAvailable: true, version, feedUrl: `https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v${version}/` }
   })
   mocks.updater.checkForUpdates.mockImplementationOnce(() => new Promise(resolve => {
     mocks.handlers.get('update-available')!({ version: '0.9.0' })

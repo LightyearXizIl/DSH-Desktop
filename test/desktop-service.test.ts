@@ -145,81 +145,62 @@ describe('desktop service', () => {
     expect(queued(service, dir).map(r => r.kind)).toEqual(['main-crash'])
   })
   it.each([
-    ['win32', 'x64', 'windows'],
-    ['darwin', 'arm64', 'mac'],
-    ['darwin', 'x64', 'mac-intel']
-  ])('uses the strict rollout query schema for automatic and manual checks on %s/%s', async (platform, arch, expectedPlatform) => {
+    ['win32', 'x64', 'latest.yml'],
+    ['darwin', 'arm64', 'latest-mac.yml'],
+    ['darwin', 'x64', 'latest-mac.yml']
+  ])('reads the newest compatible GitHub Release for %s/%s', async (platform, arch, metadataName) => {
     const { options, request } = fixture()
     const service = new DesktopService({ ...options, platform, arch })
-    const selected = { updateAvailable: true, version: '0.9.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.9.0/' }
-    let policy: { updateAvailable: false } | typeof selected = { updateAvailable: false }
-    request.mockImplementation(async (address, init) => {
-      const url = new URL(address)
-      const allowed = ['currentVersion', 'installationId', 'platform']
-      // Model the backend's strict schema: an extra manual/channel/arch field
-      // fails the request rather than being ignored by an accepting fixture.
-      if (url.searchParams.size !== allowed.length || [...url.searchParams.keys()].some(key => !allowed.includes(key))) {
-        return Response.json({ error: 'unrecognized_keys' }, { status: 400 })
+    request.mockResolvedValue(Response.json([
+      {
+        tag_name: 'v0.9.0',
+        draft: false,
+        prerelease: false,
+        html_url: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/tag/v0.9.0',
+        body: '## Changes\r\n- New About page',
+        assets: [{ name: metadataName }, { name: 'dsh-desktop-windows-x64-setup.exe' }]
+      },
+      {
+        tag_name: 'v0.10.0',
+        draft: false,
+        prerelease: false,
+        assets: [{ name: platform === 'win32' ? 'latest-mac.yml' : 'latest.yml' }]
       }
-      expect(url.origin + url.pathname).toBe(`${SERVICE_URL}/v1/updates/check`)
-      expect(Object.fromEntries(url.searchParams)).toEqual({ installationId: service.installationId, currentVersion: options.version, platform: expectedPlatform })
-      expect(init?.redirect).toBe('error')
-      expect(init?.signal).toBeInstanceOf(AbortSignal)
-      return Response.json(policy)
+    ]))
+    const decision = await service.checkUpdate(true)
+    expect(decision).toEqual({
+      updateAvailable: true,
+      version: '0.9.0',
+      feedUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v0.9.0/',
+      releaseNotes: '## Changes\n- New About page',
+      releaseUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/tag/v0.9.0'
     })
-    for (const manual of [false, true]) {
-      policy = { updateAvailable: false }
-      await expect(service.checkUpdate(manual)).resolves.toEqual(policy)
-      policy = selected
-      await expect(service.checkUpdate(manual)).resolves.toEqual(selected)
-    }
-    expect(request).toHaveBeenCalledTimes(4)
+    const [address, init] = request.mock.calls.at(-1)!
+    expect(address).toBe('https://api.github.com/repos/LightyearXizIl/DSH-Desktop/releases?per_page=100')
+    expect(init?.redirect).toBe('error')
+    expect(init?.signal).toBeInstanceOf(AbortSignal)
   })
-  it.each([false, true])('fails closed without a fallback feed when manual=%s', async manual => {
-    const { options, request } = fixture()
-    const service = new DesktopService({ ...options, platform: 'win32', arch: 'x64' })
-    for (const response of [
-      new Response('unrecognized_keys', { status: 400 }),
-      new Response('unavailable', { status: 503 }),
-      new Response('malformed JSON'),
-      Response.json({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://evil.test/' }),
-      Response.json({ updateAvailable: true, version: '0.7.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.7.0/' })
-    ]) {
-      request.mockClear()
-      request.mockResolvedValueOnce(response)
-      await expect(service.checkUpdate(manual)).rejects.toThrow()
-      expect(request).toHaveBeenCalledTimes(1)
-      const call = request.mock.calls[0]
-      if (!call) throw new Error('Expected an update policy request')
-      expect(new URL(call[0]).pathname).toBe('/crash/v1/updates/check')
-    }
-    request.mockClear()
-    const timeout = new DOMException('Update policy request timed out', 'TimeoutError')
-    request.mockRejectedValueOnce(timeout)
-    await expect(service.checkUpdate(manual)).rejects.toBe(timeout)
-    expect(request).toHaveBeenCalledTimes(1)
-    const call = request.mock.calls[0]
-    if (!call) throw new Error('Expected an update policy request')
-    expect(new URL(call[0]).pathname).toBe('/crash/v1/updates/check')
-  })
-  it('queries with no channel/arch and rejects invalid or downgraded policy responses', async () => {
+  it('ignores drafts, incompatible metadata, current and older releases', async () => {
     const { service, request } = fixture()
-    request.mockResolvedValue(new Response(JSON.stringify({ updateAvailable: false })))
-    expect(await service.checkUpdate()).toEqual({ updateAvailable: false })
-    const url = new URL(request.mock.calls[0]![0])
-    expect(url.searchParams.has('manual')).toBe(false)
-    request.mockResolvedValue(new Response(JSON.stringify({ updateAvailable: false })))
-    await service.checkUpdate(true)
-    expect(new URL(request.mock.calls.at(-1)![0]).searchParams.has('manual')).toBe(false)
-    expect(url.searchParams.get('platform')).toBe('mac'); expect(url.searchParams.has('channel')).toBe(false); expect(url.searchParams.has('arch')).toBe(false)
-    for (const version of ['0.7.0', '0.8.0', '0.9.0-rc.1', '../../evil', '0.9.0-01']) {
-      request.mockResolvedValue(new Response(JSON.stringify({ updateAvailable: true, version, feedUrl: `https://dshdesktop.com/updates/archive/${version}/` })))
-      await expect(service.checkUpdate()).rejects.toThrow('Invalid')
+    request.mockResolvedValue(Response.json([
+      { tag_name: 'v9.0.0', draft: true, assets: [{ name: 'latest-mac.yml' }] },
+      { tag_name: 'v0.8.0', assets: [{ name: 'latest-mac.yml' }] },
+      { tag_name: 'v0.7.0', assets: [{ name: 'latest.yml' }] },
+      { tag_name: 'nightly', assets: [{ name: 'latest-mac.yml' }] }
+    ]))
+    await expect(service.checkUpdate()).resolves.toEqual({ updateAvailable: false })
+  })
+  it('fails closed on HTTP, malformed, or network errors', async () => {
+    const { service, request } = fixture()
+    for (const response of [
+      new Response('unavailable', { status: 503 }),
+      new Response('{}')
+    ]) {
+      request.mockResolvedValueOnce(response)
+      await expect(service.checkUpdate()).rejects.toThrow()
     }
-    request.mockResolvedValue(new Response(JSON.stringify({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://evil.test/' })))
-    await expect(service.checkUpdate()).rejects.toThrow('Invalid')
-    request.mockResolvedValue(new Response(JSON.stringify({ updateAvailable: true, version: '0.9.0', feedUrl: 'https://dshdesktop.com/updates/archive/0.9.0/' })))
-    expect(await service.checkUpdate()).toMatchObject({ updateAvailable: true, version: '0.9.0' })
+    request.mockRejectedValueOnce(new Error('offline'))
+    await expect(service.checkUpdate()).rejects.toThrow('offline')
   })
 })
 describe('diagnostic event integration', () => {

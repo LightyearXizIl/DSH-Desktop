@@ -24,10 +24,10 @@ import {
   writeSkippedVersion
 } from './skipped-version'
 import {
+  GITHUB_FEED,
   archiveFeedUrl,
   compareVersions,
-  fetchAvailableReleases,
-  STABLE_FEED_URL
+  fetchAvailableReleases
 } from './version-catalog'
 
 const { autoUpdater } = electronUpdater
@@ -50,6 +50,8 @@ let manualCheckRequested = false
 let presentationId = 0
 let pendingDowngrade = false
 let selectedUpdateVersion: string | undefined
+let selectedReleaseNotes: string | undefined
+let selectedReleaseUrl: string | undefined
 
 export function getUpdateStatus(): UpdateStatus {
   return { ...status, locale: updateLocale?.() }
@@ -153,6 +155,8 @@ export async function checkForUpdates(manual = false, source: UpdateStatus['sour
   manualCheckRequested = manual
   lastCheckedAt = Date.now()
   selectedUpdateVersion = undefined
+  selectedReleaseNotes = undefined
+  selectedReleaseUrl = undefined
   checkPromise = (async () => {
     try {
       let requestManual = manual
@@ -172,7 +176,13 @@ export async function checkForUpdates(manual = false, source: UpdateStatus['sour
           return
         }
         selectedUpdateVersion = policy.version
-        autoUpdater.setFeedURL({ provider: 'generic', url: policy.feedUrl })
+        selectedReleaseNotes = policy.releaseNotes ?? selectedReleaseNotes
+        selectedReleaseUrl = policy.releaseUrl
+        autoUpdater.setFeedURL(
+          typeof policy.feedUrl === 'string'
+            ? { provider: 'generic', url: policy.feedUrl }
+            : policy.feedUrl
+        )
         autoUpdater.allowPrerelease = isPrereleaseVersion(policy.version)
         autoUpdater.allowDowngrade = false
         const result = await autoUpdater.checkForUpdates()
@@ -262,7 +272,7 @@ export async function installSpecificVersion(version: unknown): Promise<UpdateSt
       transition({ type: 'error', message: errorMessage(error) })
     } finally {
       checkPromise = undefined
-      autoUpdater.setFeedURL({ provider: 'generic', url: STABLE_FEED_URL })
+      autoUpdater.setFeedURL(GITHUB_FEED)
       autoUpdater.allowDowngrade = false
       pendingDowngrade = false
       autoUpdater.allowPrerelease = false
@@ -325,7 +335,12 @@ function configureUpdater(): void {
     }
     // Offered, not fetched: nothing leaves the network until the user accepts
     // the update, which is the same click that starts the download.
-    transition({ type: 'available', version: info.version, releaseNotes: normalizeReleaseNotes(info.releaseNotes) })
+    transition({
+      type: 'available',
+      version: info.version,
+      releaseNotes: selectedReleaseNotes ?? normalizeReleaseNotes(info.releaseNotes),
+      releaseUrl: selectedReleaseUrl
+    })
   })
   autoUpdater.on('download-progress', (progress) =>
     transition({ type: 'progress', percent: progress.percent })
@@ -334,7 +349,12 @@ function configureUpdater(): void {
     transition({ type: 'not-available' })
   })
   autoUpdater.on('update-downloaded', (info) =>
-    transition({ type: 'downloaded', version: info.version })
+    transition({
+      type: 'downloaded',
+      version: info.version,
+      releaseNotes: selectedReleaseNotes,
+      releaseUrl: selectedReleaseUrl
+    })
   )
   autoUpdater.on('error', (error) => {
     transition({ type: 'error', message: errorMessage(error) })

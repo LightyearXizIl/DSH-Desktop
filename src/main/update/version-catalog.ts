@@ -2,13 +2,19 @@ import type { AvailableRelease } from '../../shared/contracts'
 
 export type { AvailableRelease }
 
-export const STABLE_FEED_URL = 'https://dshdesktop.com/updates/latest/'
-export const VERSION_INDEX_URL = 'https://dshdesktop.com/updates/versions.json'
+export const UPDATE_REPOSITORY = 'LightyearXizIl/DSH-Desktop'
+export const GITHUB_FEED = {
+  provider: 'github' as const,
+  owner: 'LightyearXizIl',
+  repo: 'DSH-Desktop'
+}
+export const RELEASES_API_URL = `https://api.github.com/repos/${UPDATE_REPOSITORY}/releases?per_page=100`
+export const VERSION_INDEX_URL = RELEASES_API_URL
 
 const INDEX_TIMEOUT_MS = 8_000
 
 export function archiveFeedUrl(version: string): string {
-  return `https://dshdesktop.com/updates/archive/${version}/`
+  return `https://github.com/${UPDATE_REPOSITORY}/releases/download/v${version}/`
 }
 
 /** Split "1.2.3-rc.1" into ([1,2,3], "rc.1"). Non-numeric segments read as 0. */
@@ -73,24 +79,34 @@ function comparePrerelease(left: string, right: string): -1 | 0 | 1 {
   return 0
 }
 
-function isRelease(value: unknown): value is AvailableRelease {
-  if (typeof value !== 'object' || value === null) return false
+function releaseFromGitHub(value: unknown): AvailableRelease | undefined {
+  if (typeof value !== 'object' || value === null) return undefined
   const record = value as Record<string, unknown>
-  return (
-    typeof record.version === 'string' &&
-    record.version.length > 0 &&
-    typeof record.tag === 'string' &&
-    record.tag.length > 0 &&
-    typeof record.archiveUrl === 'string' &&
-    record.archiveUrl.length > 0
-  )
+  if (record.draft === true) return undefined
+  if (typeof record.tag_name !== 'string' || !record.tag_name.startsWith('v')) return undefined
+  const version = record.tag_name.slice(1)
+  if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) return undefined
+  const assets = Array.isArray(record.assets)
+    ? record.assets.flatMap((asset: unknown) => {
+      if (!asset || typeof asset !== 'object' || !('name' in asset)) return []
+      return typeof asset.name === 'string' ? [asset.name] : []
+    })
+    : []
+  if (!assets.includes('latest.yml') && !assets.includes('latest-mac.yml')) return undefined
+  return {
+    version,
+    tag: record.tag_name,
+    archiveUrl: `https://github.com/${UPDATE_REPOSITORY}/releases/download/${record.tag_name}/`,
+    prerelease: record.prerelease === true
+  }
 }
 
 export function parseVersionIndex(raw: unknown): AvailableRelease[] {
-  if (typeof raw !== 'object' || raw === null) return []
-  const versions = (raw as { versions?: unknown }).versions
-  if (!Array.isArray(versions)) return []
-  return versions.filter(isRelease)
+  if (!Array.isArray(raw)) return []
+  return raw.flatMap((release) => {
+    const parsed = releaseFromGitHub(release)
+    return parsed === undefined ? [] : [parsed]
+  })
 }
 
 export async function fetchAvailableReleases(

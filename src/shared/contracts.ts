@@ -43,6 +43,8 @@ export interface UpdateStatus {
   locale?: 'en' | 'zh'
   /** Plain text only; render without interpreting HTML from update metadata. */
   releaseNotes?: string
+  /** The GitHub Release page for the offered version. */
+  releaseUrl?: string
   /** Set while an explicitly chosen older version is being installed. */
   downgrade?: boolean
 }
@@ -52,4 +54,5 @@ export interface AvailableRelease {
   version: string
   tag: string
   archiveUrl: string
+  prerelease?: boolean
 }

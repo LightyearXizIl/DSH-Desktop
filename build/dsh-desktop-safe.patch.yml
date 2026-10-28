@@ -18,5 +18,9 @@
 - insert:
     - id: dsh-desktop-client-ui
       name: dsh-desktop-client-ui
+    - id: dsh-desktop-theme
+      name: dsh-desktop-theme
+      config:
+        root: !!js dshHomePath('desktop-theme')
     - id: dsh-desktop-hmr-fallback
       name: dsh-desktop-hmr-fallback

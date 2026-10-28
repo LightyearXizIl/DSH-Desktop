@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { UpdateLocale } from './update-view'
+import type { UpdateStatus } from '../shared/contracts'
 import { setupDesktopStoragePersistence } from './desktop-storage'
 import { setupDesktopNotificationBridge } from './desktop-notification'
 import { mountDesktopUpdateUi } from './desktop-update-ui'
@@ -546,7 +547,10 @@ contextBridge.exposeInMainWorld(
       ipcRenderer.invoke('desktop-host-plugin:set-enabled', enabled),
     uninstallMarket: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('market:uninstall'),
     openInFinder: (path: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('harness:open-in-finder', path),
-    openExternal: (url: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('harness:open-external', url)
+    openExternal: (url: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('harness:open-external', url),
+    getAboutInfo: (): Promise<{ desktopVersion: string; harnessVersion: string; locale: 'en' | 'zh' }> =>
+      ipcRenderer.invoke('desktop:about-info'),
+    checkForUpdates: (): Promise<UpdateStatus> => ipcRenderer.invoke('updates:check')
   })
 )
 

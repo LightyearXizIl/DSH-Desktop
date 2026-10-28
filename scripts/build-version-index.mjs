@@ -45,8 +45,8 @@ function compare(a, b) {
 }
 
 /**
- * Turn a list of `releases/archive/<name>` directory names into the version
- * index the desktop client reads from `dshdesktop.com/updates/versions.json`.
+ * Build a rollback index from release tags. The desktop client reads GitHub
+ * Releases directly, so this remains useful for release-side history checks.
  * Non-semver names are dropped; the rest sort newest first.
  */
 export function buildVersionIndex(archiveDirNames, previous = { versions: [] }) {
@@ -60,7 +60,7 @@ export function buildVersionIndex(archiveDirNames, previous = { versions: [] }) 
     .map((version) => existing.get(version) ?? ({
       version,
       tag: `v${version}`,
-      archiveUrl: `https://dshdesktop.com/updates/archive/${version}/`
+      archiveUrl: `https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v${version}/`
     }))
   return { ...previous, generatedAt: new Date().toISOString(), versions }
 }

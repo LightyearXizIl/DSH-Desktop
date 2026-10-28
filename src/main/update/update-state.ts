@@ -2,9 +2,9 @@ import type { UpdateStatus } from '../../shared/contracts'
 
 export type UpdateStateEvent =
   | { type: 'check'; manual: boolean; source?: UpdateStatus['source'] }
-  | { type: 'available'; version: string; releaseNotes?: string }
+  | { type: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
   | { type: 'progress'; percent: number }
-  | { type: 'downloaded'; version: string }
+  | { type: 'downloaded'; version: string; releaseNotes?: string; releaseUrl?: string }
   | { type: 'not-available' }
   | { type: 'error'; message: string }
   | { type: 'unsupported'; message: string }
@@ -32,11 +32,23 @@ export function reduceUpdateStatus(
     case 'check':
       return { ...base, phase: 'checking', manual: event.manual, source: event.source ?? (event.manual ? 'manual' : 'runtime') }
     case 'available':
-      return { ...base, phase: 'available', availableVersion: event.version, releaseNotes: event.releaseNotes }
+      return {
+        ...base,
+        phase: 'available',
+        availableVersion: event.version,
+        releaseNotes: event.releaseNotes,
+        releaseUrl: event.releaseUrl
+      }
     case 'progress':
       return { ...current, phase: 'downloading', percent: clampPercent(event.percent) }
     case 'downloaded':
-      return { ...base, phase: 'downloaded', availableVersion: event.version, releaseNotes: current.releaseNotes }
+      return {
+        ...base,
+        phase: 'downloaded',
+        availableVersion: event.version,
+        releaseNotes: event.releaseNotes ?? current.releaseNotes,
+        releaseUrl: event.releaseUrl ?? current.releaseUrl
+      }
     case 'not-available':
       return { ...base, phase: 'up-to-date' }
     case 'error':

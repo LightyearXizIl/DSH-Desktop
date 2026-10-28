@@ -6,7 +6,87 @@ window.__ModuleLoader__.load({
     Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' })
 
     const React = require('react')
-    const { BrandWordmark, FishLogo, MenuItemButton } = require('@deepseek-ai/dsh-client-ui-primitives')
+    const {
+      BrandWordmark,
+      FishLogo,
+      MenuItemButton,
+      Modal
+    } = require('@deepseek-ai/dsh-client-ui-primitives')
+
+    const ABOUT_NS = 'settings.desktopAbout'
+    const ABOUT_AUTHOR = {
+      name: 'NullPointer',
+      login: 'LightyearXizIl',
+      repository: 'https://github.com/LightyearXizIl/DSH-Desktop',
+      wechat: 'XizllHZ_007'
+    }
+    const ABOUT_ASSET = (name) => `/api/desktop-client-ui/assets/${name}`
+    const ABOUT_ZH = {
+      nav: '关于',
+      title: '关于 DSH Desktop',
+      intro: '作者、版本与支持方式。',
+      author: '作者',
+      repository: 'GitHub 仓库',
+      wechat: '微信号',
+      desktopVersion: '桌面端版本',
+      harnessVersion: '内置 Harness',
+      versionLoading: '正在读取版本…',
+      versionUnavailable: '版本信息不可用',
+      checkUpdates: '检查更新',
+      checking: '正在检查…',
+      upToDate: '当前已是最新版本。',
+      available: '发现新版本 {version}，更新窗口已打开。',
+      unsupported: '当前构建不支持自动更新。',
+      checkFailed: '检查更新失败：{message}',
+      checkFailedUnknown: '未知错误',
+      checkFinished: '更新检查已完成。',
+      updateLogTitle: 'v{version} 更新日志',
+      viewRelease: '查看 GitHub Release',
+      noReleaseNotes: '这个版本没有填写更新说明。',
+      appreciate: '赞赏',
+      appreciateTitle: '支持 DSH Desktop',
+      appreciateIntro: '如果这个项目对你有帮助，可以扫码赞赏。',
+      wechatPay: '微信赞赏',
+      alipay: '支付宝赞赏',
+      close: '关闭',
+      avatarAlt: 'NullPointer 的 GitHub 头像',
+      wechatQrAlt: '微信赞赏二维码',
+      alipayQrAlt: '支付宝赞赏二维码',
+      thanks: '感谢你的支持。'
+    }
+    const ABOUT_EN = {
+      nav: 'About',
+      title: 'About DSH Desktop',
+      intro: 'Author, version, and ways to support the project.',
+      author: 'Author',
+      repository: 'GitHub repository',
+      wechat: 'WeChat ID',
+      desktopVersion: 'Desktop version',
+      harnessVersion: 'Bundled Harness',
+      versionLoading: 'Reading version…',
+      versionUnavailable: 'Version information is unavailable',
+      checkUpdates: 'Check for updates',
+      checking: 'Checking…',
+      upToDate: 'You are on the latest version.',
+      available: 'Version {version} is available. The update window is open.',
+      unsupported: 'Automatic updates are unavailable in this build.',
+      checkFailed: 'Update check failed: {message}',
+      checkFailedUnknown: 'Unknown error',
+      checkFinished: 'Update check finished.',
+      updateLogTitle: 'What’s new in v{version}',
+      viewRelease: 'View GitHub Release',
+      noReleaseNotes: 'This release has no notes.',
+      appreciate: 'Support',
+      appreciateTitle: 'Support DSH Desktop',
+      appreciateIntro: 'If this project helps you, you can support it by scanning a code.',
+      wechatPay: 'WeChat',
+      alipay: 'Alipay',
+      close: 'Close',
+      avatarAlt: 'NullPointer GitHub avatar',
+      wechatQrAlt: 'WeChat support QR code',
+      alipayQrAlt: 'Alipay support QR code',
+      thanks: 'Thank you for your support.'
+    }
 
     // Tight bounds of the mark inside its 1000x1000 source artwork.
     const BRAND_MARK_VIEWBOX = { x: 42, y: 218, width: 898, height: 564 }
@@ -104,14 +184,290 @@ window.__ModuleLoader__.load({
       }, unread ? (chinese ? '标为已读' : 'Mark as read') : (chinese ? '标为未读' : 'Mark as unread'))
     }
 
-    const inject = ['slots', 'remote.session', 'sessions', 'uiWorkspace']
+    function AboutSection(props) {
+      const {
+        t,
+        readInfo,
+        checkUpdates,
+        openExternal,
+        assetUrl
+      } = props
+      const [info, setInfo] = React.useState(null)
+      const [infoError, setInfoError] = React.useState(false)
+      const [checking, setChecking] = React.useState(false)
+      const [notice, setNotice] = React.useState('')
+      const [updateResult, setUpdateResult] = React.useState(null)
+      const [supportOpen, setSupportOpen] = React.useState(false)
+      const alive = React.useRef(true)
+
+      React.useEffect(() => {
+        alive.current = true
+        void Promise.resolve()
+          .then(() => readInfo())
+          .then((value) => {
+            if (alive.current) setInfo(value)
+          })
+          .catch(() => {
+            if (alive.current) setInfoError(true)
+          })
+        return () => {
+          alive.current = false
+        }
+      }, [])
+
+      const check = async () => {
+        if (!alive.current) return
+        setChecking(true)
+        setNotice(t('checking'))
+        setUpdateResult(null)
+        try {
+          const status = await checkUpdates()
+          if (!alive.current) return
+          if (status?.phase === 'available') {
+            setNotice(t('available', { version: status.availableVersion || '' }))
+            const releaseUrl = status.releaseUrl || ''
+            setUpdateResult({
+              version: status.availableVersion || '',
+              notes: status.releaseNotes || '',
+              url: releaseUrl
+            })
+          } else if (status?.phase === 'up-to-date') {
+            setNotice(t('upToDate'))
+          } else if (status?.phase === 'unsupported') {
+            setNotice(t('unsupported'))
+          } else if (status?.phase === 'error') {
+            setNotice(t('checkFailed', {
+              message: status.message || t('checkFailedUnknown')
+            }))
+          } else {
+            setNotice(t('checkFinished'))
+          }
+        } catch (error) {
+          if (!alive.current) return
+          setNotice(t('checkFailed', {
+            message: error instanceof Error && error.message
+              ? error.message
+              : t('checkFailedUnknown')
+          }))
+        } finally {
+          if (alive.current) setChecking(false)
+        }
+      }
+
+      const openRepository = () => {
+        void openExternal(ABOUT_AUTHOR.repository).catch((error) => {
+          console.error('[about] unable to open repository', error)
+        })
+      }
+
+      const versions = info
+        ? [
+            [t('desktopVersion'), info.desktopVersion],
+            [t('harnessVersion'), info.harnessVersion]
+          ]
+        : []
+
+      return React.createElement(
+        'section',
+        { className: 'dshDesktopAbout' },
+        React.createElement('h2', { className: 'dshDesktopAboutTitle' }, t('title')),
+        React.createElement('p', { className: 'dshDesktopAboutIntro' }, t('intro')),
+        React.createElement(
+          'div',
+          { className: 'dshDesktopAboutHero' },
+          React.createElement('img', {
+            className: 'dshDesktopAboutAvatar',
+            src: assetUrl('author-avatar.png'),
+            alt: t('avatarAlt'),
+            width: 64,
+            height: 64
+          }),
+          React.createElement(
+            'div',
+            { className: 'dshDesktopAboutIdentity' },
+            React.createElement('strong', null, ABOUT_AUTHOR.name),
+            React.createElement('span', { className: 'dshDesktopAboutLogin' }, `@${ABOUT_AUTHOR.login}`)
+          ),
+          React.createElement('button', {
+            type: 'button',
+            className: 'dshDesktopAboutButton',
+            onClick: openRepository
+          }, t('repository'))
+        ),
+        React.createElement(
+          'div',
+          { className: 'dshDesktopAboutCard' },
+          React.createElement(
+            'div',
+            { className: 'dshDesktopAboutRows' },
+            React.createElement(
+              'div',
+              { className: 'dshDesktopAboutRow' },
+              React.createElement('span', { className: 'dshDesktopAboutLabel' }, t('author')),
+              React.createElement('span', null, ABOUT_AUTHOR.name)
+            ),
+            React.createElement(
+              'div',
+              { className: 'dshDesktopAboutRow' },
+              React.createElement('span', { className: 'dshDesktopAboutLabel' }, t('repository')),
+              React.createElement('span', { className: 'dshDesktopAboutValue' }, 'LightyearXizIl/DSH-Desktop')
+            ),
+            React.createElement(
+              'div',
+              { className: 'dshDesktopAboutRow' },
+              React.createElement('span', { className: 'dshDesktopAboutLabel' }, t('wechat')),
+              React.createElement('code', { className: 'dshDesktopAboutCode' }, ABOUT_AUTHOR.wechat)
+            ),
+            ...versions.map(([label, value]) =>
+              React.createElement(
+                'div',
+                { className: 'dshDesktopAboutRow', key: label },
+                React.createElement('span', { className: 'dshDesktopAboutLabel' }, label),
+                React.createElement('code', { className: 'dshDesktopAboutCode' }, value)
+              )
+            ),
+            !info && !infoError
+              ? React.createElement(
+                  'div',
+                  { className: 'dshDesktopAboutRow' },
+                  React.createElement('span', { className: 'dshDesktopAboutLabel' }, t('desktopVersion')),
+                  React.createElement('span', { className: 'dshDesktopAboutMuted' }, t('versionLoading'))
+                )
+              : null,
+            infoError
+              ? React.createElement(
+                  'p',
+                  { className: 'dshDesktopAboutError', role: 'alert' },
+                  t('versionUnavailable')
+                )
+              : null
+          )
+        ),
+        React.createElement(
+          'div',
+          { className: 'dshDesktopAboutActions' },
+          React.createElement('button', {
+            type: 'button',
+            className: 'dshDesktopAboutButton dshDesktopAboutPrimary',
+            disabled: checking,
+            onClick: () => { void check() }
+          }, checking ? t('checking') : t('checkUpdates')),
+          React.createElement('button', {
+            type: 'button',
+            className: 'dshDesktopAboutButton',
+            onClick: () => setSupportOpen(true)
+          }, t('appreciate'))
+        ),
+        React.createElement('p', {
+          className: 'dshDesktopAboutNotice',
+          role: 'status',
+          'aria-live': 'polite'
+        }, notice),
+        updateResult
+          ? React.createElement(
+              'section',
+              { className: 'dshDesktopAboutUpdate', 'aria-live': 'polite' },
+              React.createElement(
+                'div',
+                { className: 'dshDesktopAboutUpdateHead' },
+                React.createElement(
+                  'strong',
+                  null,
+                  t('updateLogTitle', { version: updateResult.version })
+                ),
+                updateResult.url
+                  ? React.createElement('button', {
+                      type: 'button',
+                      className: 'dshDesktopAboutLink',
+                      onClick: () => {
+                        void openExternal(updateResult.url).catch((error) => {
+                          console.error('[about] unable to open release page', error)
+                        })
+                      }
+                    }, t('viewRelease'))
+                  : null
+              ),
+              React.createElement(
+                'pre',
+                {
+                  className: 'dshDesktopAboutReleaseNotes',
+                  'aria-busy': updateResult.notesLoading
+                },
+                updateResult.notes || t('noReleaseNotes')
+              )
+            )
+          : null,
+        React.createElement(
+          Modal,
+          {
+            open: supportOpen,
+            onClose: () => setSupportOpen(false),
+            title: t('appreciateTitle'),
+            closeLabel: t('close')
+          },
+          React.createElement('p', { className: 'dshDesktopSupportIntro' }, t('appreciateIntro')),
+          React.createElement(
+            'div',
+            { className: 'dshDesktopSupportGrid' },
+            React.createElement(
+              'figure',
+              { className: 'dshDesktopSupportCode' },
+              React.createElement('img', {
+                src: assetUrl('qrcode-wechat.png'),
+                alt: t('wechatQrAlt'),
+                draggable: false,
+                width: 220,
+                height: 220
+              }),
+              React.createElement('figcaption', null, t('wechatPay'))
+            ),
+            React.createElement(
+              'figure',
+              { className: 'dshDesktopSupportCode' },
+              React.createElement('img', {
+                src: assetUrl('qrcode-alipay.png'),
+                alt: t('alipayQrAlt'),
+                draggable: false,
+                width: 220,
+                height: 220
+              }),
+              React.createElement('figcaption', null, t('alipay'))
+            )
+          ),
+          React.createElement('p', { className: 'dshDesktopSupportThanks' }, t('thanks'))
+        )
+      )
+    }
+
+    const inject = ['slots', 'locale', 'remote.session', 'sessions', 'uiWorkspace']
     function apply(ctx) {
+      const aboutT = ctx.locale.bind(ABOUT_NS)
+      ctx.effect(
+        () => ctx.locale.register(ABOUT_NS, { zh: ABOUT_ZH, en: ABOUT_EN }),
+        'dsh-desktop-client-ui: About dictionaries'
+      )
       ctx.effect(() => {
         const id = 'dsh-desktop-preset-toolbar-style'
         if (document.getElementById(id)) return
         const style = document.createElement('style')
         style.id = id
         style.textContent = `
+          html, body, body * {
+            scrollbar-width:none !important;
+            scrollbar-color:transparent transparent !important;
+            -ms-overflow-style:none !important;
+          }
+          html::-webkit-scrollbar, body::-webkit-scrollbar, body *::-webkit-scrollbar,
+          html::-webkit-scrollbar-corner, body::-webkit-scrollbar-corner, body *::-webkit-scrollbar-corner {
+            display:none !important;
+            width:0 !important;
+            height:0 !important;
+          }
+          html::-webkit-scrollbar-button, body::-webkit-scrollbar-button, body *::-webkit-scrollbar-button {
+            display:none !important;
+          }
+          html, body { overflow-x:clip !important; }
+          body > #root { max-width:100vw; overflow-x:clip; }
           :root { --dsh-page-title-top-spacing:56px; }
           /* Top-level page titles align with the sidebar brand row. Keep
              conversation chrome and detail/dialog headers in their own layout. */
@@ -133,6 +489,49 @@ window.__ModuleLoader__.load({
           [data-dsh-preset-search] input[type=search]:focus-visible {
             outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:2px;
             background:var(--dsw-alias-bg-base);
+          }
+          .dshDesktopAbout { box-sizing:border-box; display:flex; flex-direction:column; gap:14px; width:100%; max-width:760px; color:var(--dsw-alias-label-primary); }
+          .dshDesktopAboutTitle { margin:0; font-size:18px; font-weight:600; line-height:26px; }
+          .dshDesktopAboutIntro { margin:0; color:var(--dsw-alias-label-tertiary); font-size:13px; line-height:20px; }
+          .dshDesktopAboutHero { box-sizing:border-box; display:flex; align-items:center; gap:14px; padding:18px; border:1px solid var(--dsw-alias-border-l2); border-radius:16px; background:var(--dsw-alias-bg-layer-1); }
+          .dshDesktopAboutAvatar { flex:none; width:64px; height:64px; border:1px solid var(--dsw-alias-border-l2); border-radius:16px; object-fit:cover; background:var(--dsw-alias-bg-layer-2); }
+          .dshDesktopAboutIdentity { display:flex; flex-direction:column; gap:3px; min-width:0; flex:1; }
+          .dshDesktopAboutIdentity strong { font-size:16px; line-height:24px; }
+          .dshDesktopAboutLogin { color:var(--dsw-alias-label-tertiary); font-size:12px; line-height:18px; }
+          .dshDesktopAboutCard { box-sizing:border-box; padding:16px 18px; border:1px solid var(--dsw-alias-border-l2); border-radius:16px; background:var(--dsw-alias-bg-layer-1); }
+          .dshDesktopAboutRows { display:flex; flex-direction:column; }
+          .dshDesktopAboutRow { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; padding:10px 0; border-bottom:1px solid var(--dsw-alias-border-l2); font-size:13px; line-height:20px; }
+          .dshDesktopAboutRow:last-child { border-bottom:0; }
+          .dshDesktopAboutLabel { flex:none; color:var(--dsw-alias-label-tertiary); }
+          .dshDesktopAboutValue { min-width:0; text-align:right; overflow-wrap:anywhere; }
+          .dshDesktopAboutCode { max-width:60%; padding:1px 6px; border-radius:5px; background:var(--dsw-alias-bg-layer-2); color:var(--dsw-alias-label-secondary); font-family:var(--ds-font-family-code,monospace); font-size:12px; overflow-wrap:anywhere; }
+          .dshDesktopAboutMuted { color:var(--dsw-alias-label-tertiary); }
+          .dshDesktopAboutError { margin:8px 0 0; color:var(--dsw-alias-state-error-primary); font-size:12px; line-height:18px; }
+          .dshDesktopAboutActions { display:flex; flex-wrap:wrap; gap:10px; }
+          .dshDesktopAboutButton { box-sizing:border-box; height:36px; padding:0 16px; border:1px solid var(--dsw-alias-border-l3); border-radius:18px; background:transparent; color:var(--dsw-alias-label-primary); font:inherit; font-size:13px; font-weight:500; cursor:pointer; }
+          .dshDesktopAboutButton:hover:not(:disabled) { background:var(--dsw-alias-interactive-bg-hover); }
+          .dshDesktopAboutButton:disabled { cursor:default; opacity:.55; }
+          .dshDesktopAboutButton:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:2px; }
+          .dshDesktopAboutPrimary { border-color:transparent; background:var(--dsw-alias-button-primary-fill); color:var(--dsw-alias-label-primary-foreground); }
+          .dshDesktopAboutPrimary:hover:not(:disabled) { background:var(--dsw-alias-button-primary-hover); }
+          .dshDesktopAboutNotice { min-height:18px; margin:0; color:var(--dsw-alias-label-tertiary); font-size:12px; line-height:18px; }
+          .dshDesktopAboutUpdate { box-sizing:border-box; padding:14px 16px; border:1px solid var(--dsw-alias-border-l2); border-radius:14px; background:var(--dsw-alias-bg-layer-1); }
+          .dshDesktopAboutUpdateHead { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:8px; }
+          .dshDesktopAboutUpdateHead strong { font-size:13px; line-height:20px; }
+          .dshDesktopAboutLink { padding:0; border:0; background:transparent; color:var(--dsw-alias-state-business-primary); font:inherit; font-size:12px; cursor:pointer; }
+          .dshDesktopAboutLink:hover { text-decoration:underline; text-underline-offset:3px; }
+          .dshDesktopAboutLink:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:2px; }
+          .dshDesktopAboutReleaseNotes { box-sizing:border-box; max-height:260px; margin:0; padding:12px; overflow:auto; border-radius:10px; background:var(--dsw-alias-bg-layer-2); color:var(--dsw-alias-label-secondary); font-family:inherit; font-size:12px; line-height:19px; white-space:pre-wrap; overflow-wrap:anywhere; }
+          .dshDesktopSupportIntro { margin:0 0 14px; color:var(--dsw-alias-label-secondary); font-size:13px; line-height:20px; }
+          .dshDesktopSupportGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+          .dshDesktopSupportCode { display:flex; flex-direction:column; align-items:center; gap:8px; margin:0; padding:12px; border:1px solid var(--dsw-alias-border-l2); border-radius:14px; background:var(--dsw-alias-bg-layer-1); }
+          .dshDesktopSupportCode img { display:block; width:100%; max-width:220px; height:auto; aspect-ratio:1; object-fit:contain; user-select:none; -webkit-user-drag:none; }
+          .dshDesktopSupportCode figcaption { color:var(--dsw-alias-label-primary); font-size:13px; font-weight:600; line-height:20px; }
+          .dshDesktopSupportThanks { margin:14px 0 0; color:var(--dsw-alias-label-tertiary); font-size:12px; line-height:18px; text-align:center; }
+          @media (width <= 560px) {
+            .dshDesktopAboutHero { align-items:flex-start; flex-wrap:wrap; }
+            .dshDesktopAboutHero .dshDesktopAboutButton { width:100%; }
+            .dshDesktopSupportGrid { grid-template-columns:1fr; }
           }
         `
         document.head.appendChild(style)
@@ -193,6 +592,22 @@ window.__ModuleLoader__.load({
           id: 'desktop-unread-session',
           order: 350
         }, UnreadSessionMenuItem)
+      )
+      ctx.slots.inject('settings.section', () =>
+        ctx.slots.register({
+          name: 'settings.section',
+          id: 'about',
+          order: 100,
+          label: () => aboutT('nav'),
+          locale: ABOUT_NS,
+          inject: () => ({
+            t: aboutT,
+            readInfo: () => window.dshDesktop.getAboutInfo(),
+            checkUpdates: () => window.dshDesktop.checkForUpdates(),
+            openExternal: (url) => window.dshDesktop.openExternal(url),
+            assetUrl: ABOUT_ASSET
+          })
+        }, AboutSection)
       )
     }
 

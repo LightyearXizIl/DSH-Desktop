@@ -3,19 +3,27 @@ import {
   archiveFeedUrl,
   compareVersions,
   fetchAvailableReleases,
+  GITHUB_FEED,
   parseVersionIndex,
-  STABLE_FEED_URL,
   VERSION_INDEX_URL
 } from '../src/main/update/version-catalog'
 
 describe('version-catalog constants', () => {
-  it('points the stable feed and index at the dshdesktop domain', () => {
-    expect(STABLE_FEED_URL).toBe('https://dshdesktop.com/updates/latest/')
-    expect(VERSION_INDEX_URL).toBe('https://dshdesktop.com/updates/versions.json')
+  it('points the stable feed and history at this repository GitHub Releases', () => {
+    expect(GITHUB_FEED).toEqual({
+      provider: 'github',
+      owner: 'LightyearXizIl',
+      repo: 'DSH-Desktop'
+    })
+    expect(VERSION_INDEX_URL).toBe(
+      'https://api.github.com/repos/LightyearXizIl/DSH-Desktop/releases?per_page=100'
+    )
   })
 
   it('builds a per-version archive feed url with a trailing slash', () => {
-    expect(archiveFeedUrl('1.2.3')).toBe('https://dshdesktop.com/updates/archive/1.2.3/')
+    expect(archiveFeedUrl('1.2.3')).toBe(
+      'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v1.2.3/'
+    )
   })
 })
 
@@ -51,21 +59,41 @@ describe('compareVersions', () => {
 })
 
 describe('parseVersionIndex', () => {
-  it('keeps well-formed entries and drops the rest', () => {
-    const raw = {
-      versions: [
-        { version: '1.2.3', tag: 'v1.2.3', archiveUrl: 'https://dshdesktop.com/updates/archive/1.2.3/' },
-        { version: '', tag: 'v0', archiveUrl: 'x' },
-        { nope: true },
-        42
-      ]
-    }
+  it('keeps only publishable GitHub releases with update metadata', () => {
+    const raw = [
+      {
+        tag_name: 'v1.2.3',
+        draft: false,
+        prerelease: false,
+        assets: [{ name: 'latest.yml' }]
+      },
+      {
+        tag_name: 'v1.3.0',
+        draft: false,
+        prerelease: false,
+        assets: [{ name: 'README.txt' }]
+      },
+      {
+        tag_name: 'v1.4.0',
+        draft: true,
+        prerelease: false,
+        assets: [{ name: 'latest.yml' }]
+      },
+      { tag_name: 'release-1.5.0', assets: [{ name: 'latest.yml' }] },
+      { nope: true },
+      42
+    ]
     expect(parseVersionIndex(raw)).toEqual([
-      { version: '1.2.3', tag: 'v1.2.3', archiveUrl: 'https://dshdesktop.com/updates/archive/1.2.3/' }
+      {
+        version: '1.2.3',
+        tag: 'v1.2.3',
+        archiveUrl: 'https://github.com/LightyearXizIl/DSH-Desktop/releases/download/v1.2.3/',
+        prerelease: false
+      }
     ])
   })
 
-  it('returns an empty array for non-objects or a missing versions array', () => {
+  it('returns an empty array for non-arrays', () => {
     expect(parseVersionIndex(null)).toEqual([])
     expect(parseVersionIndex({})).toEqual([])
     expect(parseVersionIndex('nope')).toEqual([])
@@ -73,13 +101,11 @@ describe('parseVersionIndex', () => {
 })
 
 describe('fetchAvailableReleases', () => {
-  const index = {
-    versions: [
-      { version: '1.0.0', tag: 'v1.0.0', archiveUrl: 'a' },
-      { version: '1.2.0', tag: 'v1.2.0', archiveUrl: 'b' },
-      { version: '1.1.0', tag: 'v1.1.0', archiveUrl: 'c' }
-    ]
-  }
+  const index = [
+    { tag_name: 'v1.0.0', assets: [{ name: 'latest.yml' }] },
+    { tag_name: 'v1.2.0', assets: [{ name: 'latest.yml' }] },
+    { tag_name: 'v1.1.0', assets: [{ name: 'latest.yml' }] }
+  ]
   const ok = () =>
     Promise.resolve({ ok: true, json: () => Promise.resolve(index) } as Response)
 
@@ -94,12 +120,12 @@ describe('fetchAvailableReleases', () => {
   })
 
   it('keeps prereleases below the running release in numeric order', async () => {
-    const response = () => Promise.resolve({ ok: true, json: async () => ({ versions: [
-      { version: '1.2.0-rc.9', tag: 'a', archiveUrl: 'a' },
-      { version: '1.2.0-rc.10', tag: 'b', archiveUrl: 'b' },
-      { version: '1.2.0', tag: 'c', archiveUrl: 'c' },
-      { version: '1.3.0', tag: 'd', archiveUrl: 'd' }
-    ] }) } as Response)
+    const response = () => Promise.resolve({ ok: true, json: async () => [
+      { tag_name: 'v1.2.0-rc.9', prerelease: true, assets: [{ name: 'latest.yml' }] },
+      { tag_name: 'v1.2.0-rc.10', prerelease: true, assets: [{ name: 'latest.yml' }] },
+      { tag_name: 'v1.2.0', assets: [{ name: 'latest.yml' }] },
+      { tag_name: 'v1.3.0', assets: [{ name: 'latest.yml' }] }
+    ] } as Response)
     const releases = await fetchAvailableReleases('1.2.0', response as unknown as typeof fetch)
     expect(releases.map(release => release.version)).toEqual(['1.2.0-rc.10', '1.2.0-rc.9'])
   })

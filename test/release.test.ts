@@ -13,7 +13,7 @@ const releaseAssets = [
 ]
 
 /** The exact Harness build every `@deepseek-ai/dsh-*` production dep is pinned to. */
-const HARNESS_VERSION = '0.2.1-rc.2'
+const HARNESS_VERSION = '0.2.1-rc.4'
 
 describe('GitHub release contract', () => {
   it('keeps the package and lockfile versions aligned', async () => {
@@ -302,7 +302,7 @@ describe('GitHub release contract', () => {
 
     expect(packageJson.dependencies['electron-updater']).toBeTruthy()
     expect(packageJson.build.publish).toEqual([
-      { provider: 'generic', url: 'https://dshdesktop.com/updates/latest/' }
+      { provider: 'github', owner: 'LightyearXizIl', repo: 'DSH-Desktop' }
     ])
     expect(packageJson.build.win.verifyUpdateCodeSignature).toBe(true)
     expect(packageJson.build.win.signtoolOptions.publisherName).toBe('Beijing Shuju Xiangsu Intelligence Technology Co., Ltd.')
@@ -582,7 +582,7 @@ describe('GitHub release contract', () => {
       expect(readme).not.toContain('| 平台 | 安装包 | 下载 |')
       expect(readme).not.toContain('Coming soon')
       expect(readme).not.toContain('即将发布')
-      expect(readme).toContain('https://github.com/dataelement/dsh-desktop/releases')
+      expect(readme).toContain('https://github.com/LightyearXizIl/DSH-Desktop/releases')
       expect(readme).toContain('**Pre-release**')
       for (const asset of releaseAssets) {
         expect(readme).not.toContain(`releases/latest/download/${asset}`)

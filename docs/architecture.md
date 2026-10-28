@@ -83,7 +83,7 @@ For reused or deferred legacy trees, startup reads bundle manifests and YAML lay
 
 A baseline market that cannot be installed — an offline or restricted network reports this as a pnpm fetch, 404 or EPERM failure — only blocks startup when the market already in the profile is absent, unreadable or still owned by a generation. Otherwise the boot continues on the installed market and the pending marker retries the repair on the next launch.
 
-Safe Mode uses the installation anchor for both host plugin imports and client bundle discovery, without requiring `profiles/node_modules`. The paired `dsh-app-boot` / `dsh-client-modules` patches target Harness `0.1.7-rc.1`: `mountRootInclude` publishes the explicit host anchor on the loader using `Symbol.for("dsh.desktop.host-module-base-url")`, and client discovery consumes it for bare package names only. Configuration-relative paths and ordinary profiles keep their existing resolution. This loader handoff is needed because client discovery otherwise re-resolves from the Profile tree; remove both hunks when upstream propagates an equivalent resolution anchor. Regression coverage includes the actual recovery subprocess's authenticated HTML and executable bootstrap, plus path-resolution behavior tests.
+Safe Mode uses the installation anchor for both host plugin imports and client bundle discovery, without requiring `profiles/node_modules`. The paired `dsh-app-boot` / `dsh-client-modules` patches target the pinned Harness baseline (`0.2.1-rc.4` as of Desktop 0.0.2): `mountRootInclude` publishes the explicit host anchor on the loader using `Symbol.for("dsh.desktop.host-module-base-url")`, and client discovery consumes it for bare package names only. Configuration-relative paths and ordinary profiles keep their existing resolution. This loader handoff is needed because client discovery otherwise re-resolves from the Profile tree; remove both hunks when upstream propagates an equivalent resolution anchor. Regression coverage includes the actual recovery subprocess's authenticated HTML and executable bootstrap, plus path-resolution behavior tests.
 
 Normal-profile Desktop patch insertions resolve from the actual bundled Harness entry, then use the same absolute source URLs for backend loading and client discovery. The patch file's directory is not a package anchor: installed patches live directly in `resources`, while runtime packages live in `resources/app.asar.unpacked/node_modules`. Missing host sources retain the package name, anchor and original resolution cause, and leave the previous generated patch intact.
 
@@ -109,5 +109,29 @@ Update metadata and artifacts are produced by the native release workflow. macOS
 ## Desktop customization boundary
 
 Most of the product UI remains upstream Harness. DSH Desktop adds native host surfaces through Electron Main and preload code, uses Harness extension slots where available, and tracks unavoidable upstream package changes as reproducible `patch-package` files. This keeps the desktop layer reviewable while making upstream upgrades an explicit compatibility exercise.
+
+The bundled `dsh-desktop-theme` plugin owns the glass appearance and its
+settings page. Its source is split by lifecycle and effect ownership under
+`packages/dsh-desktop-theme/src/client/`; `npm run theme:build` emits the single
+ModuleLoader bundle consumed by both normal and Safe Mode profiles. The host
+entry remains in `packages/dsh-desktop-theme/index.js`, and the generated
+`lib/` output is not a second source tree. The theme's settings stylesheet
+follows the plugin lifetime, while appearance styles, ambient layers, tokens,
+wallpapers, and effect loops follow the enabled state. Spotlight decoration
+must not change the active composer seat's upstream `sticky` positioning.
+The glass wrapper must preserve the upstream sidebar width, padding, margin and
+collapse position. Brand and New Session controls use explicit upstream marks
+instead of a generic labelled-button seam, and the Chat heading keeps Search,
+New Session and Collapse controls persistently visible.
+
+The shared `src/shared/assistant-speed.ts` module owns decode-speed derivation
+and formatting. Harness patches use its unique formatter name for the
+completed-answer action, and the composer statistics template appends the unit
+exactly once.
+
+Desktop-wide scrollbar hiding is a host UI policy, not a theme effect: the
+client UI stylesheet hides visible scrollbars and clips page-level horizontal
+overflow without disabling wheel or touchpad scrolling. Scrollable content
+must remain reachable through normal scrolling.
 
 Harness 0.1.7 replaces directory based `dsh-agent-presets` with Profile composition entries. Before launching the normal web Profile, Desktop converts valid user directories into those entries, backs up the original tree and Profile patch, and leaves the original directories untouched. Safe Mode continues to resolve its bundled preset and client packages from the installation anchor; the recovery subprocess regression creates a default-preset session through the authenticated RPC with `profiles/node_modules` absent.

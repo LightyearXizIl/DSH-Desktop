@@ -9,11 +9,24 @@ const Service = { tracker: Symbol('service-tracker') }
 const source = await readFile(new URL('../node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js', import.meta.url), 'utf8')
 const workbenchSource = await readFile(new URL('../packages/dsh-desktop-workbenches/client.js', import.meta.url), 'utf8')
 const classStart = source.indexOf('class extends', source.indexOf('var UiWorkspaceService ='))
-const classEnd = source.indexOf('\n\t\t};', classStart) + '\n\t\t};'.length
+const classEndMatch = /\r?\n\t\t};/.exec(source.slice(classStart))
+if (classEndMatch === null) throw new Error('Workspace service class end not found')
+const classEnd = classStart + classEndMatch.index + classEndMatch[0].length
+const helperStartMatch = /\r?\n\t\t\/\*\*\r?\n\t\t\* `error` as the Session Controller/.exec(source.slice(classEnd))
+if (helperStartMatch === null) throw new Error('Workspace helper start not found')
+const helperStart = classEnd + helperStartMatch.index + helperStartMatch[0].indexOf('/**')
+const helperEndMatch = /\r?\n\t\t\/\*\* Stable tie-breaking/.exec(source.slice(helperStart))
+if (helperEndMatch === null) throw new Error('Workspace helper end not found')
+const helperEnd = helperStart + helperEndMatch.index
 const recentStart = source.indexOf('function recentWorkspace(', classEnd)
-const recentEnd = source.indexOf('\n\t\t//#endregion', recentStart)
-if ([classStart, classEnd, recentStart, recentEnd].some(index => index < 0)) throw new Error('Workspace service extraction failed; check the installed Harness navigation module.')
+const recentEndMatch = /\r?\n\t\t\/\/#endregion/.exec(source.slice(recentStart))
+if (recentEndMatch === null) throw new Error('Workspace recent helper end not found')
+const recentEnd = recentStart + recentEndMatch.index
+if ([classStart, classEnd, helperStart, helperEnd, recentStart, recentEnd].some(index => index < 0)) {
+  throw new Error('Workspace service extraction failed; check the installed Harness navigation module.')
+}
 const UiWorkspaceService = vm.runInNewContext(`(() => {
+  ${source.slice(helperStart, helperEnd)}
   ${source.slice(recentStart, recentEnd)}
   return (${source.slice(classStart, classEnd).trim().replace(/;$/, '')})
 })()`, { _deepseek_ai_cordis: { Service: class {} }, AbortController, AbortSignal, console, setTimeout, clearTimeout })
@@ -38,6 +51,16 @@ function mainViewOf(sessionState) {
   return Object.keys(sessionState.byId).find(id => sessionState.byId[id].retainedBy?.mainView > 0)
 }
 
+function workspaceStateWithoutSessions(service) {
+  service.workspaces = {
+    list: {
+      getSnapshot: () => ({ phase: 'ready', items: [], archivedSessionIds: [], pinnedSessionIds: [] }),
+      subscribe: () => () => {}
+    },
+    delete: vi.fn(async () => {})
+  }
+}
+
 function fixture() {
   const service = Object.create(UiWorkspaceService.prototype)
   let navigation = new AbortController()
@@ -48,7 +71,11 @@ function fixture() {
   service.sessionStarter = null
   service.sessionOpener = null
   service.sessionReuseFilter = null
-  service.view = { markSessionRead: vi.fn() }
+  service.view = {
+    markSessionRead: vi.fn(),
+    markChatSession: vi.fn(),
+    unmarkChatSession: vi.fn()
+  }
   service.sessionFilter = null
   service.sessionFilterUnsubscribe = null
   service.workspaceFilter = null
@@ -227,7 +254,8 @@ describe('native Workspace navigation with workbench routing', () => {
   it('removes workspace folders that have no sessions in the active scope', () => {
     expect(source).toContain('sessionIds: workspace.sessionIds.filter(isSessionVisible)')
     expect(source).toContain('.filter((workspace) => workspace.sessionIds.length > 0)')
-    expect(source).toContain('if (g.sessions.length === 0) continue;')
+    expect(source).toContain('if (g.sessions.length === 0 && g.key !== "") continue;')
+    expect(source).toContain('rowKeys.push(group.workspaceId === void 0 ? "chat-heading" : `workspace:${group.key}`);')
   })
 
   it('registers one reactive sidebar session filter and restores all sessions on release', () => {
@@ -392,12 +420,16 @@ describe('native Workspace navigation with workbench routing', () => {
     sessionState.ids.push(blankId)
     sessionState.byId[blankId] = { id: blankId, sessionId: blankId, blank: true, cwd: '/project' }
     workspaceState.items[0].sessionIds.push(blankId)
+    const { controller, dispose } = attachWorkbenchRouting(service, sessionState, workspaceState)
+    controller.state.active = null
+    controller.state.sessionBindings[blankId] = 'media-workbench'
     service.startSession('project')
     await vi.waitFor(() => expect(service.sessions.retain).toHaveBeenCalledWith('new-session', { source: 'mainView' }))
     expect(service.sessions.create).toHaveBeenCalledWith({ workspaceId: 'project' })
     expect(service.sessions.retain).not.toHaveBeenCalledWith(blankId, { source: 'mainView' })
     expect(sessionState.byId['new-session']).toMatchObject({ blank: true, cwd: '/project' })
     expect(workspaceState.items[0].sessionIds).toContain('new-session')
+    dispose()
   })
 
   it('falls back to native New Session after the workbench is closed', async () => {
@@ -409,6 +441,137 @@ describe('native Workspace navigation with workbench routing', () => {
     expect(handler).toHaveBeenCalledWith('project')
     expect(service.sessions.create).toHaveBeenCalledWith({ workspaceId: 'project' })
     expect(service.ctx.layout.selectPanel).toHaveBeenCalledWith(null)
+  })
+
+  it('creates a Chat Session when no Workspace is selected', async () => {
+    const { service, sessionState } = fixture()
+    service.notify = vi.fn()
+    service.view.markChatSession = vi.fn()
+    service.view.unmarkChatSession = vi.fn()
+    workspaceStateWithoutSessions(service)
+    service.sessions.create = vi.fn(async ({ sessionId }) => {
+      const id = sessionId ?? 'new-session'
+      sessionState.ids.push(id)
+      sessionState.byId[id] = { id, sessionId: id, blank: true }
+      return id
+    })
+
+    service.startSession()
+    await vi.waitFor(() => expect(service.sessions.retain).toHaveBeenCalledWith('new-session', { source: 'mainView' }))
+
+    expect(service.sessions.create).toHaveBeenCalledWith({})
+    expect(service.view.markChatSession).toHaveBeenCalledWith('new-session')
+    expect(service.sessions.retain).not.toHaveBeenCalledWith('workbench-blank', { source: 'mainView' })
+    expect(sessionState.byId['new-session']).toMatchObject({ blank: true })
+  })
+
+  it('keeps a Workspace-selected New Session from switching into Chat', async () => {
+    const { service, sessionState, workspaceState } = fixture()
+    service.view.markChatSession = vi.fn()
+    service.view.unmarkChatSession = vi.fn()
+    sessionState.ids.push('current-workspace-session')
+    sessionState.byId['current-workspace-session'] = {
+      id: 'current-workspace-session', sessionId: 'current-workspace-session', cwd: '/project',
+      retainedBy: { mainView: 1 }
+    }
+    workspaceState.items[0].sessionIds.push('current-workspace-session')
+    service.mainReference = { sessionId: 'current-workspace-session' }
+    const starter = vi.fn(() => true)
+    service.registerSessionStarter(starter)
+
+    service.startSession()
+    await vi.waitFor(() => expect(starter).toHaveBeenCalledWith('project'))
+    expect(service.sessions.create).not.toHaveBeenCalled()
+    expect(service.view.markChatSession).not.toHaveBeenCalled()
+  })
+
+  it('opens an empty Chat Session instead of reusing the selected Workspace blank', async () => {
+    const { service, sessionState, workspaceState } = fixture()
+    service.notify = vi.fn()
+    service.view.markChatSession = vi.fn()
+    service.view.unmarkChatSession = vi.fn()
+    const current = 'workspace-blank'
+    sessionState.ids.push(current)
+    sessionState.byId[current] = {
+      id: current, sessionId: current, blank: true, cwd: '/project',
+      retainedBy: { mainView: 1 }
+    }
+    workspaceState.items[0].sessionIds.push(current)
+    service.mainReference = { sessionId: current }
+    service.sessions.create = vi.fn(async ({ sessionId }) => {
+      const id = sessionId ?? 'chat-session'
+      sessionState.ids.push(id)
+      sessionState.byId[id] = { id, sessionId: id, blank: true }
+      return id
+    })
+
+    service.startSession(void 0, { chat: true })
+    await vi.waitFor(() => expect(service.sessions.retain).toHaveBeenCalledWith('chat-session', { source: 'mainView' }))
+
+    expect(service.sessions.create).toHaveBeenCalledWith({})
+    expect(service.view.markChatSession).toHaveBeenCalledWith('chat-session')
+  })
+
+  it('submits a pre-session prompt as the first message of a Chat Session', async () => {
+    const { service, sessionState } = fixture()
+    service.notify = vi.fn()
+    service.view.markChatSession = vi.fn()
+    service.view.unmarkChatSession = vi.fn()
+    workspaceStateWithoutSessions(service)
+    service.sessions.create = vi.fn(async () => {
+      const id = 'chat-session'
+      sessionState.ids.push(id)
+      sessionState.byId[id] = { id, sessionId: id, blank: true }
+      return id
+    })
+    const calls = []
+    const binding = { sessionId: 'chat-session', ctx: { scope: 'chat-session' } }
+    service.sessions.binding = vi.fn(() => binding)
+    service.ctx.get = vi.fn(() => ({
+      input: {
+        requestDraftInitialization: vi.fn((_binding, options) => {
+          calls.push(['draft', options])
+          return 'applied'
+        }),
+        for: vi.fn((ctx) => {
+          expect(ctx).toBe(binding.ctx)
+          return {
+            submit: vi.fn((mode, source) => {
+              calls.push(['submit', mode, source])
+            })
+          }
+        })
+      }
+    }))
+
+    await service.startChatSession('  hello from chat  ')
+
+    expect(service.sessions.create).toHaveBeenCalledWith({})
+    expect(service.view.markChatSession).toHaveBeenCalledWith('chat-session')
+    expect(calls).toEqual([
+      ['draft', { prompt: 'hello from chat', clearPreviousDraft: true }],
+      ['submit', 'queue', 'click']
+    ])
+  })
+
+  it('prefers the current Workspace over Chat for a new Session', async () => {
+    const { service, sessionState, workspaceState } = fixture()
+    service.view.markChatSession = vi.fn()
+    service.view.unmarkChatSession = vi.fn()
+    sessionState.ids.push('current-workspace-session')
+    sessionState.byId['current-workspace-session'] = {
+      id: 'current-workspace-session', sessionId: 'current-workspace-session', cwd: '/project',
+      retainedBy: { mainView: 1 }
+    }
+    workspaceState.items[0].sessionIds.push('current-workspace-session')
+    service.mainReference = { sessionId: 'current-workspace-session' }
+
+    service.startSession()
+    await vi.waitFor(() => expect(service.sessions.retain).toHaveBeenCalledWith('new-session', { source: 'mainView' }))
+
+    expect(service.sessions.create).toHaveBeenCalledWith({ workspaceId: 'project' })
+    expect(service.view.unmarkChatSession).toHaveBeenCalledWith('new-session')
+    expect(service.view.markChatSession).not.toHaveBeenCalled()
   })
 
   it('leaves the active workbench when workspace navigation opens a session owned by a removed provider', async () => {
