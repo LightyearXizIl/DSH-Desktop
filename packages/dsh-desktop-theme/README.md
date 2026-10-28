@@ -45,6 +45,10 @@ not a glass surface, and the New Session button only changes its material while
 retaining the upstream `100cqw` centering content. Chat controls live on the
 Chat heading row and remain visible without hover.
 
+The floating card belongs on the layout's sidebar column, not the inner sidebar
+root. The inner root fills that card and supplies its content padding; the
+center column stays transparent so the whole fluid backdrop remains visible.
+
 Run `npm run theme:build` after client source changes, and
 `npm run typecheck` from the repository root to check both the desktop host
 code and this package's strict TypeScript sources.

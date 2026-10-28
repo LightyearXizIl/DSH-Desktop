@@ -10,8 +10,13 @@ export const THEME_RUNTIME_STYLES = String.raw`
   --dsh-desktop-glass-card-dark: color-mix(in srgb, rgb(34 38 47) calc(50% * var(--dsh-desktop-frost, 1)), transparent);
 }
 [data-dsh-desktop-theme] [data-dsh-desktop-frame],
+[data-dsh-desktop-theme] [data-dsh-desktop-center],
 [data-dsh-desktop-theme] [data-phase],
 [data-dsh-desktop-theme] [data-dsh-desktop-details] { background: transparent; }
+[data-dsh-desktop-theme] [data-dsh-desktop-center] {
+  border-left: 0;
+  box-shadow: none;
+}
 
 [data-dsh-desktop-float] [data-phase='active'] header {
   position: relative;
@@ -199,14 +204,13 @@ export const THEME_RUNTIME_STYLES = String.raw`
   background: var(--dsh-desktop-glass-card-dark);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 30px rgba(2, 6, 14, 0.32);
 }
-/* The sidebar root is the stable upstream content box; its parent column gets
-   the floating-glass treatment below. */
+/* The upstream layout owns the sidebar column; the stable inner root is its
+   content. Apply the floating glass to the column itself so the card spans
+   the full column and the inner root remains free to fill it. */
 [data-dsh-desktop-float] [data-dsh-desktop-sidebar] {
   position: relative;
   z-index: 9;
   box-sizing: border-box;
-  width: calc(100% - 24px);
-  height: calc(100% - 24px);
   margin: 12px;
   padding: 0;
   border: 1px solid rgba(19, 45, 83, 0.26);
@@ -215,7 +219,10 @@ export const THEME_RUNTIME_STYLES = String.raw`
   background: var(--dsh-desktop-glass-card-light);
   backdrop-filter: blur(var(--dsh-desktop-blur, 14px));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 10px 34px rgba(19, 45, 83, 0.16);
-  overflow: visible;
+  overflow: hidden;
+}
+[data-dsh-desktop-float] [data-dsh-desktop-sidebar] > [data-dsh-sidebar-root] {
+  padding: 10px 12px 14px;
 }
 [data-dsh-desktop-float] body[data-ds-dark-theme] [data-dsh-desktop-sidebar] {
   border-color: rgba(148, 180, 220, 0.32);
@@ -225,12 +232,13 @@ export const THEME_RUNTIME_STYLES = String.raw`
 }
 [data-dsh-desktop-float] [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-sidebar] {
   box-sizing: border-box;
-  width: calc(100% - 24px);
-  height: calc(100% - 24px);
-  margin: 12px;
+  margin: 12px -12px 12px 12px;
   padding: 0;
   border-radius: var(--dsw-radius-lg);
   transition: margin 150ms var(--ds-ease-in-out), border-radius 150ms var(--ds-ease-in-out), transform 0.1s ease-out;
+}
+[data-dsh-desktop-float] [data-dsh-desktop-frame]:not([data-sidebar-collapsed]) [data-dsh-sidebar-root] {
+  width: 100% !important;
 }
 [data-dsh-desktop-float] [data-dsh-desktop-inputbar] { padding-bottom: 12px; }
 [data-dsh-desktop-float] [data-composer-card] textarea::placeholder { color: rgb(55 64 84 / 0.5); }

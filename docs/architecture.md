@@ -123,6 +123,9 @@ The glass wrapper must preserve the upstream sidebar width, padding, margin and
 collapse position. Brand and New Session controls use explicit upstream marks
 instead of a generic labelled-button seam, and the Chat heading keeps Search,
 New Session and Collapse controls persistently visible.
+The glass card is applied to the layout-owned sidebar column; the inner sidebar
+root fills it and owns content padding. The center column remains transparent
+so the fluid backdrop is continuous behind the conversation.
 
 The shared `src/shared/assistant-speed.ts` module owns decode-speed derivation
 and formatting. Harness patches use its unique formatter name for the

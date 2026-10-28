@@ -109,6 +109,7 @@ const SEAMS: readonly Seam[] = [
   // the three-column frame without relying on a hashed class name.
   { attribute: 'data-dsh-desktop-sidebar', selector: '[data-dsh-sidebar-root]' },
   { attribute: 'data-dsh-desktop-frame', selector: '[data-dsh-desktop-sidebar]', closest: true },
+  { attribute: 'data-dsh-desktop-center', selector: '[data-dsh-desktop-center]', first: true },
   // The brand row is the only upstream control that must stay unglazed. The
   // new-session button is addressed separately so the brand never inherits a
   // generic "first labelled button" surface.
@@ -163,12 +164,13 @@ export function startSeamStamper(): () => void {
     if (queued !== 0) cancelAnimationFrame(queued)
     document.querySelectorAll('[data-dsh-desktop-frame], [data-dsh-desktop-surface], '
       + '[data-dsh-desktop-sidebar], [data-dsh-desktop-brand], [data-dsh-desktop-new-session], '
-      + '[data-dsh-desktop-conversation], [data-dsh-desktop-inputbar], [data-dsh-desktop-add], '
+      + '[data-dsh-desktop-center], [data-dsh-desktop-conversation], [data-dsh-desktop-inputbar], [data-dsh-desktop-add], '
       + '[data-dsh-desktop-spot]')
       .forEach((element) => {
         for (const attribute of [
           'data-dsh-desktop-frame',
           'data-dsh-desktop-sidebar',
+          'data-dsh-desktop-center',
           'data-dsh-desktop-surface',
           'data-dsh-desktop-brand',
           'data-dsh-desktop-new-session',
