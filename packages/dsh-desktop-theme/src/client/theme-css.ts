@@ -204,7 +204,10 @@ export const THEME_RUNTIME_STYLES = String.raw`
 [data-dsh-desktop-float] [data-dsh-desktop-sidebar] {
   position: relative;
   z-index: 9;
-  margin: 12px 12px 0;
+  box-sizing: border-box;
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
+  margin: 12px;
   padding: 0;
   border: 1px solid rgba(19, 45, 83, 0.26);
   border-right: 1px solid rgba(150, 190, 245, 0.65);
@@ -221,6 +224,9 @@ export const THEME_RUNTIME_STYLES = String.raw`
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 30px rgba(2, 6, 14, 0.32);
 }
 [data-dsh-desktop-float] [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-sidebar] {
+  box-sizing: border-box;
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
   margin: 12px;
   padding: 0;
   border-radius: var(--dsw-radius-lg);
