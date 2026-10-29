@@ -292,7 +292,7 @@ describe('GitHub release contract', () => {
       dependencies: Record<string, string>
       build: {
         publish: Array<{ provider: string; url?: string; owner?: string; repo?: string }>
-        win: { verifyUpdateCodeSignature: boolean; signtoolOptions: { publisherName: string } }
+        win: { verifyUpdateCodeSignature: boolean; signtoolOptions?: { publisherName?: string } }
       }
     }
     const workflow = await readFile(
@@ -304,8 +304,8 @@ describe('GitHub release contract', () => {
     expect(packageJson.build.publish).toEqual([
       { provider: 'github', owner: 'LightyearXizIl', repo: 'DSH-Desktop' }
     ])
-    expect(packageJson.build.win.verifyUpdateCodeSignature).toBe(true)
-    expect(packageJson.build.win.signtoolOptions.publisherName).toBe('Beijing Shuju Xiangsu Intelligence Technology Co., Ltd.')
+    expect(packageJson.build.win.verifyUpdateCodeSignature).toBe(false)
+    expect(packageJson.build.win.signtoolOptions).toBeUndefined()
     for (const asset of [
       'latest-mac-arm64.yml',
       'latest-mac-x64.yml',
