@@ -4,8 +4,8 @@
 </h1>
 
 <p align="center">
-  <strong>DSH Desktop by Dataelem</strong> é um aplicativo Agent para desktop desenvolvido pela equipe da Dataelem com base no framework DeepSeek Harness, disponível em edições de código aberto e empresarial.<br />
-  Site oficial：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a> · Repositório de código aberto：<a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
+  <strong>DSH Desktop</strong> é um cliente de desktop comunitário do DeepSeek Harness para Windows, desenvolvido e mantido de forma independente por NullPointer.<br />
+  Repositório de código aberto: <a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
 </p>
 
 <p align="center">
@@ -13,116 +13,108 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="Licença: MIT" src="https://img.shields.io/badge/License-MIT-171513.svg" /></a>
-  <img alt="macOS" src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel-171513.svg" />
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-171513.svg" /></a>
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
 </p>
 
-![DSH Desktop com Preset portáteis, provedores de modelos, controle pelo celular e geração de PPTX editáveis](docs/images/dsh-desktop-hero-v021.png)
+<p align="center"><strong>Use os modelos oficiais da DeepSeek ou provedores externos populares, gerencie Agent Presets portáteis, continue sessões do Harness pelo celular e transforme seus materiais em apresentações PPTX editáveis.</strong></p>
 
-<p align="center"><strong>Use modelos oficiais da DeepSeek ou provedores de terceiros populares, gerencie Agent Preset portáteis, continue suas sessões do Harness pelo celular e transforme materiais em apresentações PPTX editáveis.</strong></p>
-
-O DSH Desktop transforma a experiência local do DeepSeek Harness em um aplicativo desktop instalável. Ele inicia o Harness automaticamente, armazena Profile, plugins, espaços de trabalho, configurações de modelos e sessões fora do diretório do aplicativo e abre a interface completa quando o Runtime local está pronto.
+O DSH Desktop empacota o DeepSeek Harness local como um aplicativo de desktop instalável. Ele inicia o Harness automaticamente, guarda perfis, plugins, espaços de trabalho, configurações de modelos e sessões fora do diretório de instalação e abre a interface completa do Harness assim que o runtime local fica pronto.
 
 > [!IMPORTANT]
-> O DSH Desktop é uma versão inicial baseada no `@deepseek-ai/dsh@0.2.1-rc.4`, que evolui rapidamente. As versões para macOS são assinadas e notarizadas pela Apple. Os instaladores para Windows x64 também são assinados; os avisos de segurança do Windows podem diminuir gradualmente à medida que o editor acumula reputação de downloads e instalações.
+> O DSH Desktop é uma versão inicial baseada no `@deepseek-ai/dsh@0.2.1-rc.4`, que evolui rapidamente. O instalador para Windows x64 é uma compilação comunitária sem assinatura, por isso o Windows SmartScreen pode exibir um aviso na primeira execução. Este projeto não é um produto oficial da DeepSeek.
 
 ## Download
 
-Oferecemos versões estáveis e de prévia: a **versão estável**, recomendada para o uso diário, está disponível no [site oficial](https://www.dshdesktop.com/#download). Para experimentar uma **versão de prévia**, escolha uma versão marcada como **Pre-release** no [GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases).
+Baixe o `dsh-desktop-windows-x64-setup.exe` mais recente em [GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases). As versões marcadas como **Pre-release** são para quem quer testar novidades e podem ser incompatíveis com alguns plugins da comunidade.
 
-As versões de prévia incluem nossos novos recursos e adotam rapidamente as versões oficiais mais recentes do DeepSeek Harness. Elas podem ser incompatíveis com plugins da comunidade e **não são recomendadas para usuários em geral**. Quem quiser experimentar as novidades antecipadamente é bem-vindo a compartilhar comentários na comunidade; só distribuímos as atualizações para toda a comunidade após a validação desses usuários.
-
-As versões instaladas verificam atualizações logo após a inicialização e a cada seis horas. Quando há uma nova versão, o DSH Desktop pede confirmação antes do download; a instalação só começa ao escolher **Restart and install**. Também é possível verificar manualmente ou ignorar uma versão sem ocultar lançamentos futuros.
-
-## Comunidade
-
-<p align="center">
-  Leia o código QR abaixo com o WeChat para entrar no grupo do DSH Desktop.<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="Código QR do grupo do DSH Desktop no WeChat" /><br />
-  Você também pode entrar na <a href="https://discord.gg/7Xgf3qe3Qp">comunidade do DSH Desktop no Discord</a>.
-</p>
+O aplicativo instalado procura atualizações no GitHub Releases logo após a inicialização e a cada seis horas. Quando há uma nova versão, o DSH Desktop pergunta primeiro e mostra o registro de alterações dessa versão; o download só começa se você concordar, e a instalação só começa quando você escolhe **Reiniciar e instalar**. Você também pode verificar manualmente em **Configurações → Sobre** ou pular uma versão sem ocultar as próximas.
 
 ## O que o DSH Desktop acrescenta
 
-O DeepSeek Harness já fornece o Agent Runtime e a Web UI. O DSH Desktop acrescenta os recursos nativos necessários para um produto desktop:
+O DeepSeek Harness já oferece um runtime de agentes e uma interface web. O DSH Desktop acrescenta os recursos de um aplicativo de desktop:
 
-- Inicia e encerra o Harness sem uma CLI separada ou outra aba do navegador
-- Usa o seletor de diretórios do sistema para adicionar e gerenciar espaços de trabalho
-- Oferece suporte aos modelos oficiais da DeepSeek e a provedores de terceiros populares
-- Importa e exporta Agent Preset completos como [pacotes `.dshpreset`](docs/preset-packages.md) portáteis
-- Transforma materiais em apresentações PPTX editáveis por meio do modo PPT integrado
-- Inclui Python e bibliotecas de Office para criar e verificar DOCX, PPTX e XLSX offline no macOS e Windows
-- Preserva Profile, plugins, espaços de trabalho, sessões e configurações de modelos durante atualizações
-- Detecta falhas de inicialização e de plugins da interface, guarda diagnósticos e oferece recuperação guiada
-- Inclui um Modo de segurança não destrutivo que bloqueia temporariamente plugins de terceiros
-- Permite que um celular pareado continue sessões pela LAN ou por um túnel público temporário opcional
-- Verifica atualizações do aplicativo e mantém download e instalação sob controle do usuário
-- Adapta menus, barra de título, foco da janela, tema e marca para macOS e Windows
+- Inicia e encerra o Harness automaticamente, sem abrir uma CLI ou uma aba do navegador
+- Adiciona e gerencia espaços de trabalho de projetos pelo seletor de pastas nativo
+- Oferece suporte aos modelos oficiais da DeepSeek e aos principais provedores de modelos externos
+- Importa e exporta Agent Presets personalizados como [arquivos `.dshpreset`](docs/preset-packages.md) portáteis, verificando conflitos de nome e alertando sobre confiança antes de instalar
+- Gera apresentações PPTX editáveis a partir dos seus materiais com o modo PPT integrado
+- Inclui Python e bibliotecas do Office para criar e verificar DOCX, PPTX e XLSX offline
+- Mantém perfis, plugins, espaços de trabalho, sessões e configurações de modelos ao atualizar o aplicativo
+- Detecta falhas na inicialização do Harness ou em plugins do frontend, grava o diagnóstico em `harness.log` e oferece recuperação guiada
+- Oferece um modo de segurança que bloqueia temporariamente os plugins de terceiros sem danificar os dados do usuário
+- Permite que um celular pareado continue as sessões pela rede local ou por um túnel público temporário opcional
+- Inclui o tema Liquid Glass (modos Mica e de compatibilidade), uma animação de inicialização e a inicialização automática opcional de um modelo local
+- Verifica atualizações do desktop dentro do aplicativo e deixa você decidir se quer baixá-las e instalá-las
 
 ## Criação de PPT
 
-Ative o botão **PPT**, escolha um modelo e descreva a apresentação desejada. O catálogo inclui **16 modelos e 192 layouts**, com exportação para PPTX editável. As prévias são em inglês; as apresentações podem ser geradas em inglês ou chinês, com configurações de fontes para ambos. O idioma da prévia não determina o idioma do resultado.
+Clique em **PPT**, escolha um modelo e descreva o que deseja. O catálogo integrado tem **16 modelos e 192 layouts** e gera arquivos PPTX editáveis. As prévias dos modelos aparecem em inglês; o conteúdo pode ser gerado em chinês ou em inglês com as configurações de fonte correspondentes, e o idioma da prévia não define o idioma do resultado.
 
-O PPT vem pré-instalado e suas instruções automáticas se aplicam apenas às sessões com o botão PPT ativado. Consulte o [guia de PPT](packages/ppt-runtime/README.md) para detalhes sobre modelos, validação e fontes de referência.
+O recurso PPT vem pré-instalado, e suas instruções automáticas só valem nas sessões em que o botão PPT está selecionado. Modelos, validações e fontes de referência estão descritos nas [notas de PPT](packages/ppt-runtime/README.md).
 
 ## Acesso pelo celular
 
-Selecione **Connect Phone…** no menu `Harness` e leia o código. O desktop precisa aprovar explicitamente a conexão antes que o celular acesse as sessões.
+Escolha **Conectar celular…** no menu `Harness` e leia o QR code de pareamento.
 
-O Harness permanece em uma porta aleatória de `127.0.0.1`. O celular usa um Bridge separado e pareado: ele pode ficar restrito à rede local ou ativar um Cloudflare Quick Tunnel temporário para acesso remoto.
+- No Wi-Fi, basta ler o código para conectar.
+- Em um túnel de Internet, também é preciso digitar a senha de 6 dígitos exibida no computador. Por padrão, é uma senha temporária de 5 minutos mantida apenas na memória; uma senha permanente só é gerada neste computador se você concordar na janela **Conectar celular**.
 
-Se o Cloudflare não iniciar, o aplicativo tenta usar o Pinggy. Se o link do Cloudflare aparecer, mas o celular não conseguir abri-lo, selecione **Can’t open? Try another link** para mudar para o Pinggy.
+O Harness sempre roda em uma porta aleatória de `127.0.0.1`; o acesso pelo celular passa por uma ponte de pareamento separada. O Cloudflare Quick Tunnel é o caminho habitual para conexões longas. O Pinggy gratuito é a alternativa quando o Cloudflare não está disponível (por exemplo, na China continental) e expira em cerca de 60 minutos. Quando o desktop se desconecta, a sessão do celular termina.
+
+Se o Cloudflare não iniciar, o Pinggy é tentado. Se o link do Cloudflare estiver visível, mas o celular não conseguir abri-lo, toque em **Não abre? Tentar outra linha** para mudar para o Pinggy.
 
 ## Modo de segurança e recuperação
 
-Se um plugin de terceiros impedir a inicialização ou a renderização, o DSH Desktop relaciona as evidências do Runtime e do frontend aos plugins instalados e abre uma recuperação guiada.
+Se um plugin de terceiros impedir a inicialização ou a renderização, o DSH Desktop combina as informações do runtime e do frontend para identificar o plugin e abre uma página de recuperação guiada.
 
-Selecione **Restart as Safe Mode…** no menu `Harness` para iniciar um Profile isolado apenas com os Bundle oficiais principais. Os plugins externos do Profile normal ficam bloqueados, mas o Agent, as sessões, as configurações de modelos e os espaços de trabalho continuam disponíveis.
+Escolha **Reiniciar no modo de segurança…** no menu `Harness` para iniciar um perfil isolado que contém apenas os Bundles oficiais do núcleo. Os plugins de terceiros do perfil normal ficam bloqueados, mas agentes, sessões, configurações de modelos e espaços de trabalho continuam disponíveis. No aviso do modo de segurança, você pode desinstalar o plugin selecionado ou voltar à inicialização normal. A página de recuperação também procura atualizações compatíveis dos plugins, e o modo de segurança permite atualizá-los em lote.
 
-A tela de recuperação verifica se há atualizações compatíveis dos plugins e permite instalá-las quando disponíveis. O Modo de segurança também permite atualizar vários plugins de uma vez. Para obter ajuda, passe o cursor sobre **WeChat group** para exibir o QR code ou clique em **Discord** para abrir a comunidade.
+Se a interface normal não abrir, também é possível iniciar com `--safe-mode`, por exemplo no PowerShell:
 
-Se a interface normal não abrir, inicie o aplicativo com `--safe-mode`. No macOS:
-
-```sh
-open -a "DSH Desktop" --args --safe-mode
+```powershell
+& "$env:LOCALAPPDATA\Programs\DSH Desktop\DSH Desktop.exe" --safe-mode
 ```
+
+(Substitua o caminho se você instalou em outra pasta.)
 
 ## Dados locais e segurança
 
-- A Web UI do Harness é servida somente em uma porta de loopback aleatória.
-- O Renderer não tem privilégios de Node.js e usa Context Isolation e sandbox.
-- WebView, navegação interna não confiável e solicitações inesperadas de permissões são bloqueados.
-- Profile e sessões ficam nos dados de usuário do aplicativo, não no diretório de instalação.
-- O celular exige um Token de curta duração e aprovação explícita do desktop.
+- A interface web do Harness roda apenas em uma porta de loopback aleatória.
+- O renderer não tem acesso ao Node.js e roda com Context Isolation e Sandbox.
+- WebViews, navegação interna não confiável e pedidos de permissão inesperados são bloqueados.
+- Links web externos abrem no navegador do sistema.
+- Perfis e sessões ficam no diretório de dados de aplicativo por usuário do Electron, e não no diretório de instalação.
+- O acesso pelo celular exige um token de pareamento de curta duração. No Wi-Fi basta ler o código; em um túnel de Internet também é necessária a senha exibida no computador.
 
 ## Plataformas compatíveis
 
-| Plataforma | Distribuição | Status |
+| Plataforma | Formato | Status |
 | --- | --- | --- |
-| macOS Apple Silicon | DMG/ZIP assinados e notarizados | Compatível |
-| macOS Intel | DMG/ZIP assinados e notarizados | Compatível |
-| Windows x64 | Instalador NSIS assinado | Compatível |
-| Windows ARM64 | — | Não compatível atualmente |
-| Linux | — | Não compatível atualmente |
+| Windows x64 | Instalador NSIS sem assinatura | Compatível |
+| macOS | Os scripts de compilação estão no código, mas não há instaladores publicados | Não publicado |
+| Windows ARM64 / Linux | — | Sem suporte no momento |
 
-O Harness inclui dependências nativas, portanto cada artefato é compilado no sistema operacional e na arquitetura correspondentes.
+O Harness inclui dependências nativas de cada plataforma, por isso cada instalador precisa ser compilado no sistema operacional e na arquitetura de destino.
 
 ## Desenvolvimento e arquitetura
 
-- [Guia de desenvolvimento](docs/development.md) — configuração, validação, manutenção de patches e empacotamento nativo
-- [Arquitetura](docs/architecture.md) — Runtime, dados, segurança, recuperação, celular e atualizações
-- [Guia de lançamento](docs/release-runbook.md) — assinatura e controles de publicação
-- [Formato de pacote Preset](docs/preset-packages.md) — contrato de Agent Preset portátil
+A documentação do projeto começa no [índice de documentação](docs/README.md). As mais usadas:
 
-Antes de enviar alterações, execute `npm test`, `npm run typecheck` e `npm run build`, e teste o fluxo afetado no aplicativo real. Nunca inclua chaves de API reais em Issue, logs, capturas de tela ou dados de teste.
+- [Guia de desenvolvimento](docs/development.md) — ambiente local, validação, manutenção de patches e empacotamento nativo
+- [Arquitetura](docs/architecture.md) — inicialização, dados persistentes, limites de segurança, recuperação, acesso pelo celular e atualizações
+- [Procedimento de publicação](docs/release-runbook.md) — números de versão, empacotamento e publicação no GitHub Release
+- [Pacotes de Preset](docs/preset-packages.md) — o contrato dos Agent Presets portáteis
 
-## Projetos amigos
+Antes de enviar uma alteração, execute `npm test`, `npm run typecheck` e `npm run build` e teste o fluxo afetado no aplicativo. Nunca inclua chaves de API reais em issues, logs, capturas de tela ou dados de teste.
 
-[dsh-market](https://github.com/dsh-market/dsh-market) é o mercado comunitário de plugins do DeepSeek Harness. No Harness, você pode pesquisar e visualizar plugins, instalar ou atualizar pacotes, ativá-los ou desativá-los e mudar temas.
+## Projetos relacionados
+
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — o framework de agentes oficial da DeepSeek, de onde vêm o runtime e a interface web deste aplicativo.
+- [dsh-market](https://github.com/dsh-market/dsh-market) — o mercado comunitário de plugins do DeepSeek Harness para explorar, instalar e atualizar plugins dentro do Harness.
 
 ## Licença
 
-O DSH Desktop é distribuído sob a [Licença MIT](LICENSE).
+O DSH Desktop é de código aberto sob a [licença MIT](LICENSE).
 
-O DeepSeek Harness e suas dependências continuam sujeitos às respectivas licenças e políticas de marcas. O DSH Desktop é um aplicativo desktop comunitário independente.
+O DeepSeek Harness e suas dependências continuam sujeitos às próprias licenças e regras de marca. O DSH Desktop é um aplicativo de desktop comunitário independente e não tem vínculo com a DeepSeek.

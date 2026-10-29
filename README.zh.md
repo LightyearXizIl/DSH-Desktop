@@ -4,8 +4,8 @@
 </h1>
 
 <p align="center">
-  <strong>DSH Desktop by Dataelem</strong>（DSH 客户端）是 Dataelem 团队基于 DeepSeek Harness 框架打造的桌面 Agent 应用，提供开源版与企业版。<br />
-  官方网站：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a> · 开源仓库：<a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
+  <strong>DSH Desktop</strong> 是面向 Windows 的 DeepSeek Harness 社区桌面客户端，由 NullPointer 独立维护。<br />
+  开源仓库：<a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
 </p>
 
 <p align="center">
@@ -14,51 +14,38 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-171513.svg" /></a>
-  <img alt="macOS" src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel-171513.svg" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
 </p>
-
-![DSH Desktop 的 Preset、模型提供方、手机控制与可编辑 PPT 生成功能](docs/images/dsh-desktop-hero-v021.png)
 
 <p align="center"><strong>使用 DeepSeek 官方模型或主流第三方模型，管理可移植的 Agent Preset，在手机上继续 Harness 会话，并将材料生成可继续编辑的 PPTX。</strong></p>
 
 DSH Desktop 把本地 DeepSeek Harness 封装为可安装的桌面应用。它会自动启动 Harness，把 Profile、插件、工作区、模型配置和会话保存在应用安装目录之外，并在本地 Runtime 就绪后直接进入完整 Harness 界面。
 
 > [!IMPORTANT]
-> DSH Desktop 当前处于早期预览阶段，基于仍在快速迭代的 `@deepseek-ai/dsh@0.2.1-rc.4`。macOS 正式包已完成代码签名并通过 Apple 公证；Windows x64 安装包也已完成代码签名。随着下载量、安装量和发行者信誉逐步积累，Windows 安全提示会逐渐减少，但不会立即消失。
+> DSH Desktop 当前处于早期预览阶段，基于仍在快速迭代的 `@deepseek-ai/dsh@0.2.1-rc.4`。Windows x64 安装包是未签名的社区构建，首次运行时 Windows SmartScreen 可能给出提示。本项目不是 DeepSeek 官方产品。
 
 ## 下载安装
 
-我们提供稳定版和预览版：**稳定版**可在[官网](https://dshdesktop.com/zh/)下载，推荐日常使用；**预览版**可在 [GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases) 中选择标记为 **Pre-release** 的版本。
+在 [GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases) 下载最新的 `dsh-desktop-windows-x64-setup.exe`。标记为 **Pre-release** 的版本用于尝鲜，可能与部分社区插件不兼容。
 
-预览版除了包含我们的新增功能，还会积极跟进 DeepSeek Harness 官方最新版本，可能与社区插件不兼容，**不建议普通用户使用**。欢迎愿意尝鲜的用户体验并在社区反馈；经尝鲜用户验证后，我们才会向全体社区用户推送。
-
-安装版会在启动后及每六小时检查更新。发现新版本时，DSH Desktop 会先询问用户；同意后才开始下载，只有选择“重新启动并安装”后才会进入安装。你也可以从应用菜单手动检查，或跳过当前版本而不影响后续版本提示。
-
-## 加入社区
-
-<p align="center">
-  使用微信扫描下方二维码，加入 DSH Desktop 微信交流群。<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop 微信群二维码" /><br />
-  也可以加入 <a href="https://discord.gg/7Xgf3qe3Qp">DSH Desktop Discord 社区</a>。
-</p>
+安装版会在启动后及每六小时从 GitHub Releases 检查更新。发现新版本时，DSH Desktop 会先询问用户并展示该版本的更新日志；同意后才开始下载，只有选择“重新启动并安装”后才会进入安装。你也可以在“设置 → 关于”中手动检查，或跳过当前版本而不影响后续版本提示。
 
 ## DSH Desktop 带来了什么
 
-DeepSeek Harness 已经提供 Agent Runtime 与 Web UI。DSH Desktop 在此基础上补齐真正的桌面宿主能力：
+DeepSeek Harness 已经提供 Agent Runtime 与 Web UI。DSH Desktop 在此基础上补齐桌面宿主能力：
 
 - 自动启动和停止 Harness，不需要另开 CLI 或浏览器标签页
 - 通过系统原生目录选择器添加和管理项目工作区
 - 支持 DeepSeek 官方模型与主流第三方模型提供方
 - 将完整的自定义 Agent Preset 导入或导出为便携的 [`.dshpreset` 压缩包](docs/preset-packages.md)，安装前检查命名冲突并提示信任风险
 - 通过内置 PPT 模式将材料生成并交付为可继续编辑的 PPTX
-- 在 macOS 和 Windows 自带 Python 及 Office 库，支持离线生成和检查 DOCX、PPTX、XLSX
+- 自带 Python 及 Office 库，支持离线生成和检查 DOCX、PPTX、XLSX
 - 应用升级时保留 Profile、插件、工作区、会话和模型配置
 - 识别 Harness 启动或前端插件故障，把诊断写入 `harness.log` 并提供引导恢复入口
 - 提供不破坏用户数据的安全模式，临时屏蔽第三方插件
 - 让已配对的手机通过局域网或可选的临时公网隧道继续会话
+- 内置 Liquid Glass 主题（云母与兼容模式）、启动动画，以及可选的本地模型自动启动
 - 在应用内检查桌面更新，并由用户决定是否下载和安装
-- 针对 macOS 和 Windows 优化原生菜单、标题栏、窗口焦点、主题和品牌体验
 
 ## PPT 生成
 
@@ -81,15 +68,15 @@ Cloudflare 启动失败时会尝试 Pinggy。若已显示 Cloudflare 配对链�
 
 如果第三方插件导致启动或页面渲染异常，DSH Desktop 会结合 Runtime 与前端证据定位相关插件，并打开引导式恢复界面。
 
-从 `Harness` 菜单选择“以安全模式重启…”，应用会使用只包含官方核心 Bundle 的隔离 Profile 启动。正常 Profile 中的第三方插件会被屏蔽，但 Agent、会话、模型配置和工作区仍然可用。你可以从页面顶部的安全模式提示卸载选中的问题插件，或恢复正常启动。
+从 `Harness` 菜单选择“以安全模式重启…”，应用会使用只包含官方核心 Bundle 的隔离 Profile 启动。正常 Profile 中的第三方插件会被屏蔽，但 Agent、会话、模型配置和工作区仍然可用。你可以从页面顶部的安全模式提示卸载选中的问题插件，或恢复正常启动。恢复页面会检查插件是否有兼容更新，安全模式还支持批量升级。
 
-恢复页面会检查插件是否有兼容更新；有可用版本时，可升级对应插件，安全模式还支持批量升级。需要帮助时，鼠标悬停“**微信群**”即可显示二维码，点击 **Discord** 则会打开社区链接。
+当正常界面无法进入时，也可以通过 `--safe-mode` 启动，例如在 PowerShell 中：
 
-当正常界面无法进入时，也可以通过 `--safe-mode` 启动。例如 macOS：
-
-```sh
-open -a "DSH Desktop" --args --safe-mode
+```powershell
+& "$env:LOCALAPPDATA\Programs\DSH Desktop\DSH Desktop.exe" --safe-mode
 ```
+
+（如果安装时选择了其他目录，请替换为实际路径。）
 
 ## 本地数据与安全边界
 
@@ -104,31 +91,30 @@ open -a "DSH Desktop" --args --safe-mode
 
 | 平台 | 分发形式 | 状态 |
 | --- | --- | --- |
-| macOS Apple Silicon | 已签名并通过公证的 DMG/ZIP | 支持 |
-| macOS Intel | 已签名并通过公证的 DMG/ZIP | 支持 |
-| Windows x64 | 已完成代码签名的 NSIS 安装包 | 支持 |
-| Windows ARM64 | — | 当前不支持 |
-| Linux | — | 当前不支持 |
+| Windows x64 | 未签名的 NSIS 安装包 | 支持 |
+| macOS | 源码保留构建脚本，暂不发布安装包 | 未发布 |
+| Windows ARM64 / Linux | — | 当前不支持 |
 
-Harness 包含目标平台原生依赖，因此每一种正式安装包都在对应操作系统与架构上构建。
+Harness 包含目标平台原生依赖，因此每一种安装包都要在对应操作系统与架构上构建。
 
 ## 开发与架构
 
-欢迎参与贡献。工程说明已拆分为独立文档：
+完整的项目文档从 [文档总览](docs/README.md) 开始，常用的几份：
 
 - [开发指南](docs/development.md) — 本地环境、验证、补丁维护与原生平台打包
 - [运行架构](docs/architecture.md) — 启动流程、持久化数据、安全边界、故障恢复、手机连接与更新
-- [发布手册](docs/release-runbook.md) — 签名与正式发布控制
+- [发布手册](docs/release-runbook.md) — 版本号、打包与 GitHub Release 发布
 - [Preset 包格式](docs/preset-packages.md) — 可移植 Agent Preset 契约
 
 提交修改前请运行 `npm test`、`npm run typecheck` 和 `npm run build`，并实际操作受影响的应用流程。请勿在 Issue、日志、截图或测试数据中提交真实 API Key。
 
-## 友情链接
+## 相关项目
 
-[dsh-market](https://github.com/dsh-market/dsh-market) 是 DeepSeek Harness 社区插件市场，可在 Harness 界面中浏览和搜索插件、查看截图、安装或更新包、启停插件以及切换主题。
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — DeepSeek 官方 Agent 框架，本项目的运行时与 Web UI 来源。
+- [dsh-market](https://github.com/dsh-market/dsh-market) — DeepSeek Harness 社区插件市场，可在 Harness 界面中浏览、安装和更新插件。
 
 ## 许可证
 
 DSH Desktop 采用 [MIT License](LICENSE) 开源。
 
-DeepSeek Harness 及其依赖仍遵循各自的上游许可证与商标规则。DSH Desktop 是独立的社区桌面应用。
+DeepSeek Harness 及其依赖仍遵循各自的上游许可证与商标规则。DSH Desktop 是独立的社区桌面应用，与 DeepSeek 官方无隶属关系。

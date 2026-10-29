@@ -4,8 +4,8 @@
 </h1>
 
 <p align="center">
-  <strong>DSH Desktop by Dataelem</strong> は、Dataelem チームが DeepSeek Harness フレームワークを基盤に開発したデスクトップ Agent アプリケーションです。オープンソース版とエンタープライズ版を提供しています。<br />
-  公式サイト：<a href="https://www.dshdesktop.com/">www.dshdesktop.com</a> · オープンソースリポジトリ：<a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
+  <strong>DSH Desktop</strong> は、NullPointer が個人で開発・保守している Windows 向けの DeepSeek Harness コミュニティ製デスクトップクライアントです。<br />
+  オープンソースリポジトリ：<a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
 </p>
 
 <p align="center">
@@ -13,116 +13,108 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="ライセンス: MIT" src="https://img.shields.io/badge/License-MIT-171513.svg" /></a>
-  <img alt="macOS" src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel-171513.svg" />
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-171513.svg" /></a>
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
 </p>
 
-![ポータブル Preset、モデルプロバイダー、スマートフォン連携、編集可能な PPTX 生成を備えた DSH Desktop](docs/images/dsh-desktop-hero-v021.png)
+<p align="center"><strong>DeepSeek 公式モデルや主要なサードパーティモデルを使い、持ち運べる Agent Preset を管理し、スマートフォンから Harness セッションを続け、資料から編集可能な PPTX を作成できます。</strong></p>
 
-<p align="center"><strong>DeepSeek 公式モデルや主要なサードパーティーモデルを利用し、ポータブルな Agent Preset を管理し、スマートフォンから Harness セッションを続け、資料から編集可能な PPTX を生成できます。</strong></p>
-
-DSH Desktop は、ローカルの DeepSeek Harness をインストール可能なデスクトップアプリとして提供します。Harness を自動起動し、Profile、プラグイン、ワークスペース、モデル設定、セッションをアプリ本体とは別の場所に保存し、ローカル Runtime の準備が整うと完全な Harness 画面を開きます。
+DSH Desktop は、ローカルの DeepSeek Harness をインストール可能なデスクトップアプリとしてパッケージ化します。Harness を自動で起動し、Profile、プラグイン、ワークスペース、モデル設定、セッションをアプリのインストール先とは別の場所に保存し、ローカル Runtime の準備ができ次第 Harness の完全な画面を開きます。
 
 > [!IMPORTANT]
-> DSH Desktop は、急速に進化している `@deepseek-ai/dsh@0.2.1-rc.4` を基盤とする早期プレビューです。macOS 版はコード署名と Apple 公証済みです。Windows x64 インストーラーもコード署名済みですが、発行元のダウンロード・インストール実績が蓄積されるまでは Windows のセキュリティ警告が表示される場合があります。
+> DSH Desktop は、急速に進化している `@deepseek-ai/dsh@0.2.1-rc.4` を基盤とする早期プレビューです。Windows x64 インストーラーは署名なしのコミュニティビルドのため、初回起動時に Windows SmartScreen の警告が表示される場合があります。本プロジェクトは DeepSeek の公式製品ではありません。
 
 ## ダウンロード
 
-安定版とプレビュー版を提供しています。日常利用におすすめの**安定版**は[公式サイト](https://www.dshdesktop.com/#download)からダウンロードできます。**プレビュー版**を試す場合は、[GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases) で **Pre-release** と表示されたバージョンを選んでください。
+[GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases) から最新の `dsh-desktop-windows-x64-setup.exe` をダウンロードしてください。**Pre-release** と表示されたバージョンは先行版で、一部のコミュニティプラグインと互換性がない場合があります。
 
-プレビュー版には新機能に加え、DeepSeek Harness 公式の最新バージョンを積極的に取り込みます。コミュニティのプラグインと互換性がない場合があるため、**一般ユーザーにはおすすめしません**。いち早く試したい方は、ぜひコミュニティにフィードバックをお寄せください。先行ユーザーによる検証を経てから、コミュニティ全体に更新を配信します。
-
-インストール版は起動直後と 6 時間ごとに更新を確認します。新しいバージョンが見つかっても、同意するまでダウンロードは始まりません。ダウンロード後に **Restart and install** を選ぶとインストールします。アプリケーションメニューから手動確認したり、今のバージョンだけをスキップしたりすることもできます。
-
-## コミュニティ
-
-<p align="center">
-  下の QR コードを WeChat で読み取り、DSH Desktop コミュニティグループに参加してください。<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop WeChat グループの QR コード" /><br />
-  Discord を利用する場合は、<a href="https://discord.gg/7Xgf3qe3Qp">DSH Desktop Discord コミュニティ</a>にも参加できます。
-</p>
+インストール版は起動直後と 6 時間ごとに GitHub Releases の更新を確認します。新しいバージョンがあると、まず確認を求め、そのリリースの更新履歴を表示します。同意した後にだけダウンロードが始まり、「再起動してインストール」を選んだときにだけインストールします。「設定 → このアプリについて」から手動で確認したり、今後のバージョン通知を残したまま特定のバージョンをスキップしたりすることもできます。
 
 ## DSH Desktop が追加する機能
 
-DeepSeek Harness は Agent Runtime と Web UI を提供します。DSH Desktop は、その上にデスクトップ製品として必要なホスト機能を追加します。
+DeepSeek Harness はすでに Agent Runtime と Web UI を提供しています。DSH Desktop はその上にデスクトップホストとしての機能を加えます。
 
-- 別の CLI やブラウザータブを必要とせず Harness を起動・終了
-- OS 標準のディレクトリ選択画面でプロジェクトワークスペースを追加・管理
-- DeepSeek 公式モデルと主要なサードパーティーモデルプロバイダーに対応
-- カスタム Agent Preset 一式をポータブルな [`.dshpreset` パッケージ](docs/preset-packages.md)としてインポート・エクスポート
-- 内蔵の PPT モードで資料から編集可能な PPTX を生成・出力
-- macOS と Windows に Python と Office ライブラリを同梱し、DOCX・PPTX・XLSX のオフライン作成と検証に対応
-- アプリ更新後も Profile、プラグイン、ワークスペース、セッション、モデル設定を保持
-- Harness 起動時やフロントエンドのプラグイン障害を検出し、診断ログとガイド付き復旧を提供
-- サードパーティープラグインだけを一時停止する非破壊的なセーフモード
+- CLI やブラウザタブを別途開かずに Harness を自動で起動・停止
+- ネイティブのフォルダ選択ダイアログでプロジェクトワークスペースを追加・管理
+- DeepSeek 公式モデルと主要なサードパーティのモデルプロバイダーに対応
+- カスタム Agent Preset を持ち運べる [`.dshpreset` アーカイブ](docs/preset-packages.md)としてインポート・エクスポートし、インストール前に名前の衝突確認と信頼に関する警告を表示
+- 内蔵の PPT モードで資料から編集可能な PPTX を作成
+- Python と Office ライブラリを同梱し、DOCX、PPTX、XLSX をオフラインで作成・検査
+- アプリを更新しても Profile、プラグイン、ワークスペース、セッション、モデル設定を保持
+- Harness の起動失敗やフロントエンドプラグインの障害を検出し、`harness.log` に診断を記録して復旧手順を案内
+- ユーザーデータを壊さずにサードパーティプラグインを一時的に無効化するセーフモード
 - ペアリングしたスマートフォンから LAN または任意の一時公開トンネル経由でセッションを継続
-- デスクトップ更新の確認、ダウンロード、インストールをユーザーが管理
-- macOS と Windows 向けのメニュー、タイトルバー、フォーカス、テーマ、ブランド表示
+- Liquid Glass テーマ（マイカ／互換モード）、起動アニメーション、任意のローカルモデル自動起動を内蔵
+- アプリ内でデスクトップ版の更新を確認し、ダウンロードとインストールはユーザーが判断
 
 ## PPT 作成
 
-**PPT** ボタンを有効にし、テンプレートを選んで作成したい内容を入力します。**16 種類のテンプレート、192 種類のレイアウト**から、編集可能な PPTX を生成できます。プレビューは英語ですが、出力は英語・中国語に対応し、それぞれのフォント設定を備えています。プレビューの言語が出力言語を決めることはありません。
+**PPT** ボタンを押してテンプレートを選び、作りたい内容を説明します。内蔵の **16 テンプレート・192 レイアウト**から、編集可能な PPTX を出力します。テンプレートのプレビューは英語で表示されますが、生成内容は中国語と英語に対応し、それぞれに合ったフォント設定が使われます。プレビューの言語が出力言語を決めることはありません。
 
-PPT はプリインストールされており、自動指示は PPT ボタンを有効にしたセッションだけに適用されます。詳細と出典は [PPT ガイド](packages/ppt-runtime/README.md)を参照してください。
+PPT 機能は常にプリインストールされ、関連する自動プロンプトは PPT ボタンを選んだセッションでのみ有効になります。テンプレート、検証、参照元の詳細は [PPT の説明](packages/ppt-runtime/README.md)を参照してください。
 
 ## スマートフォン接続
 
-`Harness` メニューから **Connect Phone…** を選び、ペアリングコードを読み取ります。スマートフォンがセッションへアクセスする前に、デスクトップ側の明示的な承認が必要です。
+`Harness` メニューから「スマートフォンを接続…」を選び、ペアリング用の QR コードを読み取ります。
 
-Harness 自体はランダムな `127.0.0.1` ポートだけで動作します。スマートフォン接続には別のペアリング Bridge を使い、LAN 内に限定するか、遠隔利用時だけ一時的な Cloudflare Quick Tunnel を有効にできます。
+- Wi-Fi では読み取るだけで接続できます。
+- インターネットトンネルでは、さらにパソコンに表示される 6 桁の接続パスワードを入力します。既定はメモリ上だけに保持される 5 分間の一時パスワードで、「スマートフォンを接続」画面で同意した場合にだけ長期パスワードがこのパソコンに生成されます。
 
-Cloudflare の起動に失敗すると Pinggy を試します。Cloudflare のペアリングリンクが表示されてもスマートフォンで開けない場合は、**Can’t open? Try another link** を選んで Pinggy に切り替えられます。
+Harness 本体は常にランダムな `127.0.0.1` ポートで動作し、スマートフォンからのアクセスは独立したペアリング Bridge を経由します。Cloudflare Quick Tunnel が通常の長時間接続経路です。無料の Pinggy は Cloudflare が使えない場合（中国本土など）の予備経路で、約 60 分で失効します。デスクトップ側で切断すると、スマートフォンのセッションも終了します。
+
+Cloudflare の起動に失敗した場合は Pinggy を試します。Cloudflare のペアリングリンクが表示されているのにスマートフォンで開けない場合は、「**開けない場合は別の経路へ**」を押して Pinggy に切り替えられます。
 
 ## セーフモードと復旧
 
-サードパーティープラグインが起動や画面表示を妨げた場合、DSH Desktop は Runtime とフロントエンドの証拠から関連プラグインを特定し、ガイド付き復旧画面を開きます。
+サードパーティプラグインが原因で起動や画面描画に問題が起きた場合、DSH Desktop は Runtime とフロントエンドの両方の情報から原因のプラグインを特定し、案内付きの復旧画面を開きます。
 
-`Harness` メニューの **Restart as Safe Mode…** を選ぶと、公式コア Bundle だけを含む隔離 Profile で起動します。通常 Profile のサードパーティープラグインは停止しますが、Agent、セッション、モデル設定、ワークスペースは引き続き利用できます。
+`Harness` メニューから「セーフモードで再起動…」を選ぶと、公式コア Bundle だけを含む独立した Profile で起動します。通常 Profile のサードパーティプラグインは無効になりますが、Agent、セッション、モデル設定、ワークスペースは引き続き使えます。画面上部のセーフモード通知から、選んだ問題のプラグインをアンインストールしたり、通常起動に戻したりできます。復旧画面ではプラグインの互換更新も確認でき、セーフモードでは一括アップグレードにも対応しています。
 
-復旧画面では互換性のあるプラグイン更新を確認し、利用可能な場合は個別に更新できます。セーフモードでは一括更新も可能です。相談したい場合は **WeChat group** にマウスを合わせて QR コードを表示するか、**Discord** をクリックしてコミュニティを開いてください。
+通常の画面に入れない場合は `--safe-mode` で起動することもできます。PowerShell の例：
 
-通常画面を開けない場合は `--safe-mode` を指定できます。macOS の例：
-
-```sh
-open -a "DSH Desktop" --args --safe-mode
+```powershell
+& "$env:LOCALAPPDATA\Programs\DSH Desktop\DSH Desktop.exe" --safe-mode
 ```
+
+（別のフォルダにインストールした場合は実際のパスに置き換えてください。）
 
 ## ローカルデータとセキュリティ
 
-- Harness Web UI はランダムな loopback ポートだけで提供されます。
-- Renderer には Node.js 権限がなく、Context Isolation と sandbox を使用します。
-- WebView、信頼されていないアプリ内ナビゲーション、予期しない権限要求をブロックします。
-- Profile とセッションはインストール先ではなく、ユーザー別のアプリデータに保存されます。
-- スマートフォン接続には短時間だけ有効な Token とデスクトップ側の承認が必要です。
+- Harness の Web UI はランダムなループバックポートでのみ動作します。
+- Renderer には Node.js の権限がなく、Context Isolation と Sandbox が有効です。
+- WebView、信頼できないアプリ内遷移、想定外の権限要求はブロックされます。
+- 外部の Web リンクはシステムのブラウザで開きます。
+- Profile とセッションはインストール先ではなく、Electron のユーザー単位のアプリデータフォルダに保存されます。
+- スマートフォンからのアクセスには短時間有効なペアリング Token が必要です。Wi-Fi では読み取るだけで接続し、インターネットトンネルではさらにパソコンに表示されるパスワードが必要です。
 
 ## 対応プラットフォーム
 
 | プラットフォーム | 配布形式 | 状態 |
 | --- | --- | --- |
-| macOS Apple Silicon | 署名・公証済み DMG/ZIP | 対応 |
-| macOS Intel | 署名・公証済み DMG/ZIP | 対応 |
-| Windows x64 | コード署名済み NSIS インストーラー | 対応 |
-| Windows ARM64 | — | 未対応 |
-| Linux | — | 未対応 |
+| Windows x64 | 署名なしの NSIS インストーラー | 対応 |
+| macOS | ソースにビルドスクリプトのみ残しており、インストーラーは未配布 | 未配布 |
+| Windows ARM64 / Linux | — | 現在は非対応 |
 
-Harness にはターゲット固有のネイティブ依存関係が含まれるため、各リリースは対応する OS とアーキテクチャ上でビルドされます。
+Harness には対象プラットフォーム固有の依存関係が含まれるため、各インストーラーは対応する OS とアーキテクチャでビルドする必要があります。
 
 ## 開発とアーキテクチャ
 
-- [開発ガイド](docs/development.md) — セットアップ、検証、パッチ保守、ネイティブパッケージング
-- [アーキテクチャ](docs/architecture.md) — Runtime、データ、セキュリティ、復旧、スマートフォン接続、更新
-- [リリース手順](docs/release-runbook.md) — 署名と公開の管理
-- [Preset パッケージ形式](docs/preset-packages.md) — ポータブル Agent Preset の仕様
+プロジェクトの文書は[ドキュメント一覧](docs/README.md)から始まります。よく使うもの：
 
-変更を提出する前に `npm test`、`npm run typecheck`、`npm run build` を実行し、影響する実際のアプリ操作も確認してください。Issue、ログ、スクリーンショット、テストデータに本物の API キーを含めないでください。
+- [開発ガイド](docs/development.md) — ローカル環境、検証、パッチの保守、ネイティブ環境でのパッケージ化
+- [実行アーキテクチャ](docs/architecture.md) — 起動の流れ、保存データ、セキュリティ境界、障害復旧、スマートフォン接続、更新
+- [リリース手順](docs/release-runbook.md) — バージョン番号、パッケージ化、GitHub Release への公開
+- [Preset パッケージ形式](docs/preset-packages.md) — 持ち運べる Agent Preset の仕様
+
+変更を提出する前に `npm test`、`npm run typecheck`、`npm run build` を実行し、影響する操作を実際に試してください。Issue、ログ、スクリーンショット、テストデータに実際の API Key を含めないでください。
 
 ## 関連プロジェクト
 
-[dsh-market](https://github.com/dsh-market/dsh-market) は DeepSeek Harness のコミュニティプラグインマーケットです。Harness 画面からプラグインの検索、プレビュー、インストール、更新、有効化・無効化、テーマ変更を行えます。
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — DeepSeek 公式の Agent フレームワークで、本アプリの Runtime と Web UI の提供元です。
+- [dsh-market](https://github.com/dsh-market/dsh-market) — DeepSeek Harness のコミュニティプラグインマーケットで、Harness の画面内でプラグインの閲覧、インストール、更新ができます。
 
 ## ライセンス
 
-DSH Desktop は [MIT License](LICENSE) のもとで公開されています。
+DSH Desktop は [MIT License](LICENSE) で公開されています。
 
-DeepSeek Harness とその依存関係には、それぞれの上流ライセンスと商標ポリシーが適用されます。DSH Desktop は独立したコミュニティデスクトップアプリです。
+DeepSeek Harness とその依存関係には、それぞれのライセンスと商標規則が引き続き適用されます。DSH Desktop は独立したコミュニティ製デスクトップアプリであり、DeepSeek とは提携関係にありません。

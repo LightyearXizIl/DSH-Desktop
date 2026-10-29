@@ -1,6 +1,6 @@
 # DSH Desktop Release Notes
 
-本文件是发布说明的风格参考。CI 在生成 GitHub Release 正文时读取前 120 行作为 `<style-reference>`。手工维护，无需每次发布都更新。
+本文件是 GitHub Release 正文的写作风格参考，手工维护，无需每次发布都更新。正文内容与根目录 `CHANGELOG.md` 的对应版本条目保持一致，发布流程见 `docs/release-runbook.md`。
 
 写作约定：
 

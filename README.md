@@ -4,8 +4,8 @@
 </h1>
 
 <p align="center">
-  <strong>DSH Desktop by Dataelem</strong> is a desktop Agent application built by the Dataelem team on the DeepSeek Harness framework, available in open-source and enterprise editions.<br />
-  Website: <a href="https://www.dshdesktop.com/">www.dshdesktop.com</a> · Open-source repository: <a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
+  <strong>DSH Desktop</strong> is a community Windows desktop client for DeepSeek Harness, independently maintained by NullPointer.<br />
+  Open-source repository: <a href="https://github.com/LightyearXizIl/DSH-Desktop">LightyearXizIl/DSH-Desktop</a>
 </p>
 
 <p align="center">
@@ -14,121 +14,107 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-171513.svg" /></a>
-  <img alt="macOS" src="https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel-171513.svg" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-x64-171513.svg" />
 </p>
-
-![DSH Desktop overview with portable presets, model providers, phone control, and editable PPT generation](docs/images/dsh-desktop-hero-v021.png)
 
 <p align="center"><strong>Use official DeepSeek models or mainstream third-party providers, manage portable Agent presets, continue Harness sessions from your phone, and turn source material into editable PPTX decks.</strong></p>
 
 DSH Desktop packages the local DeepSeek Harness experience as an installed desktop application. It starts Harness automatically, keeps profiles, plugins, workspaces, model settings, and sessions outside the application directory, and opens the full Harness interface as soon as the local runtime is ready.
 
 > [!IMPORTANT]
-> DSH Desktop is an early preview built on the rapidly evolving `@deepseek-ai/dsh@0.2.1-rc.4`. macOS releases are code-signed and notarized by Apple. Windows x64 installers are code-signed; Windows security warnings may still decrease gradually as the publisher builds download and installation reputation.
+> DSH Desktop is an early preview built on the rapidly evolving `@deepseek-ai/dsh@0.2.1-rc.4`. The Windows x64 installer is an unsigned community build, so Windows SmartScreen may warn on first launch. This project is not an official DeepSeek product.
 
 ## Download
 
-We offer stable and preview releases: download the **stable release**, recommended for everyday use, from our [official website](https://www.dshdesktop.com/#download). To try a **preview release**, choose a version marked **Pre-release** on [GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases).
+Download the latest `dsh-desktop-windows-x64-setup.exe` from [GitHub Releases](https://github.com/LightyearXizIl/DSH-Desktop/releases). Versions marked **Pre-release** are for early adopters and may be incompatible with some community plugins.
 
-Preview releases include our newest features and closely track the latest official DeepSeek Harness versions. They may be incompatible with community plugins and are **not recommended for general users**. Early adopters are welcome to try them and share feedback in our community; we roll out updates to the wider community only after validation by early adopters.
-
-Installed builds check for updates shortly after startup and every six hours. When a new version is available, DSH Desktop asks before downloading it; installation begins only after you choose **Restart and install**. You can also check manually from the application menu or skip one version without hiding future releases.
-
-## Community
-
-<p align="center">
-  Scan the QR code below with WeChat to join the DSH Desktop community group.<br />
-  <img src="docs/images/wechat-group-20260815.png" width="220" alt="DSH Desktop WeChat group QR code" /><br />
-  Prefer Discord? <a href="https://discord.gg/7Xgf3qe3Qp">Join the DSH Desktop Discord community</a>.
-</p>
+Installed builds check GitHub Releases for updates shortly after startup and every six hours. When a new version is available, DSH Desktop asks first and shows that release's changelog; the download starts only after you agree, and installation begins only when you choose **Restart and install**. You can also check manually from **Settings → About**, or skip one version without hiding future releases.
 
 ## What DSH Desktop adds
 
-DeepSeek Harness already provides the Agent runtime and Web UI. DSH Desktop adds the native host capabilities needed for a practical desktop product:
+DeepSeek Harness already provides an agent runtime and a web UI. DSH Desktop adds the desktop host:
 
-- Starts and stops Harness without requiring a separate CLI or browser tab
-- Uses the native system directory picker to add and manage project workspaces
+- Starts and stops Harness automatically, without a separate CLI or browser tab
+- Adds and manages project workspaces through the native folder picker
 - Supports official DeepSeek models and mainstream third-party model providers
-- Imports and exports complete custom Agent presets as portable [`.dshpreset` packages](docs/preset-packages.md), with conflict checks and a trust warning before installation
-- Turns source material into editable PPTX decks through the built-in PPT mode
-- Includes offline DOCX, PPTX and XLSX skills with bundled Python libraries on macOS and Windows
-- Preserves profiles, plugins, workspaces, sessions, and model settings across app upgrades
-- Detects startup and frontend plugin failures, keeps diagnostics in `harness.log`, and offers guided recovery actions
+- Imports and exports complete custom Agent presets as portable [`.dshpreset` archives](docs/preset-packages.md), checking name conflicts and warning about trust before installation
+- Generates editable PPTX decks from source material through the built-in PPT mode
+- Bundles Python and Office libraries to create and check DOCX, PPTX and XLSX files offline
+- Keeps profiles, plugins, workspaces, sessions and model settings across application upgrades
+- Detects Harness startup or frontend plugin failures, writes diagnostics to `harness.log` and offers guided recovery
 - Provides a non-destructive Safe Mode that temporarily blocks third-party plugins
 - Lets a paired phone continue sessions over the local network or an optional temporary public tunnel
-- Checks for desktop updates and keeps download and installation under user control
-- Adapts native menus, titlebar behavior, window focus, theme, and application branding for macOS and Windows
+- Ships the Liquid Glass theme (mica and compatibility modes), a startup animation and optional local-model auto-start
+- Checks for desktop updates in the app and lets you decide whether to download and install them
 
 ## PPT generation
 
-Enable the **PPT** button, choose a template, and describe the deck you need. The built-in catalog includes **16 templates and 192 layouts** with editable PPTX output. Previews use English; decks can use English or Chinese, with corresponding font settings. Preview language does not determine output language.
+Click **PPT**, choose a template and describe what you want. The built-in catalog contains **16 templates and 192 layouts** and produces editable PPTX files. Template previews are shown in English; generated content can be Chinese or English with matching font settings, and the preview language does not decide the output language.
 
-PPT is preinstalled, and its automatic instructions apply only to sessions where the PPT button is enabled. See the [PPT runtime guide](packages/ppt-runtime/README.md) for templates, validation, and source acknowledgments.
+PPT stays preinstalled, and its automatic instructions apply only to sessions where the PPT button is selected. Templates, validation and reference sources are described in the [PPT runtime notes](packages/ppt-runtime/README.md).
 
 ## Phone access
 
-Choose **Connect Phone…** from the `Harness` menu and scan the pairing code.
+Choose **Connect phone…** from the `Harness` menu and scan the pairing QR code.
 
 - On Wi-Fi, scanning connects immediately.
-- Over the internet tunnel, the phone enters a 6-digit pairing password shown only on the computer. By default the password is temporary (5 minutes, memory only). A durable password is created only after you opt in on the Connect Phone window.
+- An internet tunnel also requires the 6-digit pairing password shown on the computer. By default it is a temporary password kept in memory for 5 minutes; a durable password is generated on this computer only after you opt in from the **Connect phone** window.
 
-Harness itself remains on a random `127.0.0.1` port. Phone access uses a separate paired bridge. Cloudflare Quick Tunnel is the usual long-lived remote path. Free Pinggy is the fallback when Cloudflare is unavailable (for example in mainland China) and expires after about 60 minutes. Disconnecting the phone from the desktop invalidates the mobile session.
+Harness itself always runs on a random `127.0.0.1` port; phone access goes through a separate pairing bridge. Cloudflare Quick Tunnel is the usual long-lived path. Free Pinggy is the fallback when Cloudflare is unavailable (for example in mainland China) and expires after about 60 minutes. When the desktop disconnects, the phone session ends.
 
-If Cloudflare fails to start, the app tries Pinggy. If a Cloudflare pairing link appears but your phone cannot open it, choose **Can’t open? Try another link** to switch to Pinggy.
+If Cloudflare fails to start, Pinggy is tried. If a Cloudflare pairing link is showing but the phone cannot open it, choose **Can't open? Try another link** to switch to Pinggy.
 
 ## Safe Mode and recovery
 
-If a third-party plugin interferes with startup or rendering, DSH Desktop can identify the implicated plugin from runtime and frontend evidence and open a guided recovery surface.
+If a third-party plugin breaks startup or rendering, DSH Desktop combines runtime and frontend evidence to identify the plugin and opens a guided recovery page.
 
-Choose **Restart as Safe Mode…** from the `Harness` menu to start an isolated profile containing only official core bundles. The Agent, sessions, model settings, and workspaces remain available while third-party plugins from the normal profile stay blocked. You can remove selected plugins or return to a normal launch from the Safe Mode banner.
+Choose **Restart in Safe Mode…** from the `Harness` menu to start an isolated profile containing only the official core bundles. Third-party plugins from the normal profile are blocked, while agents, sessions, model settings and workspaces stay available. From the Safe Mode banner you can uninstall the selected plugin or return to normal startup. The recovery page also checks for compatible plugin updates, and Safe Mode can upgrade several plugins at once.
 
-Recovery screens check for compatible plugin updates. When available, you can upgrade an affected plugin; Safe Mode also offers batch upgrades. For help, hover over **WeChat group** to display its QR code, or click **Discord** to open the community.
+If the normal interface cannot open, you can also start with `--safe-mode`, for example in PowerShell:
 
-If the normal interface cannot be reached, start DSH Desktop with `--safe-mode`. On macOS:
-
-```sh
-open -a "DSH Desktop" --args --safe-mode
+```powershell
+& "$env:LOCALAPPDATA\Programs\DSH Desktop\DSH Desktop.exe" --safe-mode
 ```
+
+(Replace the path if you installed to a different directory.)
 
 ## Local data and security
 
-- The Harness Web UI is served only on a random loopback port.
-- The renderer has no Node.js privileges and uses context isolation and sandboxing.
-- Webviews, untrusted in-app navigation, and unexpected permission requests are blocked.
+- The Harness web UI runs only on a random loopback port.
+- The renderer has no Node.js access and runs with context isolation and sandboxing.
+- Webviews, untrusted in-app navigation and unexpected permission requests are blocked.
 - External web links open in the system browser.
-- User profiles and sessions live under Electron's per-user application data directory, not inside the installed app.
-- Phone access requires a short-lived pairing token. Wi-Fi connects on scan; the internet tunnel also requires the pairing password shown on the computer.
+- Profiles and sessions live in Electron's per-user application data directory, not in the installation directory.
+- Phone access requires a short-lived pairing token. Wi-Fi scanning connects directly; an internet tunnel also requires the password shown on the computer.
 
 ## Platform support
 
-| Platform | Distribution | Status |
+| Platform | Package | Status |
 | --- | --- | --- |
-| macOS Apple Silicon | Signed and notarized DMG/ZIP | Supported |
-| macOS Intel | Signed and notarized DMG/ZIP | Supported |
-| Windows x64 | Code-signed NSIS installer | Supported |
-| Windows ARM64 | — | Not currently supported |
-| Linux | — | Not currently supported |
+| Windows x64 | Unsigned NSIS installer | Supported |
+| macOS | Build scripts kept in source; no installers published | Not published |
+| Windows ARM64 / Linux | — | Not supported |
 
-Harness includes target-native dependencies, so every release artifact is built on the matching operating system and architecture.
+Harness contains platform-native dependencies, so every installer must be built on its target operating system and architecture.
 
 ## Development and architecture
 
-Contributions are welcome. Start with the public engineering documentation:
+The full project documentation starts at the [documentation index](docs/README.md). The most used documents:
 
-- [Development guide](docs/development.md) — setup, validation, patch maintenance, and target-native packaging
-- [Architecture](docs/architecture.md) — runtime flow, persistent data, security boundaries, recovery, mobile access, and updates
-- [Release runbook](docs/release-runbook.md) — signing and publication controls
-- [Preset package format](docs/preset-packages.md) — portable Agent preset contract
+- [Development guide](docs/development.md) — local setup, validation, patch maintenance and native packaging
+- [Architecture](docs/architecture.md) — startup, persisted data, security boundaries, recovery, phone access and updates
+- [Release runbook](docs/release-runbook.md) — versioning, packaging and GitHub Release publication
+- [Preset packages](docs/preset-packages.md) — the portable Agent preset contract
 
-Before submitting a change, run `npm test`, `npm run typecheck`, and `npm run build`, then exercise the affected real application flow. Never include real API keys in issues, logs, screenshots, or test data.
+Run `npm test`, `npm run typecheck` and `npm run build` before submitting a change, and exercise the affected application flow. Never include real API keys in issues, logs, screenshots or test data.
 
-## Friends
+## Related projects
 
-[dsh-market](https://github.com/dsh-market/dsh-market) is the community plugin market for DeepSeek Harness. Browse and search plugins, preview screenshots, install or update packages, enable or disable plugins, and switch themes from the Harness interface.
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) — the official DeepSeek agent framework that provides this app's runtime and web UI.
+- [dsh-market](https://github.com/dsh-market/dsh-market) — the DeepSeek Harness community plugin market for browsing, installing and updating plugins inside Harness.
 
 ## License
 
 DSH Desktop is open source under the [MIT License](LICENSE).
 
-DeepSeek Harness and its dependencies remain subject to their respective upstream licenses and trademark policies. DSH Desktop is an independent community desktop application.
+DeepSeek Harness and its dependencies remain subject to their own upstream licenses and trademark rules. DSH Desktop is an independent community desktop application and is not affiliated with DeepSeek.

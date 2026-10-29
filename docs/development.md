@@ -1,12 +1,12 @@
 # DSH Desktop development guide
 
-This guide covers local development, validation, patch maintenance, and target-native packaging. For the runtime design, see [Architecture](architecture.md). For formal releases, see the [release runbook](release-runbook.md).
+This guide covers local development, validation, patch maintenance, and target-native packaging. It is part of the [documentation index](README.md). For the runtime design, see [Architecture](architecture.md). For releases, see the [release runbook](release-runbook.md).
 
 ## Prerequisites
 
 - Node.js 22 or later
 - npm
-- macOS on Apple Silicon or Intel, or Windows x64
+- Windows x64 (published target); macOS on Apple Silicon or Intel can still run the source build scripts
 
 This baseline pins `@deepseek-ai/dsh@0.2.1-rc.4`. Windows packages run Harness in Electron Node mode, while macOS uses an Electron UtilityProcess. Both are independent of the Node.js version used to run development commands.
 
@@ -14,7 +14,7 @@ This baseline pins `@deepseek-ai/dsh@0.2.1-rc.4`. Windows packages run Harness i
 
 ```bash
 git clone https://github.com/LightyearXizIl/DSH-Desktop.git
-cd dsh-desktop
+cd DSH-Desktop
 npm ci
 npm run dev
 ```
@@ -68,8 +68,19 @@ patches/                  Reproducible patches for the pinned Harness packages
 build/                    Packaged HTML, icons, loaders, and Harness entry files
 scripts/                  Build, signing, metadata, and target verification tools
 test/                     Unit and source-contract regression coverage
-.github/workflows/        Native CI, signing, release, and publication workflows
+.github/workflows/        Inherited CI workflows (not part of the current release flow; see the release runbook)
 ```
+
+## Built-in theme
+
+The Liquid Glass theme source lives in `packages/dsh-desktop-theme/src/client/`.
+Edit those TypeScript modules, not the generated
+`packages/dsh-desktop-theme/lib/client.js`. Run `npm run theme:build` after
+client source changes; `npm run build` and the test pre-hooks also rebuild it.
+Theme CSS must preserve upstream layout geometry and use Harness design tokens
+and controls instead of global border-radius overrides. The host-owned update
+and About dialogs are also part of the theme contract and must use the same
+progress percentage for copy, ARIA values and the visual fill.
 
 ## Maintaining upstream patches
 
@@ -130,9 +141,9 @@ version.
 
 Do not invoke `electron-builder --win` from macOS or Linux for a distributable Windows package. The target verification scripts intentionally reject host/target mismatches.
 
-For local unsigned development packages, use the corresponding `package:dev:*` command. Packages run Harness and package commands through the packaged Electron runtime (a utility process and the Helper in Node mode on macOS, the executable in Node mode on Windows); no standalone `node_modules/node` may be present under `app.asar.unpacked`. Verify the packaged native-module, pnpm and Harness smokes, then the final signed installer's separate installed-app smoke before handoff. Office preparation is included in dev, build and test: it fetches hash-locked native Python and wheels into `.build/office-runtime`, outside ASAR, and ships no second Node runtime. See [Office runtime](office-runtime.md). The locked Electron 43.0.0 must remain compatible with the native loader: `scripts/verify-target.mjs` fails packaging when Electron in Node mode cannot load it, and changing Electron still requires a new Windows package qualification. Before packaging, `node scripts/probe-electron-node-runtime.mjs` boots Harness from the repository through Electron Node mode with a disposable `DSH_HOME` and checks an authenticated HTTP response; the Windows CI job runs it on every build.
+For local unsigned development packages, use the corresponding `package:dev:*` command. Packages run Harness and package commands through the packaged Electron runtime (a utility process and the Helper in Node mode on macOS, the executable in Node mode on Windows); no standalone `node_modules/node` may be present under `app.asar.unpacked`. Verify the packaged native-module, pnpm and Harness smokes, then install the final installer and start it once before handoff. Office preparation is included in dev, build and test: it fetches hash-locked native Python and wheels into `.build/office-runtime`, outside ASAR, and ships no second Node runtime. See [Office runtime](office-runtime.md). The locked Electron 43.0.0 must remain compatible with the native loader: `scripts/verify-target.mjs` fails packaging when Electron in Node mode cannot load it, and changing Electron still requires a new Windows package qualification. Before packaging, `node scripts/probe-electron-node-runtime.mjs` boots Harness from the repository through Electron Node mode with a disposable `DSH_HOME` and checks an authenticated HTTP response; run it before every Windows package.
 
-Formal release artifacts are built, signed, and published by the tag workflow. A local build or pull-request check is not formal release evidence.
+Releases are built locally on Windows x64 and published as GitHub Release assets; the steps are in the [release runbook](release-runbook.md). A successful local build is not a release until the installer, `latest.yml` and blockmap are uploaded.
 
 ## Contribution hygiene
 

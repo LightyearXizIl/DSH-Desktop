@@ -1,6 +1,6 @@
 # DSH Desktop architecture
 
-DSH Desktop is an Electron host for the existing DeepSeek Harness runtime and Web UI. It does not maintain a second agent runtime or reimplement the Harness frontend.
+DSH Desktop is an Electron host for the existing DeepSeek Harness runtime and Web UI. It does not maintain a second agent runtime or reimplement the Harness frontend. This document is part of the [documentation index](README.md).
 
 ## Runtime topology
 
@@ -83,7 +83,7 @@ For reused or deferred legacy trees, startup reads bundle manifests and YAML lay
 
 A baseline market that cannot be installed — an offline or restricted network reports this as a pnpm fetch, 404 or EPERM failure — only blocks startup when the market already in the profile is absent, unreadable or still owned by a generation. Otherwise the boot continues on the installed market and the pending marker retries the repair on the next launch.
 
-Safe Mode uses the installation anchor for both host plugin imports and client bundle discovery, without requiring `profiles/node_modules`. The paired `dsh-app-boot` / `dsh-client-modules` patches target the pinned Harness baseline (`0.2.1-rc.4` as of Desktop 0.0.2): `mountRootInclude` publishes the explicit host anchor on the loader using `Symbol.for("dsh.desktop.host-module-base-url")`, and client discovery consumes it for bare package names only. Configuration-relative paths and ordinary profiles keep their existing resolution. This loader handoff is needed because client discovery otherwise re-resolves from the Profile tree; remove both hunks when upstream propagates an equivalent resolution anchor. Regression coverage includes the actual recovery subprocess's authenticated HTML and executable bootstrap, plus path-resolution behavior tests.
+Safe Mode uses the installation anchor for both host plugin imports and client bundle discovery, without requiring `profiles/node_modules`. The paired `dsh-app-boot` / `dsh-client-modules` patches target the pinned Harness baseline (`0.2.1-rc.4` as of Desktop 0.0.3): `mountRootInclude` publishes the explicit host anchor on the loader using `Symbol.for("dsh.desktop.host-module-base-url")`, and client discovery consumes it for bare package names only. Configuration-relative paths and ordinary profiles keep their existing resolution. This loader handoff is needed because client discovery otherwise re-resolves from the Profile tree; remove both hunks when upstream propagates an equivalent resolution anchor. Regression coverage includes the actual recovery subprocess's authenticated HTML and executable bootstrap, plus path-resolution behavior tests.
 
 Normal-profile Desktop patch insertions resolve from the actual bundled Harness entry, then use the same absolute source URLs for backend loading and client discovery. The patch file's directory is not a package anchor: installed patches live directly in `resources`, while runtime packages live in `resources/app.asar.unpacked/node_modules`. Missing host sources retain the package name, anchor and original resolution cause, and leave the previous generated patch intact.
 
@@ -102,9 +102,22 @@ The public tunnel is optional and forwards only the paired mobile surface; it do
 
 ## Updates
 
-Installed macOS and Windows builds use `electron-updater`. The app checks shortly after startup, every six hours, and after a long system resume. A newly available version is offered before download. Download begins only after user consent, and installation begins only when the user chooses to restart and install. Users can skip one version without suppressing later releases.
+Installed builds use `electron-updater`. The app checks shortly after startup, every six hours, and after a long system resume. A newly available version is offered before download. Download begins only after user consent, and installation begins only when the user chooses to restart and install. Users can skip one version without suppressing later releases.
 
-Update metadata and artifacts are produced by the native release workflow. macOS arm64 and x64 metadata is merged for the generic provider; the signed Windows installer has its blockmap and metadata regenerated after signing.
+The update source is the public GitHub Releases API of `LightyearXizIl/DSH-Desktop` (`src/main/update/version-catalog.ts`). The client picks the newest non-draft release whose assets include the platform metadata (`latest.yml` on Windows), points the feed at that release's download directory, and shows the release body as the changelog. A stable installation ignores prereleases. Installing an older version from the history list temporarily enables downgrade for that one check and download.
+
+Windows installers are unsigned personal builds. `package.json` sets `win.verifyUpdateCodeSignature: false` and declares no `signtoolOptions.publisherName`, so packaged builds write no publisher into `resources/app-update.yml` and electron-updater skips the Authenticode check. Update integrity relies on the `sha512` in `latest.yml` and the HTTPS GitHub download.
+
+The update and About dialogs are preload-owned surfaces mounted under
+`document.body`, not `document.documentElement`, so they inherit Harness design
+tokens. Mica mode renders them as glass cards with the official panel radius
+and theme blur; compatibility mode and the disabled theme keep the official
+solid card. `updatePercent()` is the single integer source for progress copy,
+`aria-valuenow`, `aria-valuetext` and the visual fill width.
+
+## Crash reporting
+
+Packaged builds start `src/main/desktop-service` after the single-instance lock. Failures (`startup-failure`, `harness-crash`, `renderer-crash`, `gpu-crash`, `main-crash`) are queued under `<userData>/desktop-service/outbox` with the version, platform, failure kind and at most the last 100 redacted log lines; at most 50 reports are kept. Every report needs explicit consent in a native dialog before its single upload attempt, refusal discards it, and nothing is retried. A leftover session marker alone is not reported. The upload address in the current code is still the inherited `https://…/crash` endpoint (`SERVICE_URL` in `service.ts`), which this project does not operate; see the [known issues](README.md#已知遗留问题).
 
 ## Desktop customization boundary
 
@@ -121,11 +134,51 @@ wallpapers, and effect loops follow the enabled state. Spotlight decoration
 must not change the active composer seat's upstream `sticky` positioning.
 The glass wrapper must preserve the upstream sidebar width, padding, margin and
 collapse position. Brand and New Session controls use explicit upstream marks
-instead of a generic labelled-button seam, and the Chat heading keeps Search,
-New Session and Collapse controls persistently visible.
-The glass card is applied to the layout-owned sidebar column; the inner sidebar
-root fills it and owns content padding. The center column remains transparent
-so the fluid backdrop is continuous behind the conversation.
+instead of a generic labelled-button seam. On Windows, the collapse toggle is
+seated in the brand row ahead of the logo so it does not overlap the brand mark;
+when collapsed, the zero-width sidebar column clears its card background and
+filter so the fixed caption rail button remains unclipped.
+
+Floating panes (sidebar column, active conversation header, composer card,
+trajectory card) paint their glass on a `::before` plate, so no pane carries a
+`backdrop-filter` of its own. The hover tilt writes an inline `transform` on the
+whole pane so its text tilts with the card. Because a transform makes the pane
+the containing block for its `position: fixed` descendants, the spotlight snaps
+the pane flat as soon as a tooltip, menu, listbox or dialog mounts inside it and
+does not tilt it again until that overlay is gone. The sidebar tilts with the
+other panes, rests while the settings overlay is open over it, and never tilts
+as the collapsed rail.
+
+Liquid Glass publishes its material (tint, opacity floor, stroke, shadow, bubble,
+switch colours) as theme override tokens with light and dark values, so panes
+follow the active scheme without hand-written dark selectors. Pane opacity
+starts at a legibility floor and frost only adds to it;
+`test/desktop-theme-contrast.test.ts` checks text contrast over every fluid
+bloom. In mica mode pages float on one content pane. An active conversation's
+transcript has no pane and reads on the backdrop under its floating header; the
+trajectory view is its own glass card that ends above the composer. The hero
+stays on the bare backdrop. Compatibility mode keeps the native columns and
+gives the sidebar and center full-bleed glass.
+
+The glass card is applied to the layout-owned sidebar column (`pI_x6G_sidebarCol`),
+using `paintBox` to unwrap `display: contents` slot wrappers; the inner sidebar
+root fills it and owns content padding. The center column itself stays
+transparent so the fluid backdrop is continuous between the panes. The layout patch
+renders `data-dsh-desktop-center` on `CenterColumn`; theme unmount must never
+strip this attribute because React owns it and would not re-render it on
+subsequent theme toggles.
+
+Deep surfaces also expose the fluid backdrop: the trajectory view
+(`data-dsh-desktop-trajectory` in `dsh-client-ui-trajectory`) and right sidebar
+(`data-sidebar-right-session` in `dsh-client-ui-sidebar-right`) have their
+`--dsw-alias-bg-layer-1` and base backgrounds re-pointed to transparent. The
+Chat section heading aligns with the Workspace section header: no leading
+glyph, a quiet section title, and actions ordered as search, collapse, and
+new session at the end.
+
+The bundled `dsh-startup-screen` plugin defaults to author credentials:
+identity `NullPointer`, identity ID `007`, and access level `01`, configured
+identically across host defaults, client fallback, and preview documents.
 
 The shared `src/shared/assistant-speed.ts` module owns decode-speed derivation
 and formatting. Harness patches use its unique formatter name for the
@@ -137,4 +190,4 @@ client UI stylesheet hides visible scrollbars and clips page-level horizontal
 overflow without disabling wheel or touchpad scrolling. Scrollable content
 must remain reachable through normal scrolling.
 
-Harness 0.1.7 replaces directory based `dsh-agent-presets` with Profile composition entries. Before launching the normal web Profile, Desktop converts valid user directories into those entries, backs up the original tree and Profile patch, and leaves the original directories untouched. Safe Mode continues to resolve its bundled preset and client packages from the installation anchor; the recovery subprocess regression creates a default-preset session through the authenticated RPC with `profiles/node_modules` absent.
+Harness 0.1.7 introduced Profile composition entries in place of directory based `dsh-agent-presets`, and the pinned baseline retains that model. Before launching the normal web Profile, Desktop converts valid user directories into those entries, backs up the original tree and Profile patch, and leaves the original directories untouched. Safe Mode continues to resolve its bundled preset and client packages from the installation anchor; the recovery subprocess regression creates a default-preset session through the authenticated RPC with `profiles/node_modules` absent.

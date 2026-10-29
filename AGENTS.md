@@ -1,6 +1,6 @@
 # DSH Desktop 开发约束
 
-本文件适用于整个仓库；目录级 `AGENTS.md` 只补充该目录的规则。规则放在能覆盖其作用域的最深层，不重复维护。新增约束与现状、工具覆盖的区别见 [规范设计说明](docs/code-standards.md)。
+本文件适用于整个仓库；目录级 `AGENTS.md` 只补充该目录的规则。规则放在能覆盖其作用域的最深层，不重复维护。新增约束与现状、工具覆盖的区别见 [规范设计说明](docs/engineering/code-standards.md)。项目全貌与全部文档的入口是 [文档总览](docs/README.md)。
 
 ## 1. 项目边界
 
@@ -8,11 +8,11 @@ DSH Desktop 是 Electron 宿主，复用 Harness runtime 和 Web UI。保持这�
 
 设计与评审优先回答四个问题：能力属于哪个进程；失败后用户数据能否恢复；上游升级后能否继续加载；目标平台的安装包是否包含并能运行这项能力。代码风格服务于这些边界。
 
-涉及 Harness 定制、宿主插件或第三方补丁时，先阅读 [Patch 与 Plugin 规范](docs/patch-plugin-contract.md)：选型、slot 兼容性和组合验证在此统一定义。
+涉及 Harness 定制、宿主插件或第三方补丁时，先阅读 [Patch 与 Plugin 规范](docs/engineering/patch-plugin-contract.md)：选型、slot 兼容性和组合验证在此统一定义。
 
 | 目录 | 职责 / 专项规则 |
 | --- | --- |
-| `src/main/` | 原生能力、运行时编排、Profile、更新、手机桥接和企业登录；见该目录 `AGENTS.md` |
+| `src/main/` | 原生能力、运行时编排、Profile、更新、手机桥接和崩溃上报；见该目录 `AGENTS.md` |
 | `src/preload/` | 窄 IPC 桥和桌面 UI 接缝；见该目录 `AGENTS.md` |
 | `src/shared/` | 跨进程数据契约和纯逻辑；不得依赖 main/preload、Electron 或 Node 特权 API |
 | `packages/` | 宿主插件、运行时包和第三方分发包；见该目录 `AGENTS.md` |
@@ -43,7 +43,7 @@ DSH Desktop 是 Electron 宿主，复用 Harness runtime 和 Web UI。保持这�
 ## 3. 依赖、用户数据与变更范围
 
 - 仓库开发使用 npm 和 `package-lock.json`。产品内部用 pnpm 管理 Profile，与仓库包管理是两件事；不得新增竞争锁文件。
-- 本仓库维护的代码只保留一份权威输入；由它生成的 bundle、压缩包、预览及完整性清单纳入构建流程，不与源码重复提交。第三方分发包与历史迁移的边界见 [源码与构建产物规范](docs/source-build-contract.md)。
+- 本仓库维护的代码只保留一份权威输入；由它生成的 bundle、压缩包、预览及完整性清单纳入构建流程，不与源码重复提交。第三方分发包与历史迁移的边界见 [源码与构建产物规范](docs/engineering/source-build-contract.md)。
 - 优先复用现有工具和组件。新增 UI、状态管理或基础设施依赖必须说明现有能力为何不足、体积/原生平台影响；不得顺带替换技术栈。
 - 保留无关 WIP、第三方 tgz 和锁文件。不得以修复构建为由随意删除锁文件或分发包，也不得只留下未记录的 `node_modules` 修改。
 - 调试默认使用临时目录或独立开发 Profile。启动前确认实际 `userData` / `DSH_HOME`；多个开发 worktree 默认可能共享开发 Profile，不能并行修改同一份数据。

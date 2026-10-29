@@ -1,60 +1,75 @@
-# Desktop release runbook
+# 发布手册
 
-## Manual workflow dispatch
+本文是 [文档总览](README.md) 的子文档，记录 DSH Desktop 当前实际使用的发布流程：在 Windows x64 本机打包，以 GitHub Release 资产的形式发布。开发环境与打包命令的细节见 [开发指南](development.md)，客户端如何发现更新见 [运行架构](architecture.md#updates)。
 
-The `Release desktop installers` workflow accepts a `mode` on `workflow_dispatch`. `target` is always honored: `macos` does not start Windows jobs, and `windows` does not start macOS jobs.
+## 1. 版本号
 
-- `development` (default): unsigned Dev packages, no signing, no publish.
-- `signed`: production-identity signed packages only. Fill `signed_version` with a non-`v` semver such as `0.9.2-test.1`. Artifacts stay on the workflow run. After the selected platforms pass signing/notarization, CI uploads DMG/EXE installers and `test-changes.md` to ModelScope `test/<signed_version>/<run_id>/` and sends a Feishu test-build notification with public download links. The card groups features, fixes, improvements and other changes from commit subjects and descriptions since the nearest reachable version tag, with the baseline tag, build SHA and a code comparison link. Both `v` and `V` version tags are recognized; a build exactly on a tag compares against the preceding tag, and a first build without tags lists its full history. Long lists are abbreviated in the card with a link to the complete Markdown file. `MODELSCOPE_TOKEN` and `FEISHU_RELEASE_WEBHOOK` are required; history generation, upload, public-download verification, or notification failure fails the job. GitHub Release and rollout do not run. These builds use the production app id and update feed, so an installed copy may later see the live `latest` channel.
-- `resign`: sign an existing `windows-x64-unsigned` artifact without rerunning the Windows build. Set `target=windows`, `unsigned_run_id` to its source release run, and `signed_version` to the exact version used for that artifact. The self-hosted signer downloads it directly and packages the signed installer.
-- `prerelease`: production-identity signed packages. Fill `prerelease_tag` with a non-`v` semver such as `2.1.0-rc.1`. Publish to GitHub `--prerelease` and ModelScope `releases/prerelease/` only when `target` is `all`. A single-platform prerelease signs that platform and skips publish.
+- Desktop 版本以根 `package.json` 的 `version` 为准，改版本时同步根 `package-lock.json`。
+- Desktop 版本与上游 Harness 版本**独立维护**：升级 `@deepseek-ai/*` 依赖不改 Desktop 版本号，Harness 版本以依赖声明和锁文件为准。
+- 只有用户明确要求发版或改版本号时才修改版本。
+- Git tag 使用 `v` 前缀加完整 SemVer，例如 `v0.0.4`；预览版使用预发布后缀，例如 `v0.0.4-rc.1`。客户端只识别 `v` 开头、能解析为 SemVer 的 tag。
 
-Official releases are still created by pushing a `v*` tag, not by filling the dispatch form. Do not put `v0.9.1` in `prerelease_tag` or `signed_version`.
+## 2. 更新日志
 
-## Release history
+每次发布都要在根 [`CHANGELOG.md`](../CHANGELOG.md) 新增对应版本条目，写清实际的功能、修复、验证和已知限制，不用占位文字。GitHub Release 正文与 CHANGELOG 条目保持一致，风格参考根目录的 [`RELEASE_NOTES.md`](../RELEASE_NOTES.md)。客户端会把 Release 正文原样展示在更新弹窗和“关于”页中。
 
-The desktop updater reads the public GitHub Releases of `LightyearXizIl/DSH-Desktop`. It selects the newest compatible, non-draft release with the platform's `latest.yml` or `latest-mac.yml`, downloads through that release's GitHub assets, and shows the Release body as the update log. A stable installation ignores prereleases. GitHub Release publication therefore has to finish before the updater can offer a version.
+## 3. 打包（仅在明确要求时执行）
 
-The ModelScope mirror and its `releases/versions.json` history remain release-side backup and rollback material; they are no longer the client's update index. Formal publication and archive backfill still share the `desktop-modelscope-release-history` concurrency group. An unavailable or malformed existing index, including a 404, fails the publication job before any index write. Retry after resolving the read failure. For a new ModelScope repository, explicitly initialize `releases/versions.json` with `{"versions": []}` before its first release; CI never assumes a failed read means empty history. This protects existing history from transient errors and stale website redirects. Publication does not reconstruct versions already lost by older runs; use archive backfill for those versions.
+日常开发不打包。只有明确要求“打包”或“出安装包”时才执行以下步骤，且必须在 Windows x64 机器上进行：
 
-## Build layout and timing
+```powershell
+# 1. 目标平台检查：Electron Node 模式能加载 Harness 原生 loader
+node scripts/verify-target.mjs win32 x64
 
-Windows signing depends only on dispatch validation and the Windows build, not on macOS packaging or notarization. Once the unsigned Windows artifact is ready, the UKey signer can run while macOS jobs continue. Both platform builds first wait for `prepare-shared-runtime-assets`, which generates shared Office templates and PPT runtime assets on a macOS runner; this is not a macOS installer build. All-platform publication still waits for both macOS builds and the signed Windows package. The macOS self-hosted runner used for the UKey is a signing host, not a dependency on the macOS package jobs.
+# 2. 确认本地 Electron 与锁定版本一致（当前为 43.0.0）
+Get-Content node_modules/electron/dist/version
 
-macOS uses one matrix job with native Apple Silicon and Intel runners. Both entries retain the same signing, notarization and artifact verification gates; publishing waits for the whole matrix. Each native job builds once (including PPT previews), runs Vitest against that prepared runtime, and packages the same output with an explicit native-target check. Windows also runs recovery UI checks before packaging. Local `npm test` and `package:*` commands still prepare their own inputs. Already compressed installer artifacts use `compression-level: 0` during upload to avoid redundant compression. Compare job step durations on the same target before changing installer compression or dependency contents.
+# 3. 构建并复用本地 Electron，不重新下载
+npm run build
+node scripts/electron-builder-windows.mjs --win --x64 --publish never `
+  "--config.electronDist=$PWD/node_modules/electron/dist"
+```
 
-GitHub Actions keeps new development installers for 3 days and other new workflow artifacts and logs for 7 days. The unsigned Windows signing handoff stays at 1 day. Run `smoke` or `resign` while the source artifact is still available, and complete publication before handoff artifacts expire. GitHub Release assets remain the durable distribution copy. The repository retention setting does not shorten artifacts created before it changed.
+本地 Electron 版本与锁定版本不一致时不得继续打包，也不得换用其他 Electron 版本来避免下载。
 
-Concurrency is grouped by ref and target: a Windows-only retry can run while an all-platform run finishes macOS notarization. Runs for the same ref and target remain serialized; publication still requires `target=all` (or a release tag), and the single local UKey runner serializes Windows signing.
+打包成功后 `dist/` 下应有：
 
-The self-hosted signer downloads artifacts in six concurrent 32 MiB ranges through `gh`, retries bounded requests, and checks the complete archive against GitHub's SHA-256 digest before extraction. A real 668,014,109-byte signing artifact downloaded and verified in 149 seconds on the signing host; the previous single stream was still incomplete after ten minutes. Throughput depends on the network. A short response, failed transfer or digest mismatch leaves an existing verified output untouched and removes temporary parts.
+| 文件 | 用途 |
+| --- | --- |
+| `dsh-desktop-windows-x64-setup.exe` | NSIS 安装包 |
+| `dsh-desktop-windows-x64-setup.exe.blockmap` | 差分下载索引 |
+| `latest.yml` | 客户端更新元数据，`version` 必须等于本次版本 |
 
-PPT packages are generated under `.build/ppt-runtime/packages/` and overlaid into the Electron package. The `afterPack` gate (`scripts/after-pack.cjs`) loads `dsh-ppt` and `dsh-ppt-composer` through `app.asar` on the packaged Electron runtime, including native imports and template previews, and fails when any Mach-O, ELF or PE file is packed inside `app.asar` instead of being matched by `asarUnpack`. A successful source build alone does not verify the packaged paths. The Office afterPack gate also executes the packaged Python and skills, generates/reopens DOCX/PPTX/XLSX, checks OPC slash paths, and converts all three with the packaged LibreOffice CLI. Signed Windows installation smokes repeat this check from both installation directories. Python is carried in `resources/office-runtime`, outside ASAR; the fixed runtime and wheel provenance is documented in [Office runtime](office-runtime.md).
+## 4. 验收
 
-The build rejects external main/preload imports absent from the packaged dependency contract. Before signing, afterPack verifies unpacked resource sizes/hashes, production dependency manifests and required Harness peers, then runs a temporary Safe Mode Harness, authenticated HTML/bootstrap registration, node-pty and speech native loading with the packaged Electron runtime. The signed Windows smoke repeats the runtime probe using installed paths and does not require checkout dependencies. This probe does not establish browser UI activation or a successful model request; perform native UI acceptance separately. The unpacked hashes belong to the pre-sign payload and must not be compared against binaries changed by signing. `node scripts/verify-desktop-navigation.mjs` is an additional interactive-desktop check of splash rendering and window navigation cancellation.
+- `afterPack` 门禁会在打包阶段自动检查：ASAR 原生文件布局与解包清单、生产依赖清单、临时 Safe Mode Harness 启动、认证后的 HTML 与 bootstrap 注册、node-pty 与语音原生模块、PPT 模块，以及 Office DOCX/PPTX/XLSX 生成、重读和 PDF 转换。门禁失败即打包失败。
+- 打包门禁不代表界面可用：发布前至少实际安装一次、启动并进入主界面。
+- 在交付说明中分别写明：已执行的检查、安装包大小与 SHA-256、`latest.yml` 版本，以及未执行的验收（例如全新机器安装、真实模型请求、插件组合）。
 
-## macOS app notarization retries
+## 5. 发布到 GitHub Release
 
-App notarization runs in `scripts/notarize-macos.mjs`, an `afterSign` hook that finishes before DMG/ZIP creation. The built-in electron-builder notarization is disabled to avoid duplicate submissions. The hook uses the existing `@electron/notarize` API for submission and acceptance, then recovers only stapling failures 65/68/69 with up to five fresh `xcrun stapler staple` calls, waiting 10/20/30/40/50 seconds and limiting each call to 60 seconds. Retry subprocess timeouts are also retried. Rejected notarization and permanent errors fail immediately; successful stapling must pass `stapler validate`. The later DMG stapling and validation retain their existing workflow retries. A network error talking to Apple CloudKit during app stapling therefore no longer requires a fresh notarization submission.
+`dist/` 被 `.gitignore` 忽略，`git push` 不会上传安装包，必须用 GitHub CLI 创建 Release：
 
-## Local Windows UKey signing runner
+```powershell
+gh release create v0.0.4 `
+  dist/dsh-desktop-windows-x64-setup.exe `
+  dist/dsh-desktop-windows-x64-setup.exe.blockmap `
+  dist/latest.yml `
+  --repo LightyearXizIl/DSH-Desktop `
+  --title "DSH Desktop v0.0.4 — <一句话主题>" `
+  --notes-file <本次更新日志.md>
+```
 
-Windows packaging and signing run as separate jobs. The GitHub-hosted Windows runner builds an unsigned NSIS installer and uploads a short-lived workflow artifact. A local macOS ARM64 runner downloads it, scans every PE by content (excluding Python runtime dependencies), preserves existing vendor signatures, and signs unsigned PEs with Jsign and the SafeNet UKey. It signs the NSIS extraction helper and generated uninstaller during repackaging, then signs the final installer, regenerates the blockmap and `latest.yml`, and uploads the signed release set. Any missing archive, invalid PE, signing failure or repackaging failure stops the run. GitHub publication requires both signing and macOS builds to pass.
+- 预览版加 `--prerelease`。已安装的稳定版会忽略预发布 Release。
+- 三个资产缺一不可：缺少 `latest.yml` 的 Release 不会被客户端当作可更新版本。
+- 推送 tag 与源码提交是单独的操作，按需要另行执行。
 
-The pinned Windows NSIS template stages the application in a sibling directory before closing the old app, then renames the old directory to a backup and promotes the staged directory. A failed extraction or rename restores the previous installation. The signed installer smoke also locks the old executable to verify that a failed upgrade leaves it runnable. A user-selected different directory is an independent installation: the installer does not automatically uninstall the previous directory, which remains available until the user removes it. Keep the user-selected installation directory when changing this template; the build adapter rejects unexpected upstream template changes.
+## 6. 代码签名
 
-JavaScript dependencies load from `app.asar`: Harness, pnpm and package commands all run on the Electron runtime, which reads the archive. `asarUnpack` keeps only what the OS loads or executes beside it (native addons and libraries, node-pty's `spawn-helper`, ripgrep, the LibreOffice engine and sherpa-onnx platform packages, and the PPT runtime). node-pty and ripgrep map their binaries to `app.asar.unpacked` themselves; `build/office-engine-resolution.mjs` resolves the LibreOffice engine package there. The macOS ARM64 test package unpacks about 1.6k files (235 MB) instead of about 21k (549 MB). Neither platform ships an independent Node: Windows uses the packaged Electron executable in Node mode, and macOS runs package commands through the app's Helper in Node mode. The locked Electron 43.0.0 is a native-loader supported fingerprint; an earlier Electron 43.4.0 attempt failed during Harness boot even though the Koffi probe passed ([Windows CI evidence](https://github.com/dataelement/dsh-desktop/actions/runs/35972303467)). Qualify any Electron or native-loader change with packaged Windows Harness and final signed-installer gates.
+本项目的 Windows 安装包是**未签名的社区构建**，不做 Authenticode 签名，用户首次运行时 SmartScreen 可能提示。
 
-Prepare the local runner once:
+自动更新不做签名校验：`package.json` 中 `win.verifyUpdateCodeSignature` 为 `false`，也不声明 `signtoolOptions.publisherName`，打包后的 `resources/app-update.yml` 不含发行者名称。更新包完整性依赖 `latest.yml` 中的 `sha512` 与 GitHub 的 HTTPS 下载。
 
-1. Register it with the `self-hosted`, `macOS`, and `ARM64` labels.
-2. Install SafeNet Authentication Client and confirm `/usr/local/lib/libeTPkcs11.dylib` is readable.
-3. Connect the UKey before pushing a release tag.
-4. In the GitHub repository, open **Settings → Secrets and variables → Actions** and create a repository secret named `DESKTOP_WINDOWS_SIGNING_PIN` containing the UKey PIN. For stronger release controls, use an environment secret and add the matching `environment` to the `sign-windows` job.
-5. Restrict release tag creation and workflow changes to trusted maintainers. A self-hosted runner can access any secret injected into its job.
+## 7. 继承的 CI 工作流
 
-The persistent UKey signing worker uses its local npm download cache. Its `setup-node` step does not restore or upload the Actions npm cache, and Node setup is bounded to five minutes. GitHub-hosted build and publish jobs continue using the Actions cache. Clearing the local npm cache is safe, but the next `npm ci` must download packages again.
-
-The workflow pins Jsign 7.5 by SHA-256 and uses the SafeNet `ETOKEN` store, SHA-256 signing, and a DigiCert RFC 3161 timestamp. GitHub injects the PIN only into the signing step. The step copies it to a mode-`600` temporary file, removes it from the shell environment, and deletes the file when the step exits. The workflow never prints the PIN or passes it as a command-line argument.
-
-The configured update publisher is `Beijing Shuju Xiangsu Intelligence Technology Co., Ltd.`, taken from the signed v0.9.2 installer. If the signing certificate changes, update `build.win.signtoolOptions.publisherName` only after checking the new certificate subject and the updater's signature verification on an installed Windows build. After a tag release succeeds, verify that the Windows installer shows the expected publisher and a valid RFC 3161 timestamp in its Digital Signatures properties. Never reuse a published tag; fix the issue and release a new version.
+`.github/workflows/` 与 `.github/scripts/` 中的发布工作流继承自本项目的前身，依赖本项目没有的签名硬件、镜像仓库与通知 Webhook，**不属于当前发布流程**，不要以它们的运行结果作为发布依据。这些文件属于代码，目前原样保留，见 [已知遗留问题](README.md#已知遗留问题)。

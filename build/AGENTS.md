@@ -2,7 +2,7 @@
 
 继承根目录规则。`build/` 含运行时源码和资源，不是可以整体忽略或清空的生成目录；普通构建输出在 `out/`、`dist/` 等目录。
 
-源码、生成产物和第三方分发输入的分类及构建顺序遵循 [源码与构建产物规范](../docs/source-build-contract.md)。不能仅凭目录名或 `.js` / `.tgz` 后缀决定是否提交。
+源码、生成产物和第三方分发输入的分类及构建顺序遵循 [源码与构建产物规范](../docs/engineering/source-build-contract.md)。不能仅凭目录名或 `.js` / `.tgz` 后缀决定是否提交。
 
 - 修改 HTML、运行时入口或资源时检查 `package.json` 的 `build.extraResources` / files 及对应测试，确认安装包真实携带并加载了目标文件。
 - 启动、恢复、Safe Mode 页面必须在 Harness Web UI 不可用时仍可展示；不依赖远程 CDN、网络字体或业务前端启动完成。

@@ -2,9 +2,9 @@
 
 继承根目录规则。先区分宿主维护的 `dsh-desktop-*`、`ppt-runtime/` 源码与第三方 tgz，不能把 `packages/` 当作普通前端 workspace。
 
-实现宿主插件前阅读 [Patch 与 Plugin 规范](../docs/patch-plugin-contract.md)，遵守其中的扩展选型、slot 所有权、生命周期及组合验证要求。
+实现宿主插件前阅读 [Patch 与 Plugin 规范](../docs/engineering/patch-plugin-contract.md)，遵守其中的扩展选型、slot 所有权、生命周期及组合验证要求。
 
-自有包与第三方分发包的来源、生成和 Git 跟踪规则见 [源码与构建产物规范](../docs/source-build-contract.md)。本仓库自有包的生成物不能作为另一份维护入口。
+自有包与第三方分发包的来源、生成和 Git 跟踪规则见 [源码与构建产物规范](../docs/engineering/source-build-contract.md)。本仓库自有包的生成物不能作为另一份维护入口。
 
 ## 包与加载契约
 
@@ -18,10 +18,10 @@
 - 扩展优先用 Harness slots、现有 UI primitives 和 locale 服务，注册/销毁遵循 Cordis 生命周期；避免复制上游组件实现。
 - React 新组件沿用函数组件方式。现有客户端以普通 JS 加载，`React.createElement` 可直接执行；若引入 JSX，需先建立对应编译和发布链路，不能只改语法。
 - 展示组件通过 props 接收数据、回调输出操作；网络请求集中在插件服务/请求函数，包含错误和取消处理，不散落在展示组件中。不要另建通用 HTTP 框架。
-- 宿主插件的语义色只使用 `--dsw-alias-*`。不新增 `--ds-*` 或硬编码十六进制色；`dsh-desktop-enterprise` 现有的 `--ds-*` 与 `#2468f2` 等为待迁移存量，修改该插件时优先换回 `--dsw-alias-*`。
+- 宿主插件的语义色只使用 `--dsw-alias-*`。不新增 `--ds-*` 或硬编码十六进制色。
 - 深浅主题依赖 token 自动切换，不新增 `body[data-ds-dark-theme]` 一类手写主题分支；上游确实缺少对应 token 时补最小接缝并说明原因。
 - 不自建第三套主题 token 体系。样式用 `document.createElement('style')` 注入，以 `id` 或 `data-plugin-css` 做幂等 guard；选择器使用插件命名空间前缀，不覆盖上游或其他插件的变量。
-- 插件文案一律通过 `ctx.locale.register(NS, { zh, en })` 注册、`ctx.locale.bind(NS)` 读取；新代码禁止用 `navigator.language` + 组件内 `copy` 对象内联文案。`dsh-desktop-enterprise` 的内联 `copy` 为待迁移存量。
+- 插件文案一律通过 `ctx.locale.register(NS, { zh, en })` 注册、`ctx.locale.bind(NS)` 读取；新代码禁止用 `navigator.language` + 组件内 `copy` 对象内联文案。
 - 中英文 key 必须同批维护，缺一即视为未完成；文案与展示逻辑分离，不把整句文案写死在组件分支里。不额外引入状态管理/i18n 库。
 - `__ModuleLoader__` 下的大插件按职责拆成独立函数或同包内子文件，再由 `client.js` 组装；单文件加载协议不能成为继续堆叠无关逻辑的理由。
 - 插件默认自包含。跨插件只允许复用仓库已有的极小共享原语（如上游 UI primitives）；不得互相 import 对方的 client 实现，也不要为此新建组件库。
@@ -34,7 +34,7 @@
 
 `ppt-runtime/` 及类似包不是 slot 替换型宿主插件：它们有模板源、编译 CSS、hash class、预览图和生成产物。
 
-- 模板原始输入（`.page`、`.pptd`、design 说明、上游参考）是权威维护入口；编译后的 `lib/client.js`、hash class、预览图和 tgz 按 [源码与构建产物规范](../docs/source-build-contract.md) 处理，不与源码双轨维护。
+- 模板原始输入（`.page`、`.pptd`、design 说明、上游参考）是权威维护入口；编译后的 `lib/client.js`、hash class、预览图和 tgz 按 [源码与构建产物规范](../docs/engineering/source-build-contract.md) 处理，不与源码双轨维护。
 - 改模板或样式从源重新生成，不要只改会被下次构建覆盖的产物或压缩 class 名。
 - 宿主侧对接仍走公开 slot 与 locale；不要把编译产物当第二套可手改的前端。
 
