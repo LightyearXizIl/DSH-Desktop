@@ -19,39 +19,46 @@ window.__ModuleLoader__.load({
     Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' })
 
     var react = require('react')
+    var ui = require('@deepseek-ai/dsh-client-ui-primitives')
     var h = react.createElement
 
     var API = '/dsh-startup/config'
 
     /* ── CSS ─────────────────────────────────────────────────────────────── */
+    /* 与“内置插件”里其他页签（如 Liquid Glass）同一套设置页规格：
+       组标题 + 细分隔线的行式布局、14px 标题 / 12px 说明、官方开关和圆角 token。 */
     var CSS = [
-      '.__ss_root{max-width:620px;display:flex;flex-direction:column;gap:14px;font-size:13px;color:var(--dsw-alias-label-primary)}',
-      '.__ss_version{font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.04em;color:var(--dsw-alias-label-tertiary)}',
-      '.__ss_group{border:1px solid var(--dsw-alias-border-l2);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:11px}',
-      '.__ss_groupTitle{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dsw-alias-label-tertiary)}',
-      '.__ss_field{display:flex;flex-direction:column;gap:5px}',
-      '.__ss_label{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary)}',
-      '.__ss_hint{font-size:11px;line-height:1.55;color:var(--dsw-alias-label-tertiary)}',
+      '.__ss_root{max-width:760px;display:flex;flex-direction:column;font-size:14px;line-height:22px;color:var(--dsw-alias-label-primary)}',
+      '.__ss_version{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}',
+      '.__ss_group{display:flex;flex-direction:column;gap:14px;padding:16px 0;border-bottom:0.5px solid var(--dsw-alias-border-l2)}',
+      '.__ss_group:last-child{border-bottom:0}',
+      '.__ss_groupTitle{margin-top:8px;font-size:14px;font-weight:400;line-height:22px;color:var(--dsw-alias-label-primary)}',
+      '.__ss_field{display:flex;flex-direction:column;gap:6px}',
+      '.__ss_label{font-size:14px;font-weight:400;line-height:22px;color:var(--dsw-alias-label-primary)}',
+      '.__ss_hint{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}',
       '.__ss_row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}',
-      '.__ss_input{border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-3);font:inherit;color:var(--dsw-alias-label-primary);border-radius:8px;padding:6px 10px;font-size:13px;box-sizing:border-box;width:100%;outline:none}',
-      '.__ss_input:focus{border-color:var(--dsw-alias-state-business-primary)}',
-      '.__ss_inputMono{font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.06em}',
-      '.__ss_select{border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-primary);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;min-width:180px}',
-      '.__ss_check{display:flex;align-items:flex-start;gap:8px;cursor:pointer}',
-      '.__ss_check input{margin-top:2px;accent-color:var(--dsw-alias-state-business-primary)}',
-      '.__ss_checkText{display:flex;flex-direction:column;gap:2px}',
-      '.__ss_two{display:grid;grid-template-columns:1fr 1fr;gap:10px}',
-      '.__ss_actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px}',
-      '.__ss_btn{border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-primary);border-radius:8px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer}',
-      '.__ss_btn:hover:not(:disabled){border-color:var(--dsw-alias-state-business-primary)}',
+      '.__ss_input{box-sizing:border-box;width:100%;height:36px;padding:0 10px;border:0.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-1);font:inherit;font-size:14px;color:var(--dsw-alias-label-primary);outline:none}',
+      '.__ss_input:focus-visible,.__ss_select:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:1px}',
+      '.__ss_inputMono{font-family:ui-monospace,Consolas,monospace;font-size:13px;letter-spacing:.06em}',
+      '.__ss_select{box-sizing:border-box;height:36px;min-width:200px;padding:0 10px;border:0.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-1);font:inherit;font-size:14px;color:var(--dsw-alias-label-primary)}',
+      '.__ss_check{display:flex;align-items:center;justify-content:space-between;gap:24px;cursor:pointer}',
+      '.__ss_check input{accent-color:var(--dsw-alias-state-business-primary)}',
+      '.__ss_checkText{display:flex;flex-direction:column;gap:4px;min-width:0}',
+      '.__ss_two{display:grid;grid-template-columns:1fr 1fr;gap:12px}',
+      '.__ss_actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}',
+      '.__ss_btn{box-sizing:border-box;height:32px;padding:0 14px;border:0.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-md);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;cursor:pointer}',
+      '.__ss_btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
+      '.__ss_btn:focus-visible{outline:2px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:1px}',
       '.__ss_btn:disabled{opacity:.5;cursor:default}',
-      '.__ss_btnPrimary{border-color:var(--dsw-alias-state-business-primary,#3964fe);background:var(--dsw-alias-state-business-primary,#3964fe);color:#fff}',
+      '.__ss_btnPrimary{border-color:transparent;background:var(--dsw-alias-button-primary-fill);color:var(--dsw-alias-label-primary-foreground)}',
+      '.__ss_btnPrimary:hover:not(:disabled){background:var(--dsw-alias-button-primary-hover)}',
       '.__ss_status{font-size:12px;color:var(--dsw-alias-label-tertiary)}',
       '.__ss_ok{font-size:12px;color:var(--dsw-alias-state-business-primary)}',
-      '.__ss_err{font-size:12px;color:var(--dsw-alias-state-error-primary,#f85149)}',
-      '.__ss_swatch{width:38px;height:26px;padding:0;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;background:transparent;cursor:pointer}',
-      '.__ss_preview{margin-top:2px;border:1px dashed var(--dsw-alias-border-l2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}',
-      '.__ss_previewText{font-size:12px;color:var(--dsw-alias-label-tertiary);line-height:1.5}'
+      '.__ss_err{font-size:12px;color:var(--dsw-alias-state-error-primary)}',
+      '.__ss_swatch{width:40px;height:28px;padding:0;border:0.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-sm);background:transparent;cursor:pointer}',
+      '.__ss_preview{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:0.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md)}',
+      '.__ss_previewText{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}',
+      '.__ss_root input[type=range]{accent-color:var(--dsw-alias-state-business-primary)}'
     ].join('')
     var tagId = 'dsh-startup-screen/main.css'
     if (typeof document !== 'undefined' && document.querySelector('style[data-plugin-css="' + tagId + '"]') === null) {
@@ -91,17 +98,18 @@ window.__ModuleLoader__.load({
       }, props.options.map((o) => h('option', { key: o[0], value: o[0] }, o[1])))
     }
 
+    /* 开关行：左侧标题与说明，右侧官方 Switch，与其他设置页一致。 */
     function Check(props) {
-      return h('label', { className: '__ss_check' },
-        h('input', {
-          type: 'checkbox',
-          checked: !!props.checked,
-          onChange: (e) => props.onChange(e.target.checked)
-        }),
+      return h('div', { className: '__ss_check' },
         h('span', { className: '__ss_checkText' },
           h('span', null, props.label),
           props.hint ? h('span', { className: '__ss_hint' }, props.hint) : null
-        )
+        ),
+        h(ui.Switch, {
+          checked: !!props.checked,
+          label: props.label,
+          onChange: (checked) => props.onChange(checked)
+        })
       )
     }
 
@@ -739,9 +747,11 @@ window.__ModuleLoader__.load({
       /* 桌面端兜底：Host 的 index 注入不生效时，由这里自举启动界面。
          正常 web 流程下 __DSH_STARTUP__/__DSH_STARTUP_BOOT__ 已就位，本调用直接返回。 */
       selfBoot()
-      ctx.slots.inject('settings.section', function () {
+      /* 启动动画是内置插件，和 Liquid Glass 一样放在“设置 → 内置插件”的子页签里，
+         不再单独占用设置左侧导航。 */
+      ctx.slots.inject('settings.plugins.tab', function () {
         return ctx.slots.register(
-          { name: 'settings.section', id: 'startup-screen', order: 26, label: '启动动画' },
+          { name: 'settings.plugins.tab', id: 'startup-screen', order: 25, label: function () { return '启动动画' } },
           function () { return h(Panel, {}) }
         )
       })

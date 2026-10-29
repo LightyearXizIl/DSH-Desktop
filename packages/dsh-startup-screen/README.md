@@ -5,7 +5,7 @@ DSH Desktop 内置的 Harness 启动动画。源码来自
 的 `1.1.2` 版本，并按 Desktop 的宿主插件结构整理。
 
 - `index.js`：Harness 宿主侧，注册启动动画、音频和配置路由。
-- `client.js`：设置页「启动动画」。
+- `client.js`：「设置 → 内置插件 → 启动动画」子页签，使用官方 Switch 和设置页的行式布局。
 - `splash.js`、`splash.css`、`assets/`：浏览器侧动画与音频。
 - 配置默认写入 `$DSH_HOME/dsh-startup.json`。
 - 默认身份资料：身份名称 `NullPointer`、身份编号 `007`、权限等级 `01`。

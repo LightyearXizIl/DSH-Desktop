@@ -9,7 +9,6 @@ window.__ModuleLoader__.load({
     const NS = 'settings.desktopMarketInstaller'
     const STATUS_PATH = '/dsh-desktop/market-installer/status'
     const INSTALL_PATH = '/dsh-desktop/market-installer/install'
-    const UNINSTALL_PATH = '/dsh-desktop/market-installer/uninstall'
     const MARKET_REPOSITORY = 'https://github.com/dsh-market/dsh-market'
 
     const en = {
@@ -32,21 +31,7 @@ window.__ModuleLoader__.load({
       repository: 'View dsh-market on GitHub',
       repositoryButton: 'View on GitHub',
       futureUpdates: 'After installation, dsh-market will notify you when its own updates are available.',
-      // The installed dsh-market registers its own "Plugin market" tab beside this one.
-      managementTab: 'Market management',
-      managementIntro: 'Manage the optional dsh-market integration installed by DSH Desktop.',
-      installedVersion: 'Installed version',
-      uninstall: 'Uninstall plugin market',
-      uninstalling: 'Uninstalling plugin market…',
-      uninstallingHint: 'Removing dsh-market from the web profile. Other plugins are not affected.',
-      uninstallConfirmTitle: 'Uninstall plugin market?',
-      uninstallConfirmDesc: 'Only dsh-market will be removed. Other plugins installed through the market will remain installed.',
-      uninstallConfirmNote: 'Restart Harness after removal to finish unloading the market interface.',
-      cancel: 'Cancel',
-      removed: 'Plugin market uninstalled',
-      removedHint: 'dsh-market has been removed. Restart Harness to finish.',
-      uninstallFailed: 'Plugin market could not be uninstalled.',
-      builtInImageTitle: 'Built-in image generation', builtInImageEnabled: 'The built-in plugin is on.', builtInImageDisabled: 'The built-in plugin is off. You can use the market version.', builtInImageEnable: 'Enable built-in plugin', builtInImageConflict: 'Disable the market version of image generation before enabling the built-in plugin.', builtInImageFailed: 'Could not read or change the built-in plugin state.', builtInImageRetry: 'Try again', builtInImageRestart: 'Restart Harness to apply', builtInImagePending: 'The built-in plugin will load after Harness restarts.'
+      imageTab: 'Image & video generation', builtInImageTitle: 'Built-in image & video generation', builtInImageEnabled: 'The built-in plugin is on.', builtInImageDisabled: 'The built-in plugin is off. You can use the market version.', builtInImageEnable: 'Enable built-in plugin', builtInImageConflict: 'Disable the market version of image & video generation before enabling the built-in plugin.', builtInImageFailed: 'Could not read or change the built-in plugin state.', builtInImageRetry: 'Try again', builtInImageRestart: 'Restart Harness to apply', builtInImagePending: 'The built-in plugin will load after Harness restarts.'
     }
 
     const zh = {
@@ -69,20 +54,7 @@ window.__ModuleLoader__.load({
       repository: '在 GitHub 查看 dsh-market',
       repositoryButton: '在 GitHub 查看',
       futureUpdates: '安装后，dsh-market 会在有新版本时提示并提供升级。',
-      managementTab: '市场管理',
-      managementIntro: '管理由 DSH Desktop 安装的可选 dsh-market 集成。',
-      installedVersion: '当前版本',
-      uninstall: '卸载插件市场',
-      uninstalling: '正在卸载插件市场…',
-      uninstallingHint: '正在从 web profile 中移除 dsh-market，其他插件不会受到影响。',
-      uninstallConfirmTitle: '卸载插件市场？',
-      uninstallConfirmDesc: '只会移除 dsh-market。通过插件市场安装的其他插件将继续保留。',
-      uninstallConfirmNote: '移除完成后需要重启 Harness，插件市场界面才会完全退出。',
-      cancel: '取消',
-      removed: '插件市场已卸载',
-      removedHint: 'dsh-market 已移除，请重启 Harness 完成卸载。',
-      uninstallFailed: '插件市场卸载失败。',
-      builtInImageTitle: '内置生图工具', builtInImageEnabled: '内置插件已启用。', builtInImageDisabled: '内置插件已关闭，可以使用市场版本。', builtInImageEnable: '启用内置插件', builtInImageConflict: '请先停用市场版本的生图工具，再启用内置插件。', builtInImageFailed: '无法读取或更改内置插件状态。', builtInImageRetry: '重试', builtInImageRestart: '重启 Harness 使更改生效', builtInImagePending: '重启 Harness 后将加载内置插件。'
+      imageTab: '影像生成', builtInImageTitle: '内置影像生成', builtInImageEnabled: '内置插件已启用。', builtInImageDisabled: '内置插件已关闭，可以使用市场版本。', builtInImageEnable: '启用内置插件', builtInImageConflict: '请先停用市场版本的影像生成，再启用内置插件。', builtInImageFailed: '无法读取或更改内置插件状态。', builtInImageRetry: '重试', builtInImageRestart: '重启 Harness 使更改生效', builtInImagePending: '重启 Harness 后将加载内置插件。'
     }
 
     const css = `
@@ -207,316 +179,6 @@ window.__ModuleLoader__.load({
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error || `HTTP ${response.status}`)
       return payload
-    }
-
-    function UninstallConfirm({ t, busy, onCancel, onConfirm }) {
-      React.useEffect(() => {
-        const onKeyDown = (event) => {
-          if (event.key === 'Escape' && !busy) onCancel()
-        }
-        window.addEventListener('keydown', onKeyDown)
-        return () => window.removeEventListener('keydown', onKeyDown)
-      }, [busy, onCancel])
-
-      return React.createElement(
-        'div',
-        {
-          className: 'dshDesktopMarketModalBackdrop',
-          role: 'presentation',
-          onMouseDown: (event) => {
-            if (event.target === event.currentTarget && !busy) onCancel()
-          }
-        },
-        React.createElement(
-          'div',
-          {
-            className: 'dshDesktopMarketModal',
-            role: 'dialog',
-            'aria-modal': 'true',
-            'aria-labelledby': 'dsh-desktop-market-uninstall-title'
-          },
-          React.createElement(
-            'h3',
-            {
-              id: 'dsh-desktop-market-uninstall-title',
-              className: 'dshDesktopMarketModalTitle'
-            },
-            t('uninstallConfirmTitle')
-          ),
-          React.createElement(
-            'p',
-            { className: 'dshDesktopMarketModalText' },
-            t('uninstallConfirmDesc')
-          ),
-          React.createElement(
-            'p',
-            { className: 'dshDesktopMarketModalNote' },
-            t('uninstallConfirmNote')
-          ),
-          React.createElement(
-            'div',
-            { className: 'dshDesktopMarketModalActions' },
-            React.createElement(
-              'button',
-              {
-                type: 'button',
-                className: 'dshDesktopMarketButton dshDesktopMarketSecondary',
-                disabled: busy,
-                onClick: onCancel
-              },
-              t('cancel')
-            ),
-            React.createElement(
-              'button',
-              {
-                type: 'button',
-                className: 'dshDesktopMarketButton dshDesktopMarketPrimary',
-                disabled: busy,
-                onClick: onConfirm,
-                autoFocus: true
-              },
-              busy ? t('uninstalling') : t('uninstall')
-            )
-          )
-        )
-      )
-    }
-
-    function MarketManagementTab({ t }) {
-      const [status, setStatus] = React.useState()
-      const [error, setError] = React.useState()
-      const [confirming, setConfirming] = React.useState(false)
-      const [restarting, setRestarting] = React.useState(false)
-
-      React.useEffect(() => {
-        let disposed = false
-        const load = async () => {
-          try {
-            const next = await readStatus()
-            if (disposed) return
-            setStatus(next)
-            setError(undefined)
-          } catch (failure) {
-            if (!disposed) setError(failure instanceof Error ? failure.message : String(failure))
-          }
-        }
-        void load()
-        return () => {
-          disposed = true
-        }
-      }, [])
-
-      React.useEffect(() => {
-        if (status?.phase !== 'uninstalling') return
-        let disposed = false
-        let timer
-        const poll = async () => {
-          try {
-            const next = await readStatus()
-            if (disposed) return
-            setStatus(next)
-            setError(undefined)
-            if (next.phase === 'uninstalling') timer = setTimeout(poll, 850)
-            else setConfirming(false)
-          } catch (failure) {
-            if (disposed) return
-            setError(failure instanceof Error ? failure.message : String(failure))
-            timer = setTimeout(poll, 1_500)
-          }
-        }
-        timer = setTimeout(poll, 850)
-        return () => {
-          disposed = true
-          clearTimeout(timer)
-        }
-      }, [status?.phase])
-
-      const uninstall = async () => {
-        setError(undefined)
-        setStatus((current) => ({ ...current, phase: 'uninstalling' }))
-        try {
-          const bridge = globalThis.dshDesktop
-          if (bridge && typeof bridge.uninstallMarket === 'function') {
-            await bridge.uninstallMarket()
-            return
-          }
-          const response = await fetch(UNINSTALL_PATH, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { accept: 'application/json' }
-          })
-          const payload = await response.json()
-          if (!response.ok && response.status !== 409) {
-            throw new Error(payload?.error || `HTTP ${response.status}`)
-          }
-          setStatus(payload)
-          if (payload.phase !== 'uninstalling') setConfirming(false)
-        } catch (failure) {
-          setConfirming(false)
-          setError(failure instanceof Error ? failure.message : String(failure))
-        }
-      }
-
-      const restart = async () => {
-        const bridge = globalThis.dshDesktop
-        if (!bridge || typeof bridge.restartHarness !== 'function') {
-          setError('Harness > Restart Harness')
-          return
-        }
-        setRestarting(true)
-        setError(undefined)
-        try {
-          await bridge.restartHarness()
-        } catch (failure) {
-          setRestarting(false)
-          setError(failure instanceof Error ? failure.message : String(failure))
-        }
-      }
-
-      const phase = status?.phase
-      const uninstalling = phase === 'uninstalling'
-      const removed = phase === 'uninstalled' || phase === 'absent'
-      const failed = phase === 'error' || phase === 'incomplete' || Boolean(error)
-      const installedVersion = status?.installedVersion || status?.dependency
-
-      return React.createElement(
-        React.Fragment,
-        null,
-        React.createElement(
-          'section',
-          { className: 'dshDesktopMarketSection' },
-          React.createElement('h2', { className: 'dshDesktopMarketTitle' }, t('title')),
-          React.createElement('p', { className: 'dshDesktopMarketIntro' }, t('managementIntro')),
-          React.createElement(
-            'div',
-            { className: 'dshDesktopMarketCard' },
-            React.createElement(
-              'div',
-              { className: 'dshDesktopMarketHead' },
-              React.createElement(
-                'div',
-                { className: 'dshDesktopMarketMark', 'aria-hidden': 'true' },
-                React.createElement('span'),
-                React.createElement('span'),
-                React.createElement('span'),
-                React.createElement('span')
-              ),
-              React.createElement(
-                'div',
-                { className: 'dshDesktopMarketIdentity' },
-                React.createElement('span', { className: 'dshDesktopMarketName' }, 'dsh-market'),
-                installedVersion
-                  ? React.createElement(
-                      'span',
-                      { className: 'dshDesktopMarketVersion' },
-                      `${t('installedVersion')} · ${installedVersion}`
-                    )
-                  : null
-              )
-            ),
-            uninstalling
-              ? React.createElement(
-                  'div',
-                  { className: 'dshDesktopMarketStatus' },
-                  React.createElement(
-                    'div',
-                    { className: 'dshDesktopMarketBusy' },
-                    React.createElement('span', {
-                      className: 'dshDesktopMarketSpinner',
-                      'aria-hidden': 'true'
-                    }),
-                    React.createElement(
-                      'span',
-                      { className: 'dshDesktopMarketStatusTitle' },
-                      t('uninstalling')
-                    )
-                  ),
-                  React.createElement(
-                    'p',
-                    { className: 'dshDesktopMarketStatusDetail' },
-                    status?.detail || t('uninstallingHint')
-                  )
-                )
-              : removed
-                ? React.createElement(
-                    'div',
-                    { className: 'dshDesktopMarketStatus' },
-                    React.createElement(
-                      'span',
-                      { className: 'dshDesktopMarketStatusTitle' },
-                      t('removed')
-                    ),
-                    React.createElement(
-                      'p',
-                      { className: 'dshDesktopMarketStatusDetail' },
-                      t('removedHint')
-                    )
-                  )
-                : failed
-                  ? React.createElement(
-                      'div',
-                      { className: 'dshDesktopMarketStatus' },
-                      React.createElement(
-                        'span',
-                        { className: 'dshDesktopMarketStatusTitle dshDesktopMarketError' },
-                        t('uninstallFailed')
-                      ),
-                      error || status?.detail
-                        ? React.createElement(
-                            'p',
-                            { className: 'dshDesktopMarketStatusDetail dshDesktopMarketError' },
-                            error || status?.detail
-                          )
-                        : null
-                    )
-                  : null,
-            React.createElement(
-              'div',
-              { className: 'dshDesktopMarketActions' },
-              removed
-                ? React.createElement(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'dshDesktopMarketButton dshDesktopMarketPrimary',
-                      disabled: restarting,
-                      onClick: () => void restart()
-                    },
-                    restarting ? t('restarting') : t('restart')
-                  )
-                : React.createElement(
-                    'button',
-                    {
-                      type: 'button',
-                      className: 'dshDesktopMarketButton dshDesktopMarketSecondary',
-                      disabled: uninstalling || !status,
-                      onClick: () => setConfirming(true)
-                    },
-                    t('uninstall')
-                  ),
-              React.createElement(
-                'a',
-                {
-                  className: 'dshDesktopMarketLink',
-                  href: MARKET_REPOSITORY,
-                  target: '_blank',
-                  rel: 'noopener noreferrer'
-                },
-                t('repository')
-              )
-            ),
-            React.createElement('p', { className: 'dshDesktopMarketNotice' }, t('futureUpdates'))
-          )
-        ),
-        confirming
-          ? React.createElement(UninstallConfirm, {
-              t,
-              busy: uninstalling,
-              onCancel: () => setConfirming(false),
-              onConfirm: () => void uninstall()
-            })
-          : null
-      )
     }
 
     function MarketInstallerSection({ t }) {
@@ -747,41 +409,69 @@ window.__ModuleLoader__.load({
         'dsh-desktop-market-installer: copy dictionaries'
       )
       const t = ctx.locale.bind(NS)
-      ctx.slots.inject('settings.plugins.tab', () =>
-        ctx.slots.register(
-          { name: 'settings.plugins.tab', id: 'desktop-host-plugins', order: 20,
-            label: () => t('builtInImageTitle'), locale: NS,
-            inject: () => ({ t }) },
-          BuiltInImageControl
-        )
-      )
+      registerBuiltInImageTab(ctx, t)
       if (marketAlreadyComposed()) {
-        ctx.slots.inject('settings.plugins.tab', () =>
-          ctx.slots.register(
-            {
-              name: 'settings.plugins.tab',
-              id: 'desktop-market-management',
-              order: 30,
-              label: () => t('managementTab'),
-              inject: () => ({ t })
-            },
-            MarketManagementTab
-          )
-        )
+        // The composed dsh-market owns its management card (version, updates,
+        // removal) under Settings → Built-in plugins, and the main sidebar
+        // carries its full panel. Its own Settings section would be a third
+        // door to the same place, so ask it through its published control to
+        // hide that section while this plugin is loaded.
+        ctx.inject(['market'], (scoped) => {
+          const market = scoped.market
+          if (typeof market?.setSettingsVisible !== 'function') return
+          market.setSettingsVisible(false)
+          return () => market.setSettingsVisible(true)
+        })
         return
       }
-      ctx.slots.inject('settings.section', () =>
+      ctx.slots.inject('settings.plugins.tab', () =>
         ctx.slots.register(
           {
-            name: 'settings.section',
+            name: 'settings.plugins.tab',
             id: 'market',
-            order: 40,
+            order: 60,
             label: () => t('nav'),
             inject: () => ({ t })
           },
           MarketInstallerSection
         )
       )
+    }
+
+    /**
+     * One "Image generation" tab at a time. While the built-in plugin is on it
+     * contributes that tab itself and this control has nothing to offer but a
+     * status line, so the control only registers while the built-in plugin is
+     * off (to turn it back on) or its status cannot be read (to show the error).
+     */
+    function registerBuiltInImageTab(ctx, t) {
+      ctx.effect(() => {
+        let active = true
+        let dispose
+        const register = () => {
+          if (!active || dispose !== undefined) return
+          dispose = ctx.slots.inject('settings.plugins.tab', () =>
+            ctx.slots.register(
+              { name: 'settings.plugins.tab', id: 'desktop-host-plugins', order: -100,
+                label: () => t('imageTab'), locale: NS,
+                inject: () => ({ t }) },
+              BuiltInImageControl
+            )
+          )
+        }
+        const desktop = globalThis.dshDesktop
+        if (typeof desktop?.getBuiltInImageGenerationStatus !== 'function') register()
+        else {
+          void desktop.getBuiltInImageGenerationStatus().then(
+            (status) => { if (status?.enabled !== true) register() },
+            register
+          )
+        }
+        return () => {
+          active = false
+          dispose?.()
+        }
+      }, 'dsh-desktop-market-installer: built-in image tab')
     }
 
     exports.apply = apply

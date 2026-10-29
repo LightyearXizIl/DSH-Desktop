@@ -1,8 +1,24 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js
-index 6fbff72..1bd27ca 100644
+index 6fbff72..fa28d03 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js
-@@ -17382,12 +17382,13 @@ window.__ModuleLoader__.load({
+@@ -16143,6 +16143,7 @@ window.__ModuleLoader__.load({
+ 			"hero.headline": "探索未至之境",
+ 			"hero.preview": "预览版",
+ 			"hero.chooseWorkspace": "选择工作区",
++			"hero.noWorkspace": "不在工作区",
+ 			"session.hierarchy": "会话层级",
+ 			"session.moreViews": "更多会话视图",
+ 			"todo.title": "任务",
+@@ -16520,6 +16521,7 @@ window.__ModuleLoader__.load({
+ 			"hero.headline": "Into the Unknown",
+ 			"hero.preview": "Preview",
+ 			"hero.chooseWorkspace": "Choose workspace",
++			"hero.noWorkspace": "No workspace",
+ 			"session.hierarchy": "Session hierarchy",
+ 			"session.moreViews": "More conversation views",
+ 			"todo.title": "To-dos",
+@@ -17382,12 +17384,13 @@ window.__ModuleLoader__.load({
  		//#endregion
  		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-conversation/src/client/skeleton/ConversationRoot.module.css.mjs
  		const css$4 = ".wSkVaW_root{background:var(--dsw-alias-bg-base);flex-direction:column;min-width:0;height:100%;display:flex;position:relative}.wSkVaW_header{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l3);flex:none;grid-template-columns:auto minmax(0,1fr);min-height:76px;padding:10px 28px 0 20px;display:grid}.wSkVaW_header:where(:not(:has(.wSkVaW_tabs))){min-height:0;padding-bottom:10px}.wSkVaW_headerBlank{border-bottom:none;min-height:0;padding-bottom:0}.wSkVaW_headerBlank .wSkVaW_headerCorner{margin-left:auto}html:not([data-platform=darwin]) .wSkVaW_headerSessionless{padding-top:0}html:not([data-platform=darwin]) .wSkVaW_headerSessionless .wSkVaW_titleRow{min-height:0}[data-platform=darwin] .wSkVaW_headerLeading,[data-platform=darwin] .wSkVaW_headerActions,[data-platform=darwin] .wSkVaW_headerUtilities,[data-platform=darwin] .wSkVaW_headerCorner{-webkit-app-region:no-drag}.wSkVaW_titleRow{min-height:30px;grid-column:2;align-items:center;gap:0;padding-inline-start:max(0px, calc(var(--dsh-frame-leading-clearance,0px) - 20px));display:flex;container-type:inline-size}.wSkVaW_titleCluster{flex:1;align-items:center;gap:10px;min-width:0;display:flex}.wSkVaW_headerLeading{flex:none;grid-area:1/1;align-items:center;gap:8px;display:flex}.wSkVaW_crumbs{white-space:nowrap;align-items:center;gap:4px;min-width:0;display:flex;overflow:hidden}.wSkVaW_crumbSeg{align-items:center;gap:4px;min-width:0;display:inline-flex}.wSkVaW_crumbSep{color:var(--dsw-alias-label-caption);font-size:14px;line-height:20px}.wSkVaW_crumb{border-radius:var(--dsw-radius-md);max-width:220px;color:var(--dsw-alias-label-tertiary);text-overflow:ellipsis;white-space:nowrap;cursor:pointer;background:0 0;border:none;padding:4px 8px;font-size:14px;line-height:20px;display:inline-block;overflow:hidden}.wSkVaW_crumbSubagent{font-size:12px;line-height:18px}button.wSkVaW_crumb:hover{background:var(--dsw-alias-interactive-bg-hover)}.wSkVaW_crumbCurrent{color:var(--dsw-alias-label-primary);cursor:default;font-weight:500}.wSkVaW_headerActions{flex:none;align-items:center;gap:8px;display:flex}.wSkVaW_headerUtilities{flex:none;align-items:center;gap:8px;margin-left:20px;display:flex}.wSkVaW_headerUtilities:empty{display:none}.wSkVaW_headerCorner{flex:none;align-items:center;margin-left:8px;margin-right:-16px;display:flex}.wSkVaW_headerCorner:empty{display:none}.wSkVaW_tabs{z-index:1;box-sizing:border-box;flex-wrap:wrap;grid-column:1/-1;align-items:flex-start;gap:16px 20px;width:100%;min-width:0;margin-top:10px;padding-left:8px;display:flex;position:relative}.wSkVaW_viewTabs{flex-wrap:wrap;gap:32px;min-width:0;min-height:25px;display:flex}.wSkVaW_tab{min-height:25px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;padding:0 0 9px;font-size:13px;font-weight:500;line-height:16px;position:relative}.wSkVaW_tab:after{content:\"\";background:0 0;border-radius:2px;height:2px;position:absolute;bottom:-1px;left:0;right:0}.wSkVaW_tabActive{color:var(--dsw-alias-state-business-primary)}.wSkVaW_tabActive:after{background:var(--dsw-alias-state-business-primary)}.wSkVaW_viewsMoreAnchor{flex:none}.wSkVaW_viewsMore{width:22px;height:22px;color:var(--dsw-alias-label-secondary);margin-top:-3px;padding:0}.wSkVaW_viewsMoreActive{color:var(--dsw-alias-state-business-primary)}.wSkVaW_tabLabel{text-overflow:ellipsis;white-space:nowrap;max-width:88px;display:block;overflow:hidden}.wSkVaW_viewsMore[aria-expanded=true]{background:var(--dsw-alias-interactive-bg-hover)}.wSkVaW_viewsMoreMenu{width:288px;max-width:calc(100vw - 24px)}.wSkVaW_viewArea{flex-direction:column;flex:1;min-height:0;display:flex}.wSkVaW_widthHandle{z-index:0;width:min(10px, calc((100% - var(--dsh-chat-content-width)) / 2 - 24px - 24px));cursor:col-resize;position:absolute;top:0;bottom:0}.wSkVaW_widthHandle[data-side=left]{right:calc(50% + var(--dsh-chat-content-width) / 2 + 24px)}.wSkVaW_widthHandle[data-side=right]{left:calc(50% + var(--dsh-chat-content-width) / 2 + 24px)}.wSkVaW_widthHandle:after{content:\"\";background:linear-gradient(to bottom, transparent calc(var(--dsh-width-handle-pointer-y,50%) - 36px), var(--dsw-alias-scrollbar-bg-l1) calc(var(--dsh-width-handle-pointer-y,50%) - 8px), var(--dsw-alias-scrollbar-bg-l1) calc(var(--dsh-width-handle-pointer-y,50%) + 8px), transparent calc(var(--dsh-width-handle-pointer-y,50%) + 36px));opacity:0;pointer-events:none;border-radius:2px;width:2px;position:absolute;top:0;bottom:0}.wSkVaW_widthHandle[data-side=left]:after{right:4px}.wSkVaW_widthHandle[data-side=right]:after{left:4px}.wSkVaW_widthHandle:hover:after,.wSkVaW_widthHandle[data-dragging]:after{opacity:1}.wSkVaW_widthHandle[data-dragging]{z-index:8}.wSkVaW_root:has([data-conversation-composer-overlay]) .wSkVaW_widthHandle{display:none}.wSkVaW_composerStack{--dsh-composer-stack-gap:6px;gap:var(--dsh-composer-stack-gap);flex-direction:column;display:flex}.wSkVaW_composerSeat{--dsh-composer-text-max-height:336px;flex-direction:column;flex:none;display:flex}.wSkVaW_root[data-phase=active]{overflow:hidden}.wSkVaW_root[data-phase=active] .wSkVaW_header{flex:none}.wSkVaW_body{--dsh-chat-content-width:var(--dsh-chat-user-width,clamp(680px, calc(var(--dsh-conversation-column-width,0px) * .64), 920px));--dsh-composer-card-max-width:calc(var(--dsh-chat-content-width) + 32px);--dsh-composer-side-clearance:16px;--dsh-composer-dock-inset:8px;flex-direction:column;flex:1;min-height:0;display:flex;position:relative}.wSkVaW_embeddedBody{--dsh-chat-content-width:min(calc(100% - 32px), 920px);--dsh-composer-card-max-width:min(calc(100% - 16px), 952px);--dsh-composer-side-clearance:8px;--dsh-composer-dock-inset:8px;overflow:hidden}.wSkVaW_scrollBody{scrollbar-gutter:stable;flex-direction:column;flex:1;min-height:0;margin-right:2px;display:flex;overflow-y:auto}.wSkVaW_scrollBody::-webkit-scrollbar-track{margin:2px}.wSkVaW_root[data-phase=active] .wSkVaW_viewArea,.wSkVaW_embeddedBody[data-content-phase=active] .wSkVaW_viewArea{flex:1 0 auto;min-height:auto}.wSkVaW_root[data-phase=active] .wSkVaW_composerSeat,.wSkVaW_embeddedBody[data-content-phase=active] .wSkVaW_composerSeat{z-index:7;background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-bg-base) 0%, transparent) 0px, var(--dsw-alias-bg-base) 36px);position:sticky;bottom:0}.wSkVaW_root[data-phase=active] .wSkVaW_composerSeat:has([data-trigger-menu]){z-index:9}.wSkVaW_scrollBody:has([data-conversation-composer-overlay]){scrollbar-gutter:auto;position:relative;overflow:hidden auto}.wSkVaW_scrollBody:has([data-conversation-composer-overlay])>[data-slot=conversation\\.session]>.wSkVaW_viewArea{flex:1 1 0;min-height:0;overflow:hidden}.wSkVaW_scrollBody:has([data-conversation-composer-overlay])>.wSkVaW_composerSeat{right:var(--dsh-scrollbar-width);position:absolute;bottom:0;left:0}.wSkVaW_composerHero{width:min(calc(var(--dsh-composer-card-max-width) + 2 * var(--dsh-composer-side-clearance)), 100%);z-index:1;align-self:center;gap:8px;padding-bottom:32px}.wSkVaW_heroWorkspaceRow{align-items:center;gap:2px;min-width:0;margin-top:4px;padding:0 16px 0 20px;display:flex}.wSkVaW_heroOptions{flex:none;align-items:center;gap:2px;min-width:0;margin-left:auto;display:flex}.wSkVaW_heroOptions:empty{display:none}.wSkVaW_root[data-phase=hero] .wSkVaW_scrollBody,.wSkVaW_embeddedBody[data-content-phase=hero] .wSkVaW_scrollBody{justify-content:center;overflow-y:auto}.wSkVaW_root[data-phase=settling] .wSkVaW_composerSeat,.wSkVaW_embeddedBody[data-content-phase=settling] .wSkVaW_composerSeat{visibility:hidden}";
@@ -17,7 +33,7 @@ index 6fbff72..1bd27ca 100644
  			document.head.appendChild(tag);
  		}
  		var ConversationRoot_module_css_default = {
-@@ -17410,6 +17411,7 @@ window.__ModuleLoader__.load({
+@@ -17410,6 +17413,7 @@ window.__ModuleLoader__.load({
  			"headerSessionless": "wSkVaW_headerSessionless",
  			"headerUtilities": "wSkVaW_headerUtilities",
  			"heroOptions": "wSkVaW_heroOptions",
@@ -25,16 +41,52 @@ index 6fbff72..1bd27ca 100644
  			"heroWorkspaceRow": "wSkVaW_heroWorkspaceRow",
  			"root": "wSkVaW_root",
  			"scrollBody": "wSkVaW_scrollBody",
-@@ -17804,7 +17806,7 @@ window.__ModuleLoader__.load({
+@@ -17690,6 +17694,8 @@ window.__ModuleLoader__.load({
+ 		* @param props.onClick - menu toggle.
+ 		* @returns the chip button element.
+ 		*/
++		/** DSH Desktop: the workspace picker's "No workspace" entry id (ui-workspace NO_WORKSPACE). */
++		const NO_WORKSPACE_PICK = "::no-workspace";
+ 		function WorkspaceChip({ buttonRef, label, menuOpen = false, onClick, t }) {
+ 			return (0, react_jsx_runtime.jsxs)("button", {
+ 				ref: buttonRef,
+@@ -17804,7 +17810,7 @@ window.__ModuleLoader__.load({
  		* @returns the Conversation view, Composer, and optional width controls.
  		*/
  		function ConversationContent(props) {
 -			const { sessionId, phase, hero, useSession, useSessions, useSessionStatus, useWorkspaces, useInput, useComposerBlock, renderSlot, renderSlotChain, selectWorkspace, t, useFactorySlot } = props;
-+			const { sessionId, phase, hero, useSession, useSessions, useSessionStatus, useWorkspaces, useInput, useComposerBlock, renderSlot, renderSlotChain, selectWorkspace, startChatSession, t, useFactorySlot } = props;
++			const { sessionId, phase, hero, useSession, useSessions, useSessionStatus, useWorkspaces, useInput, useComposerBlock, renderSlot, renderSlotChain, selectWorkspace, startChatSession, openChatSession, t, useFactorySlot } = props;
  			const session = useSession((snapshot) => snapshot);
  			const Views = useFactorySlot("views", ConversationSessionView);
  			const WidthControls = useFactorySlot("widthControls", NoConversationWidthControls);
-@@ -17878,12 +17880,18 @@ window.__ModuleLoader__.load({
+@@ -17846,7 +17852,9 @@ window.__ModuleLoader__.load({
+ 				input: inputState
+ 			};
+ 			const storedChipTitle = pendingWorkspace?.title ?? (sessionId === void 0 ? void 0 : sessionWorkspace?.title ?? (workspaces.phase === "ready" || cwd === void 0 || cwd === "" ? void 0 : workspaceLabel(cwd)));
+-			const chipTitle = storedChipTitle === void 0 ? void 0 : workspaceDisplayTitle(storedChipTitle, t("workspace.defaultName"));
++			// DSH Desktop: a Session outside every workspace is a Chat Session; the chip names that choice.
++			const chatSession = sessionId !== void 0 && pendingWorkspaceId === void 0 && workspaces.phase === "ready" && sessionWorkspace === void 0;
++			const chipTitle = chatSession ? t("hero.noWorkspace") : storedChipTitle === void 0 ? void 0 : workspaceDisplayTitle(storedChipTitle, t("workspace.defaultName"));
+ 			const heroWorkspaceRow = (0, react_jsx_runtime.jsxs)("div", {
+ 				className: ConversationRoot_module_css_default.heroWorkspaceRow,
+ 				children: [
+@@ -17862,9 +17870,14 @@ window.__ModuleLoader__.load({
+ 					renderSlot("conversation.hero.workspace", {
+ 						open: pickerOpen,
+ 						anchorRef: pickerAnchor,
+-						selectedId: pendingWorkspaceId ?? sessionWorkspace?.workspaceId,
++						selectedId: pendingWorkspaceId ?? sessionWorkspace?.workspaceId ?? (chatSession ? NO_WORKSPACE_PICK : void 0),
+ 						onPick: (workspaceId) => {
+ 							setPickerOpen(false);
++							if (workspaceId === NO_WORKSPACE_PICK) {
++								// openChatSession already reports a creation failure through the workspace notice.
++								if (!chatSession) openChatSession?.().catch(() => {});
++								return;
++							}
+ 							setPendingWorkspaceId(workspaceId);
+ 							selectWorkspace(workspaceId).catch(() => {
+ 								setPendingWorkspaceId((current) => current === workspaceId ? void 0 : current);
+@@ -17878,12 +17891,18 @@ window.__ModuleLoader__.load({
  					sessionId === void 0 ? null : (0, react_jsx_runtime.jsx)("div", {
  						className: ConversationRoot_module_css_default.heroOptions,
  						children: renderSlot("conversation.hero.options", {})
@@ -54,7 +106,7 @@ index 6fbff72..1bd27ca 100644
  				...inert ? {
  					disabled: true,
  					placeholder: t("placeholder.workspace"),
-@@ -17905,7 +17913,8 @@ window.__ModuleLoader__.load({
+@@ -17905,7 +17924,8 @@ window.__ModuleLoader__.load({
  					}),
  					hero && heroWorkspaceRow,
  					zone !== void 0 && renderSlot("conversation.input.dock", zone),
@@ -64,7 +116,7 @@ index 6fbff72..1bd27ca 100644
  				]
  			});
  			const composer = renderSlotChain("conversation.composer", {
-@@ -17949,7 +17958,8 @@ window.__ModuleLoader__.load({
+@@ -17949,7 +17969,8 @@ window.__ModuleLoader__.load({
  		* @returns the Conversation subtree.
  		*/
  		function ConversationPanel({ renderSlot }) {
@@ -74,7 +126,7 @@ index 6fbff72..1bd27ca 100644
  		}
  		//#endregion
  		//#region lib/types/client/skeleton/ConversationHeader.js
-@@ -18336,7 +18346,7 @@ window.__ModuleLoader__.load({
+@@ -18336,7 +18357,7 @@ window.__ModuleLoader__.load({
  		* @param props - borrowed editor and presentation values; this component owns no Hooks.
  		* @returns the existing text-area DOM without an additional wrapper.
  		*/
@@ -83,7 +135,7 @@ index 6fbff72..1bd27ca 100644
  			return (0, react_jsx_runtime.jsx)("div", {
  				ref: scrollRef,
  				className: css.scroll,
-@@ -18344,7 +18354,22 @@ window.__ModuleLoader__.load({
+@@ -18344,7 +18365,22 @@ window.__ModuleLoader__.load({
  				children: (0, react_jsx_runtime.jsxs)("div", {
  					className: css.grow,
  					children: [
@@ -107,7 +159,7 @@ index 6fbff72..1bd27ca 100644
  							editor: workspaceTrigger ? null : editor,
  							editable,
  							className: clsx(css.input, editorDisabled && css.inputDisabled),
-@@ -18898,13 +18923,16 @@ window.__ModuleLoader__.load({
+@@ -18898,13 +18934,16 @@ window.__ModuleLoader__.load({
  		}
  		//#endregion
  		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-conversation/src/client/skeleton/InputBar.module.css.mjs
@@ -126,7 +178,7 @@ index 6fbff72..1bd27ca 100644
  			document.head.appendChild(tag);
  		}
  		var InputBar_module_css_default = {
-@@ -18925,7 +18953,9 @@ window.__ModuleLoader__.load({
+@@ -18925,7 +18964,9 @@ window.__ModuleLoader__.load({
  			"overlayAnchor": "uV2eYG_overlayAnchor",
  			"pending": "uV2eYG_pending",
  			"placeholder": "uV2eYG_placeholder",
@@ -136,7 +188,7 @@ index 6fbff72..1bd27ca 100644
  			"retry": "uV2eYG_retry",
  			"root": "uV2eYG_root",
  			"row": "uV2eYG_row",
-@@ -18952,13 +18982,16 @@ window.__ModuleLoader__.load({
+@@ -18952,13 +18993,16 @@ window.__ModuleLoader__.load({
  		* The no-session state renders the SAME div inert as the Workspace-picker
  		* trigger instead of a parallel tree.
  		*/
@@ -154,7 +206,7 @@ index 6fbff72..1bd27ca 100644
  			(0, react.useEffect)(() => {
  				setActivity(false);
  			}, [sessionId]);
-@@ -18968,8 +19001,9 @@ window.__ModuleLoader__.load({
+@@ -18968,8 +19012,9 @@ window.__ModuleLoader__.load({
  			const removed = useSession((s) => s.removed) ?? false;
  			const planActive = useProjection("plan", (plan) => plan !== void 0 && (plan.pending ? !plan.active : plan.active));
  			const hasGoal = useProjection("goal", (goal) => goal != null);
@@ -165,7 +217,7 @@ index 6fbff72..1bd27ca 100644
  			const editor = keyboard?.editor ?? null;
  			const attachments = (0, react.useMemo)(() => input === void 0 || resolveDraftAttachments === void 0 ? [] : resolveDraftAttachments(input.attachmentIds), [resolveDraftAttachments, input?.attachmentIds]);
  			const empty = draft.trim() === "" && attachments.length === 0;
-@@ -19015,13 +19049,13 @@ window.__ModuleLoader__.load({
+@@ -19015,13 +19060,13 @@ window.__ModuleLoader__.load({
  			const scrollRef = (0, react.useRef)(null);
  			const continuable = subagent?.address.mode === "continuable";
  			const parentOffline = continuable && subagent.parentAvailable !== true;
@@ -182,7 +234,7 @@ index 6fbff72..1bd27ca 100644
  			const steeringAvailable = subagent === null || subagent.address.mode === "continuable";
  			const canSteerQueue = !locked && !machineBusy && !commandMenuOpen && empty && running && steeringAvailable && input.queue.length > 0;
  			(0, react.useEffect)(() => {
-@@ -19047,6 +19081,16 @@ window.__ModuleLoader__.load({
+@@ -19047,6 +19092,16 @@ window.__ModuleLoader__.load({
  				if (locked || draft === "") return;
  				revealSelection();
  			}, [draft !== ""]);
@@ -199,7 +251,7 @@ index 6fbff72..1bd27ca 100644
  			(0, react.useEffect)(() => {
  				return installDraftWheel(scrollRef);
  			}, []);
-@@ -19143,6 +19187,21 @@ window.__ModuleLoader__.load({
+@@ -19143,6 +19198,21 @@ window.__ModuleLoader__.load({
  					onRequestWorkspace();
  				}
  			};
@@ -221,7 +273,7 @@ index 6fbff72..1bd27ca 100644
  			const primaryStops = running && subagent === null && (empty || blocked !== void 0);
  			const primaryDisabled = primaryStops ? stop === void 0 : empty || disabled || machineBusy || uploadsPending;
  			const interruptible = running && continuable;
-@@ -19150,6 +19209,10 @@ window.__ModuleLoader__.load({
+@@ -19150,6 +19220,10 @@ window.__ModuleLoader__.load({
  			const plainMessageDraft = !empty && input?.phase === "plain" && !draft.trimStart().startsWith("/");
  			const primaryLabel = primaryStops ? t("input.stop") : running && steeringAvailable && !disabled && !uploadsPending && plainMessageDraft ? t(primarySubmitMode === "steer" ? "input.send.steer" : "input.send.queue") : t("input.send");
  			const onPrimary = () => {
@@ -232,7 +284,7 @@ index 6fbff72..1bd27ca 100644
  				if (primaryStops) {
  					stop?.();
  					return;
-@@ -19167,7 +19230,7 @@ window.__ModuleLoader__.load({
+@@ -19167,7 +19241,7 @@ window.__ModuleLoader__.load({
  				const translated = t(hintKey);
  				return translated !== hintKey ? translated : rawHint;
  			})();
@@ -241,7 +293,7 @@ index 6fbff72..1bd27ca 100644
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: clsx(InputBar_module_css_default.root, variant === "hero" && InputBar_module_css_default.hero),
  				children: [
-@@ -19191,16 +19254,13 @@ window.__ModuleLoader__.load({
+@@ -19191,16 +19265,13 @@ window.__ModuleLoader__.load({
  							e.stopPropagation();
  						} : void 0,
  						onMouseDown: onCardMouseDown,
@@ -259,7 +311,7 @@ index 6fbff72..1bd27ca 100644
  							renderSlot("conversation.input.attachments", {
  								attachments,
  								canAcceptDrop,
-@@ -19212,25 +19272,41 @@ window.__ModuleLoader__.load({
+@@ -19212,25 +19283,41 @@ window.__ModuleLoader__.load({
  								onRetryFile: (id) => {
  									retryFileUpload?.(id);
  								},
@@ -315,7 +367,7 @@ index 6fbff72..1bd27ca 100644
  							}),
  							(0, react_jsx_runtime.jsxs)("div", {
  								ref: rowRef,
-@@ -19358,8 +19434,7 @@ window.__ModuleLoader__.load({
+@@ -19358,8 +19445,7 @@ window.__ModuleLoader__.load({
  					}),
  					(0, react_jsx_runtime.jsxs)("div", {
  						className: InputBar_module_css_default.dock,
@@ -325,7 +377,32 @@ index 6fbff72..1bd27ca 100644
  							useProjection,
  							t
  						})]
-@@ -19969,6 +20044,14 @@ window.__ModuleLoader__.load({
+@@ -19926,6 +20012,24 @@ window.__ModuleLoader__.load({
+ 					};
+ 				}
+ 			});
++			/** Move the pre-send draft and attachments from `sessionId` to the Session a hero pick opens. */
++			const carryDraftFrom = (sessionId) => (nextId) => {
++				if (sessionId !== void 0 && nextId !== sessionId) {
++					const from = inputHub.shell(sessionId);
++					const draft = from.draftSnapshot;
++					const attachmentIds = from.snapshot.attachmentIds;
++					const next = inputHub.shell(nextId);
++					if (attachmentIds.length === 0 || next.addAttachments(attachmentIds)) {
++						if (sessions.binding(nextId) === void 0) throw new Error(`ui-conversation: session "${nextId}" resolved no binding`);
++						concreteConversation(ctx).rebindDraftFiles(nextId, attachmentIds);
++						if (draft.text !== "") {
++							next.setDraft(draft);
++							from.setDraft("");
++						}
++						if (attachmentIds.length > 0) for (const id of attachmentIds) from.removeAttachment(id);
++					}
++				}
++			};
+ 			const registerConversationRoot = () => slots.register({
+ 				name: "main.conversation",
+ 				children: { "conversation.header": {
+@@ -19969,6 +20073,14 @@ window.__ModuleLoader__.load({
  					"conversation.hero.options": {
  						kind: "list",
  						scope: "session"
@@ -340,15 +417,35 @@ index 6fbff72..1bd27ca 100644
  					}
  				},
  				slots: {
-@@ -19977,6 +20060,7 @@ window.__ModuleLoader__.load({
+@@ -19977,23 +20089,10 @@ window.__ModuleLoader__.load({
  				},
  				inject: (sessionId) => ({
  					hooks: { composerBlock: sessionId === void 0 ? ABSENT_BLOCK : composerBlocks.storeFor(sessionId) },
+-					selectWorkspace: (workspaceId) => workspaceNavigation.openWorkspace(workspaceId, (nextId) => {
+-						if (sessionId !== void 0 && nextId !== sessionId) {
+-							const from = inputHub.shell(sessionId);
+-							const draft = from.draftSnapshot;
+-							const attachmentIds = from.snapshot.attachmentIds;
+-							const next = inputHub.shell(nextId);
+-							if (attachmentIds.length === 0 || next.addAttachments(attachmentIds)) {
+-								if (sessions.binding(nextId) === void 0) throw new Error(`ui-conversation: session "${nextId}" resolved no binding`);
+-								concreteConversation(ctx).rebindDraftFiles(nextId, attachmentIds);
+-								if (draft.text !== "") {
+-									next.setDraft(draft);
+-									from.setDraft("");
+-								}
+-								if (attachmentIds.length > 0) for (const id of attachmentIds) from.removeAttachment(id);
+-							}
+-						}
+-					})
 +					startChatSession: (prompt) => workspaceNavigation.startChatSession(prompt),
- 					selectWorkspace: (workspaceId) => workspaceNavigation.openWorkspace(workspaceId, (nextId) => {
- 						if (sessionId !== void 0 && nextId !== sessionId) {
- 							const from = inputHub.shell(sessionId);
-@@ -20101,6 +20185,10 @@ window.__ModuleLoader__.load({
++					selectWorkspace: (workspaceId) => workspaceNavigation.openWorkspace(workspaceId, carryDraftFrom(sessionId)),
++					// DSH Desktop: the hero's "No workspace" pick moves the pre-send draft to a Chat Session.
++					openChatSession: () => workspaceNavigation.openChatSession(carryDraftFrom(sessionId), {})
+ 				})
+ 			}, ConversationContent);
+ 			const registerConversationSession = () => slots.register({
+@@ -20101,6 +20200,10 @@ window.__ModuleLoader__.load({
  						kind: "list",
  						scope: "session"
  					},
@@ -359,7 +456,7 @@ index 6fbff72..1bd27ca 100644
  					"conversation.input.permission": {
  						kind: "single",
  						scope: "session"
-@@ -20137,6 +20225,7 @@ window.__ModuleLoader__.load({
+@@ -20137,6 +20240,7 @@ window.__ModuleLoader__.load({
  						removeAttachment: void 0,
  						resolveDraftAttachments: void 0,
  						retryFileUpload: void 0,
@@ -367,7 +464,7 @@ index 6fbff72..1bd27ca 100644
  						toggleCommandMenu: void 0,
  						stop: void 0,
  						hooks: {
-@@ -20203,6 +20292,11 @@ window.__ModuleLoader__.load({
+@@ -20203,6 +20307,11 @@ window.__ModuleLoader__.load({
  						retryFileUpload: (id) => {
  							if (sessions.binding(sessionId) !== void 0) conversation.retryFileUpload(sessionId, id);
  						},
@@ -379,7 +476,7 @@ index 6fbff72..1bd27ca 100644
  						toggleCommandMenu: inputTriggers === void 0 ? void 0 : (selection) => {
  							shell.dismissPopup();
  							const snapshot = shell.snapshot;
-@@ -20235,10 +20329,7 @@ window.__ModuleLoader__.load({
+@@ -20235,10 +20344,7 @@ window.__ModuleLoader__.load({
  				yield slots.register({
  					name: "main",
  					key: "conversation",
