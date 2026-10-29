@@ -154,7 +154,11 @@ switch colours) as theme override tokens with light and dark values, so panes
 follow the active scheme without hand-written dark selectors. Pane opacity
 starts at a legibility floor and frost only adds to it;
 `test/desktop-theme-contrast.test.ts` checks text contrast over every fluid
-bloom. In mica mode pages float on one content pane. An active conversation's
+bloom. Over the fluid the floor is fitted live to the chosen palette
+(`glass-floor.ts`), and while a conversation is open a reading wash brightens
+(light) or darkens (dark) the backdrop just enough for its bare text; image
+wallpapers are sampled to size their veil and floor the same way
+(`wallpaper-legibility.ts`). In mica mode pages float on one content pane. An active conversation's
 transcript has no pane and reads on the backdrop under its floating header; the
 trajectory view is its own glass card that ends above the composer. The hero
 stays on the bare backdrop. Compatibility mode keeps the native columns and

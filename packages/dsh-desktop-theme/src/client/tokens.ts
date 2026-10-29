@@ -16,7 +16,7 @@ const GLASS_TOKENS: ThemeTokenOverrides = {
   '--dsh-desktop-glass-floor': { light: '0.76', dark: '0.72' },
   '--dsh-desktop-glass-stroke': { light: 'rgba(19, 45, 83, 0.14)', dark: 'rgba(160, 190, 230, 0.16)' },
   '--dsh-desktop-glass-edge': { light: 'rgba(255, 255, 255, 0.6)', dark: 'rgba(255, 255, 255, 0.08)' },
-  '--dsh-desktop-glass-shadow': { light: '0 10px 34px rgba(19, 45, 83, 0.12)', dark: '0 10px 34px rgba(2, 6, 14, 0.4)' },
+  '--dsh-desktop-glass-shadow': { light: '0 8px 28px rgba(19, 45, 83, 0.08)', dark: '0 10px 34px rgba(2, 6, 14, 0.4)' },
   // Cards inside a pane: a lighter (light) or lifted (dark) tile over it.
   '--dsh-desktop-glass-tile': { light: 'rgba(255, 255, 255, 0.56)', dark: 'rgba(148, 180, 220, 0.07)' },
   // Upstream draws the on track with brand-primary, which is near-white in
@@ -48,10 +48,12 @@ export const BASE_TOKENS: ThemeTokenOverrides = {
   '--dsw-alias-border-inverted2': { light: 'rgba(19, 45, 83, 0.08)', dark: 'rgba(148, 180, 220, 0.08)' },
   // Text sits on translucent glass over a moving backdrop. These steps keep
   // secondary text at 4.5:1 and tertiary near it over the glass floor below,
-  // even where a saturated fluid bloom passes behind the pane.
+  // even where a saturated fluid bloom passes behind the pane. The light
+  // secondary and tertiary steps sit close to primary so the live floor
+  // (glass-floor.ts) can stay translucent over deep palettes.
   '--dsw-alias-label-primary': { light: '#13243E', dark: '#EAF2FC' },
-  '--dsw-alias-label-secondary': { light: '#364D6C', dark: '#C3D3E7' },
-  '--dsw-alias-label-tertiary': { light: '#44597A', dark: '#A3B6CF' },
+  '--dsw-alias-label-secondary': { light: '#2A3F5E', dark: '#C3D3E7' },
+  '--dsw-alias-label-tertiary': { light: '#354A6B', dark: '#A3B6CF' },
   '--dsw-alias-label-caption': { light: '#5A6F8C', dark: '#8DA2BD' },
   '--dsw-alias-label-dimmed': { light: '#C9D4E2', dark: '#4E5F76' },
   '--dsw-alias-label-primary-bluish': { light: '#2E5EB8', dark: '#BFD6F6' },

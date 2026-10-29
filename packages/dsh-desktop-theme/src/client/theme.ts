@@ -2,6 +2,8 @@ import type { Context } from '@deepseek-ai/cordis'
 import { DEFAULT_SETTINGS, normalizeSettings, type ThemeSettings } from './settings-model.ts'
 import { BASE_TOKENS, COMPAT_TOKENS } from './tokens.ts'
 import { ensureAmbient, startSeamStamper } from './ambient.ts'
+import { liveGlassFloor, liveTextWash } from './glass-floor.ts'
+import { FALLBACK_VEIL, sampleWallpaper, wallpaperFloor, wallpaperVeil } from './wallpaper-legibility.ts'
 import type { EffectsController } from './effects.ts'
 
 export const THEME_ATTRIBUTE = 'data-dsh-desktop-theme'
@@ -33,6 +35,10 @@ export class ThemeLayer {
   private effects: EffectsController | undefined
   private videoUrl: string | undefined
   private videoMarker: string | undefined
+  /** Pixels of the current image wallpaper, darkest first, once sampled. */
+  private wallpaperSample: { src: string, pixels: Array<[number, number, number]> } | undefined
+  private wallpaperSampling: string | undefined
+  private wallpaperSampleFailed: string | undefined
   private loadGeneration = 0
   private mutationGeneration = 0
   private saveTimer: ReturnType<typeof setTimeout> | undefined
@@ -228,7 +234,8 @@ export class ThemeLayer {
       '--dsh-desktop-blur', '--dsh-desktop-frost', '--dsh-desktop-surface-frost', '--dsh-desktop-frost-ratio',
       '--dsh-desktop-wallpaper-blur', '--dsh-desktop-wallpaper-frost', '--dsh-desktop-video-blur',
       '--dsh-desktop-video-dim', '--dsh-desktop-brightness-black', '--dsh-desktop-brightness-white',
-      '--dsh-desktop-glow-hue',
+      '--dsh-desktop-glow-hue', '--dsh-desktop-glass-floor-live', '--dsh-desktop-wallpaper-veil',
+      '--dsh-desktop-wallpaper-shade', '--dsh-desktop-text-wash-white', '--dsh-desktop-text-wash-black',
     ]) root.style.removeProperty(name)
     this.videoUrl = undefined
     this.videoMarker = undefined
@@ -256,6 +263,7 @@ export class ThemeLayer {
     style.setProperty('--dsh-desktop-surface-frost', String(Math.min((settings.frost + 20) / 50, 1.4)))
     // Glass panes rise from the legibility floor toward opaque as frost grows.
     style.setProperty('--dsh-desktop-frost-ratio', String(settings.frost / 100))
+    this.applyLegibility(settings)
     style.setProperty('--dsh-desktop-wallpaper-blur', `${settings.wallpaperBlur}px`)
     style.setProperty('--dsh-desktop-wallpaper-frost', String(settings.wallpaperFrost / 100))
     style.setProperty('--dsh-desktop-video-blur', `${settings.videoBlur}px`)
@@ -279,6 +287,54 @@ export class ThemeLayer {
     this.effects?.update(settings, this.dark)
   }
 
+  /**
+   * Fit the glass floor, and over a wallpaper the bare-backdrop wash, to what
+   * is actually behind the panes (glass-floor.ts, wallpaper-legibility.ts).
+   */
+  private applyLegibility(settings: ThemeSettings): void {
+    const style = document.documentElement.style
+    const wallpaper = settings.background === 'wallpaper' && settings.wallpaper !== '' ? settings.wallpaper : undefined
+    if (wallpaper === undefined) {
+      style.removeProperty('--dsh-desktop-wallpaper-veil')
+      style.removeProperty('--dsh-desktop-wallpaper-shade')
+      style.setProperty('--dsh-desktop-glass-floor-live', String(liveGlassFloor(this.dark, settings.fluidHue, settings.fluidDepth, settings.bgBrightness)))
+      // Only mica leaves conversation text on the bare fluid.
+      const wash = settings.mode === 'compat' ? 0 : liveTextWash(this.dark, settings.fluidHue, settings.fluidDepth, settings.bgBrightness)
+      style.setProperty(this.dark ? '--dsh-desktop-text-wash-black' : '--dsh-desktop-text-wash-white', String(wash))
+      style.removeProperty(this.dark ? '--dsh-desktop-text-wash-white' : '--dsh-desktop-text-wash-black')
+      return
+    }
+    // A wallpaper's own veil already covers text on the bare backdrop.
+    style.removeProperty('--dsh-desktop-text-wash-white')
+    style.removeProperty('--dsh-desktop-text-wash-black')
+    const frost = settings.wallpaperFrost / 100
+    const pixels = this.wallpaperSample?.src === wallpaper ? this.wallpaperSample.pixels : undefined
+    // A video cannot be sampled ahead of time; it keeps the fallback wash.
+    if (pixels === undefined && !wallpaper.startsWith('host:')) this.sampleWallpaper(wallpaper)
+    // Mica leaves text on the backdrop; compatibility keeps it on full-bleed glass.
+    const veil = settings.mode === 'compat' ? 0 : pixels ? wallpaperVeil(this.dark, pixels, frost) : FALLBACK_VEIL[this.dark ? 'dark' : 'light']
+    style.setProperty(this.dark ? '--dsh-desktop-wallpaper-shade' : '--dsh-desktop-wallpaper-veil', String(veil))
+    style.removeProperty(this.dark ? '--dsh-desktop-wallpaper-veil' : '--dsh-desktop-wallpaper-shade')
+    if (pixels) style.setProperty('--dsh-desktop-glass-floor-live', String(wallpaperFloor(this.dark, pixels, frost, veil)))
+    else style.removeProperty('--dsh-desktop-glass-floor-live')
+  }
+
+  private sampleWallpaper(src: string): void {
+    if (this.wallpaperSampling === src || this.wallpaperSampleFailed === src) return
+    this.wallpaperSampling = src
+    sampleWallpaper(src).then((pixels) => {
+      if (this.wallpaperSampling !== src) return
+      this.wallpaperSampling = undefined
+      this.wallpaperSample = { src, pixels }
+      if (this.mounted && this.state.settings.enabled) this.apply()
+    }, (error: unknown) => {
+      if (this.wallpaperSampling === src) this.wallpaperSampling = undefined
+      // The fallback wash and the fixed floor stay in place; retrying the same image would fail again.
+      this.wallpaperSampleFailed = src
+      console.warn('dsh-desktop-theme: could not sample the wallpaper; keeping the fallback wash', error)
+    })
+  }
+
   private syncWallpaper(): void {
     const wallpaper = this.state.settings.wallpaper
     const isVideo = wallpaper.startsWith('host:')
@@ -287,6 +343,15 @@ export class ThemeLayer {
     root.toggleAttribute('data-dsh-desktop-wallpaper', active)
     if (active) root.setAttribute('data-dsh-desktop-media', isVideo ? 'video' : 'image')
     else root.removeAttribute('data-dsh-desktop-media')
+    // The layer's own markers switch its dim/frost veil off over the fluid.
+    // Without them the video dim (0.36 black by default) sat over the fluid in
+    // every scheme and turned the light theme grey.
+    const layer = document.querySelector<HTMLElement>('[data-dsh-desktop-wallpaper-layer]')
+    if (layer !== null) {
+      layer.dataset.background = active ? 'wallpaper' : 'fluid'
+      if (active && isVideo) layer.dataset.media = 'video'
+      else delete layer.dataset.media
+    }
 
     const image = document.querySelector<HTMLImageElement>('[data-dsh-desktop-wallpaper-img]')
     if (image !== null) {

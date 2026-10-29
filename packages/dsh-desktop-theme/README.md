@@ -66,20 +66,48 @@ overlay is open, and never tilts as the collapsed rail.
 The material lives in theme override tokens (`--dsh-desktop-glass-*`, bubble and
 switch colours) with light and dark values; do not add `body[data-ds-dark-theme]`
 branches for glass surfaces. Pane opacity starts at a legibility floor and the
-frost setting only adds to it. `test/desktop-theme-contrast.test.ts` checks the
-text tokens against every fluid bloom; keep it passing when retuning colours.
+frost setting only adds to it. The fixed floor token survives the darkest bloom
+of every palette; over the fluid, `glass-floor.ts` replaces it with a live floor
+(`--dsh-desktop-glass-floor-live` on `html`) fitted to the chosen palette's
+blooms, each taken as if it filled the pane, so pale palettes show through.
+Modal panels never drop below the fixed floor, because the modal mask darkens
+what is behind them. `test/desktop-theme-contrast.test.ts` checks the tokens
+against every bloom and `test/desktop-theme-live-glass.test.ts` checks the live
+floor, reading wash and wallpaper veil; keep both passing when retuning colours.
+
+Mica leaves conversation text on the bare backdrop, so while a conversation is
+open (`data-dsh-desktop-reading` on `html`, stamped by `ambient.ts`) the
+ambient layer fades in the reading wash: the least white (light) or black
+(dark) layer that brings bare text to the same targets, with room for the
+whale's dots, mesh lines and card shadows. It sits above the whale (z-index 2),
+whose light-scheme multiply blend would otherwise darken text backgrounds. Over
+an image wallpaper, `wallpaper-legibility.ts` samples the picture and sets the
+wallpaper layer's veil (`--dsh-desktop-wallpaper-veil` / `-shade`) for 98% of
+it, and fits the pane floor to the washed pixels; video keeps a fixed veil.
+The wallpaper layer carries `data-background` and `data-media` so its dim and
+frost veil stay off over the fluid; without them the video dim (0.36 black by
+default) sat over every fluid backdrop.
 
 In mica mode pages sit on one content pane beside the sidebar. An active
 conversation's transcript has no pane: it reads straight on the backdrop under
 its floating header, and user bubbles use the raised glass. The trajectory view
 is its own glass card, aligned with the header and ending above the composer,
-which it never encloses. The hero stays on the bare backdrop with the particle
-whale. Do not add text shadows to the transcript. Compatibility
-mode gives the sidebar and center column full-bleed glass. Center pages, settings sections,
+which it never encloses. The right sidebar's dock is its own glass card, inset
+like the left sidebar; the card sits on the dock host that slides, so it moves
+with the panel when it opens and closes. The hero stays on the bare backdrop
+with the particle whale. Do not add text shadows to the transcript. Delivered
+file cards (`[data-presented-file]`) take the raised glass. Upstream's modal
+mask leaves the Windows caption row uncovered; the theme sets
+`--dsh-frame-chrome-top: 0px` on the modal overlay so the mask reaches the top
+edge. Compatibility mode gives the sidebar, center column and right dock
+full-bleed glass, and frosts the composer so the transcript scrolling behind it
+stays blurred. Center pages, settings sections,
 sub-tab panels and modal dialogs share an opacity-only enter animation that
 `prefers-reduced-motion` disables.
-The layout patch adds only the `data-dsh-desktop-center` marker used to remove
-the center divider and shadow; it does not override upstream column geometry.
+The layout patch adds the `data-dsh-desktop-center` marker used to remove the
+center divider and shadow, and makes a sidebar toggle's first commit carry
+`data-animating` so the column change always transitions; it does not override
+upstream column geometry.
 Theme unmount must never strip `data-dsh-desktop-center`.
 
 Deep surfaces also expose the fluid backdrop: the trajectory view

@@ -385,6 +385,44 @@ describe('desktop theme client', () => {
     expect(themeCss).toContain('[data-dsh-desktop-float] [data-dsh-desktop-trajectory]::before {')
   })
 
+  it('covers the caption under modals and glazes the surfaces the audit found bare', async () => {
+    const themeCss = await readFile(
+      path.join(projectRoot, 'packages', 'dsh-desktop-theme', 'src', 'client', 'theme-css.ts'),
+      'utf8'
+    )
+    const rule = (selector: string): string => {
+      const start = themeCss.indexOf(`${selector} {`)
+      if (start < 0) throw new Error(`missing rule ${selector}`)
+      return themeCss.slice(start, themeCss.indexOf('}', start))
+    }
+    // Upstream's mask starts below the Windows caption, which left a hard
+    // seam across the window while settings were open.
+    expect(rule('[data-dsh-desktop-theme] :has(> [data-shortcut-modal])')).toContain('--dsh-frame-chrome-top: 0px;')
+    // Delivered-file cards used opaque neutral fills on the glass transcript.
+    expect(rule('[data-dsh-desktop-theme] [data-presented-file]')).toContain('--deliverable-fill: var(--dsh-desktop-glass-raised);')
+    // The right dock floats as a card on the host that slides, so closing the
+    // panel no longer sweeps a bare strip across the center.
+    expect(rule("[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-host='dock'],\n[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-empty]")).toContain('margin: 12px 12px 12px 0;')
+    // Compatibility's composer frosts what scrolls behind it.
+    expect(rule("[data-dsh-desktop-compat] [data-composer-card]::before")).toContain('backdrop-filter: var(--dsh-desktop-glass-filter);')
+    // The reading wash sits above the whale and fades with the conversation.
+    const ambient = rule('[data-dsh-desktop-theme] [data-dsh-desktop-ambient]::after')
+    expect(ambient).toContain('z-index: 2;')
+    expect(ambient).toContain('calc(var(--dsh-desktop-text-wash-white, 0) * var(--dsh-desktop-reading, 0))')
+    expect(rule('[data-dsh-desktop-theme][data-dsh-desktop-reading]')).toContain('--dsh-desktop-reading: 1;')
+    // Modal panels never thin below the fixed floor: the mask darkens behind them.
+    expect(rule("[data-dsh-desktop-theme] body [role='dialog'][aria-modal='true']")).toContain('max(var(--dsh-desktop-glass-floor, 0.74), var(--dsh-desktop-glass-alpha))')
+  })
+
+  it('carries the sidebar toggle animation marker in the toggle\'s first commit', async () => {
+    const layoutPatch = await readFile(patchPath('@deepseek-ai/dsh-client-ui-layout'), 'utf8')
+    // Upstream marked data-animating one commit after changing the columns, so
+    // a layout read in between settled them without a transition and closing
+    // the right sidebar snapped the cards to full width.
+    expect(layoutPatch).toContain('+\t\t\tconst toggling = previousToggle.current !== trackToggle && previousViewport.current === viewport;')
+    expect(layoutPatch).toContain('+\t\t\t\t"data-animating": animating > 0 || toggling || void 0,')
+  })
+
   it('marks the trajectory root so the theme can scope its surfaces', async () => {
     const [patch, installed] = await Promise.all([
       readFile(patchPath('@deepseek-ai/dsh-client-ui-trajectory'), 'utf8'),

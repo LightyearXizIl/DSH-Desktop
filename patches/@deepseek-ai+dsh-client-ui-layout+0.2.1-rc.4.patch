@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js
-index a5096f4..2e8513d 100644
+index a5096f4..a06afc3 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-layout/lib/client.js
 @@ -111,6 +111,7 @@ window.__ModuleLoader__.load({
@@ -10,3 +10,23 @@ index a5096f4..2e8513d 100644
  				children: props.children
  			});
  		}
+@@ -253,6 +254,10 @@ window.__ModuleLoader__.load({
+ 			const trackToggle = `${sidebarCollapsed}:${layoutInfo.rightbarTrack}`;
+ 			const previousToggle = (0, react.useRef)(trackToggle);
+ 			const previousViewport = (0, react.useRef)(viewport);
++			// DSH Desktop: the toggle's first commit already carries data-animating.
++			// The layout effect below only marks it for the next commit, and a
++			// layout read in between resolves the new columns without a transition.
++			const toggling = previousToggle.current !== trackToggle && previousViewport.current === viewport;
+ 			(0, react.useLayoutEffect)(() => {
+ 				const viewportChanged = previousViewport.current !== viewport;
+ 				previousViewport.current = viewport;
+@@ -325,7 +330,7 @@ window.__ModuleLoader__.load({
+ 				"data-rightbar-fullscreen": layoutInfo.rightbarFullscreen || void 0,
+ 				"data-rightbar-instant": layoutInfo.rightbarInstant || void 0,
+ 				"data-dragging": dragging || void 0,
+-				"data-animating": animating > 0 || void 0,
++				"data-animating": animating > 0 || toggling || void 0,
+ 				children: [
+ 					(0, react_jsx_runtime.jsx)(DocumentTitle, {
+ 						productTitle,

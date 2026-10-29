@@ -18,6 +18,21 @@ export const THEME_RUNTIME_STYLES = String.raw`
   --dsw-specific-bubble: var(--dsh-desktop-glass-raised);
   --dsw-specific-bubble-highlight: var(--dsh-desktop-glass-raised);
 }
+/* Delivered-file cards fill with upstream's static neutral greys, which read
+   as solid slabs on the glass transcript; they take the raised glass the user
+   bubbles use, with a faint hover tint over it. */
+[data-dsh-desktop-theme] [data-presented-file] {
+  --deliverable-fill: var(--dsh-desktop-glass-raised);
+  --deliverable-hover: color-mix(in srgb, var(--dsh-desktop-glass-raised), var(--dsw-alias-label-primary) 6%);
+  border-color: var(--dsh-desktop-glass-stroke);
+}
+/* Upstream's modal mask starts below the Windows caption row, leaving the
+   caption unmasked; over the backdrop that cuts a hard seam across the window.
+   Run the mask to the top edge. The caption's drag area is already released
+   while a dialog is open, and the native window buttons draw above the page. */
+[data-dsh-desktop-theme] :has(> [data-shortcut-modal]) {
+  --dsh-frame-chrome-top: 0px;
+}
 /* The trajectory view floats on its own glass pane, inset to line up with
    the floating header above it. The plate is the view's own, so it ends
    above the composer instead of reaching under it; the timeline plot and
@@ -99,12 +114,14 @@ export const THEME_RUNTIME_STYLES = String.raw`
 }
 /* Liquid Glass material. The tint, floor, stroke and shadow are scheme-aware
    theme tokens (tokens.ts) published on body, so these derived values are
-   declared there too. Frost only adds opacity above the legibility floor. */
+   declared there too. Over the fluid, the live floor from glass-floor.ts
+   (set on html) replaces the fixed one. Frost only adds opacity above it. */
 [data-dsh-desktop-theme] body {
-  --dsh-desktop-glass-alpha: calc(var(--dsh-desktop-glass-floor, 0.74) + (0.96 - var(--dsh-desktop-glass-floor, 0.74)) * var(--dsh-desktop-frost-ratio, 0.07));
+  --dsh-desktop-glass-base: var(--dsh-desktop-glass-floor-live, var(--dsh-desktop-glass-floor, 0.74));
+  --dsh-desktop-glass-alpha: calc(var(--dsh-desktop-glass-base) + (0.96 - var(--dsh-desktop-glass-base)) * var(--dsh-desktop-frost-ratio, 0.07));
   --dsh-desktop-glass-fill: rgb(var(--dsh-desktop-glass-tint, 255 255 255) / var(--dsh-desktop-glass-alpha));
   --dsh-desktop-glass-raised: rgb(var(--dsh-desktop-glass-tint, 255 255 255) / calc(var(--dsh-desktop-glass-alpha) + 0.06));
-  --dsh-desktop-glass-filter: blur(var(--dsh-desktop-blur, 20px)) saturate(160%);
+  --dsh-desktop-glass-filter: blur(var(--dsh-desktop-blur, 20px)) saturate(180%);
   --dsh-desktop-glass-lift: inset 0 1px 0 var(--dsh-desktop-glass-edge), var(--dsh-desktop-glass-shadow);
 }
 [data-dsh-desktop-theme] [data-dsh-desktop-frame],
@@ -137,13 +154,22 @@ export const THEME_RUNTIME_STYLES = String.raw`
 [data-dsh-desktop-theme] body[data-ds-dark-theme] [data-dsh-desktop-ambient] {
   background: #070d14;
 }
+/* The brightness control's veil, raised to the reading wash (glass-floor.ts)
+   while a conversation is open: mica leaves its text on the bare fluid. */
 [data-dsh-desktop-theme] [data-dsh-desktop-ambient]::after {
   content: '';
   position: absolute;
   inset: 0;
+  /* Above the whale (z-index 1, multiply-blended in light), so the wash and
+     the brightness veil cover every decoration, not only the fluid. */
+  z-index: 2;
   pointer-events: none;
-  background: rgba(0, 0, 0, var(--dsh-desktop-brightness-black, 0));
-  box-shadow: inset 0 0 0 100vmax rgba(255, 255, 255, var(--dsh-desktop-brightness-white, 0));
+  background: rgba(0, 0, 0, max(var(--dsh-desktop-brightness-black, 0), calc(var(--dsh-desktop-text-wash-black, 0) * var(--dsh-desktop-reading, 0))));
+  box-shadow: inset 0 0 0 100vmax rgba(255, 255, 255, max(var(--dsh-desktop-brightness-white, 0), calc(var(--dsh-desktop-text-wash-white, 0) * var(--dsh-desktop-reading, 0))));
+  transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+[data-dsh-desktop-theme][data-dsh-desktop-reading] {
+  --dsh-desktop-reading: 1;
 }
 [data-dsh-desktop-theme] body > #root {
   position: relative;
@@ -185,8 +211,9 @@ export const THEME_RUNTIME_STYLES = String.raw`
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, var(--dsh-desktop-video-dim, 0));
-  box-shadow: inset 0 0 0 100vmax rgba(255, 255, 255, var(--dsh-desktop-wallpaper-frost, 0));
+  /* The legibility wash (wallpaper-legibility.ts) only ever adds to the user's own. */
+  background: rgba(0, 0, 0, max(var(--dsh-desktop-video-dim, 0), var(--dsh-desktop-wallpaper-shade, 0)));
+  box-shadow: inset 0 0 0 100vmax rgba(255, 255, 255, max(var(--dsh-desktop-wallpaper-frost, 0), var(--dsh-desktop-wallpaper-veil, 0)));
   pointer-events: none;
 }
 [data-dsh-desktop-theme] [data-dsh-desktop-wallpaper-layer][data-background='fluid']::after {
@@ -289,6 +316,24 @@ export const THEME_RUNTIME_STYLES = String.raw`
   border-radius: var(--dsw-radius-panel);
   background: none;
 }
+/* Compatibility's composer is translucent too, and the transcript scrolls
+   behind it; without a blur the passing text reads through the placeholder.
+   It takes the same frosted plate as mica, without lift or tilt. */
+[data-dsh-desktop-compat] [data-composer-card] {
+  position: relative;
+  isolation: isolate;
+  background: none;
+}
+[data-dsh-desktop-compat] [data-composer-card]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--dsh-desktop-glass-raised);
+  backdrop-filter: var(--dsh-desktop-glass-filter);
+}
 /* Only a conversation with a title floats its header. The hero header holds
    nothing but the dock toggle, and page headers sit on the content pane. */
 [data-dsh-desktop-float] [data-phase='active'] header {
@@ -361,6 +406,45 @@ export const THEME_RUNTIME_STYLES = String.raw`
 }
 [data-dsh-desktop-float] [data-dsh-desktop-frame]:not([data-sidebar-collapsed]) [data-dsh-sidebar-root] {
   width: 100% !important;
+}
+/* The right sidebar's dock floats as its own glass card beside the header and
+   composer, inset like the left sidebar. The card rides on the dock host,
+   which is what slides in and out, so it travels with the panel instead of
+   the panel sweeping across the center as a bare strip. Compatibility mode
+   gives the same hosts full-bleed glass like its other columns. */
+[data-dsh-desktop-theme] [data-sidebar-right-panel] [data-dockkit-host='dock'],
+[data-dsh-desktop-theme] [data-sidebar-right-panel] [data-dockkit-empty] {
+  position: relative;
+  isolation: isolate;
+}
+[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-host='dock'],
+[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-empty] {
+  box-sizing: border-box;
+  margin: 12px 12px 12px 0;
+  border-radius: var(--dsw-radius-xl);
+}
+[data-dsh-desktop-theme] [data-sidebar-right-panel] [data-dockkit-host='dock']::before,
+[data-dsh-desktop-theme] [data-sidebar-right-panel] [data-dockkit-empty]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--dsh-desktop-glass-fill);
+  backdrop-filter: var(--dsh-desktop-glass-filter);
+}
+[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-host='dock']::before,
+[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-empty]::before {
+  border: 1px solid var(--dsh-desktop-glass-stroke);
+  border-radius: inherit;
+  box-shadow: var(--dsh-desktop-glass-lift);
+}
+/* Inside the card the dock's own column rule and square corners go. */
+[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-host='dock'] > *,
+[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-empty] > * {
+  border-left-color: transparent;
+  border-radius: inherit;
+  overflow: hidden;
 }
 /* Every center view except the conversation (workbench, plugins, tasks, more)
    floats on one content pane beside the sidebar, so page text never lands on
@@ -450,9 +534,11 @@ export const THEME_RUNTIME_STYLES = String.raw`
 [data-dsh-desktop-theme][data-dsh-desktop-spotlight] [data-dsh-desktop-spot][data-spot-on] [data-dsh-desktop-glow] { opacity: 1; }
 [data-dsh-desktop-theme][data-dsh-desktop-spotlight] [data-dsh-desktop-inputbar][data-dsh-desktop-spot] [data-dsh-desktop-glow] { border-radius: var(--dsw-radius-panel); }
 /* Modal panels (settings, confirmations) are raised glass. Non-modal popovers
-   that also carry role=dialog keep their stock surface. */
+   that also carry role=dialog keep their stock surface. The modal mask behind
+   them darkens the backdrop beyond what the live floor was fitted to, so they
+   never drop below the fixed floor. */
 [data-dsh-desktop-theme] body [role='dialog'][aria-modal='true'] {
-  background: var(--dsh-desktop-glass-raised);
+  background: rgb(var(--dsh-desktop-glass-tint, 255 255 255) / calc(max(var(--dsh-desktop-glass-floor, 0.74), var(--dsh-desktop-glass-alpha)) + 0.06));
   backdrop-filter: blur(40px) saturate(160%);
 }
 [data-dsh-desktop-float] [role='treeitem'][aria-selected='true'] {
@@ -531,7 +617,8 @@ export const THEME_RUNTIME_STYLES = String.raw`
   [data-dsh-desktop-theme] [data-dsh-desktop-ambient],
   [data-dsh-desktop-theme] [data-desktop-theme-critter] { animation: none; }
   [data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-spot],
-  [data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-sidebar] { transition: none; }
+  [data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-sidebar],
+  [data-dsh-desktop-theme] [data-dsh-desktop-ambient]::after { transition: none; }
   [data-dsh-desktop-theme] [data-desktop-theme-critter='bubble'] { opacity: 0; }
 }
 `

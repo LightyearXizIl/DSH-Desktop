@@ -24,7 +24,7 @@
 | `dsh-client-ui-chat` | 上传附件打开、PPT footer（首个人类消息只挂载一次）、额度/权限错误文案、解码速度显示 | `file-preview`、`local-path-links`、`ppt-integration`、`provider-error-patch` | 上游提供附件动作、消息 footer 及相同文件路由 |
 | `dsh-client-ui-conversation` | `conversation.hero.modeActions`、`conversation.hero.dock`、输入附件接缝、`desktop.workbench.frame`，同时保留上游的 `hero.options`、`input.accessory` 与 More 菜单；首页工作区选择“不在工作区”时把草稿带到新的聊天会话，聊天会话的工作区标签显示“不在工作区” | `workbench-patch-slots`、`ppt-integration`、`conversation-input-css`、`patch-runtime-compatibility`、`no-workspace-picker-patch` | 上游提供这些独立 slot，布局及生命周期等价；上游首页支持无工作区会话 |
 | `dsh-client-ui-deliverables` | 识别回答中的本地路径/文件夹并提供打开入口，排除包名、邮箱等误识别 | `local-path-links`、`file-preview` | 上游原生识别相同路径并保留打开语义 |
-| `dsh-client-ui-layout` | 在 `CenterColumn` 上渲染 `data-dsh-desktop-center` 标记，供 Liquid Glass 主题去掉中间列分隔线与阴影、挂载页面玻璃面板 | `desktop-theme` | 上游提供稳定的中间列标记或主题变量 |
+| `dsh-client-ui-layout` | 在 `CenterColumn` 上渲染 `data-dsh-desktop-center` 标记，供 Liquid Glass 主题去掉中间列分隔线与阴影、挂载页面玻璃面板；边栏开合的第一次渲染就带上 `data-animating`，避免中间的布局读取让列宽跳过过渡 | `desktop-theme` | 上游提供稳定的中间列标记或主题变量，并在同一次提交里设置动画标记 |
 | `dsh-client-ui-primitives` | Markdown mention 支持 `folder` 类型及文件夹图标 | `local-path-links` | 上游支持目录 mention 契约 |
 | `dsh-client-ui-settings-account` | 桌面端账号登录在系统浏览器打开授权页，不在 Harness 内跳转 `dsh://` | `settings-account-launcher` | 上游的桌面登录流程不再依赖协议回跳 |
 | `dsh-client-ui-settings-general` | 设置导航可滚动；调整 onboarding 的激活条件；“关于”使用信息图标而不是回退的齿轮 | `onboarding-patch`、`safe-mode`、`no-workspace-picker-patch` | 上游暴露等价的设置布局接缝；设置区注册可自带图标 |

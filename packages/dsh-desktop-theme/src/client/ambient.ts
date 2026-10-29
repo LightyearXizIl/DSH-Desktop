@@ -159,9 +159,13 @@ function paintBox(element: Element | null): Element | null {
   return current
 }
 
+/** Marks the document while a conversation is open, for the reading wash. */
+export const READING_ATTRIBUTE = 'data-dsh-desktop-reading'
+
 export function startSeamStamper(): () => void {
   const stampAll = (): void => {
     for (const seam of SEAMS) stamp(seam)
+    document.documentElement.toggleAttribute(READING_ATTRIBUTE, document.querySelector("[data-phase='active']") !== null)
   }
   stampAll()
   let queued = 0
@@ -176,6 +180,7 @@ export function startSeamStamper(): () => void {
   return () => {
     observer.disconnect()
     if (queued !== 0) cancelAnimationFrame(queued)
+    document.documentElement.removeAttribute(READING_ATTRIBUTE)
     // `data-dsh-desktop-center` is rendered by the tracked layout patch. React
     // will not restore an attribute this disposer strips, so clearing it left
     // the center column opaque after the theme was toggled off and on again.
