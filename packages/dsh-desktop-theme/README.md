@@ -126,3 +126,33 @@ fill must all use the same rounded percentage from `updatePercent()`.
 Run `npm run theme:build` after client source changes, and
 `npm run typecheck` from the repository root to check both the desktop host
 code and this package's strict TypeScript sources.
+
+## Visual audit
+
+The theme has eight visible combinations: light or dark, mica or
+compatibility, fluid or wallpaper backdrop. A change to materials, tokens or
+layering must be checked in all eight, not only in the one currently in use.
+
+- Run the development app with its own profile and a DevTools port, for
+  example from PowerShell after setting `$env:DSH_DEV_PROFILE`,
+  `$env:DSH_DEV_HARNESS_PORT` and `$env:DSH_DEV_MOBILE_PORT`:
+  `npm run dev -- --remoteDebuggingPort 9333`. Never audit against the
+  production `dsh-desktop` profile.
+- Set the Harness appearance to follow the system, then switch light and dark
+  through the DevTools protocol (`Emulation.setEmulatedMedia` with
+  `prefers-color-scheme`). A fixed light or dark appearance ignores the
+  emulated scheme, so every combination renders the same.
+- A hidden or background window does not advance `requestAnimationFrame` or
+  CSS transitions, and the fluid moves between captures. Measure contrast
+  inside a single screenshot rather than comparing one point across
+  screenshots, and disable the ambient layer's transition before measuring
+  the conversation wash.
+- Targets against the composited pixels behind the text: body and secondary
+  text at least 4.5:1, tertiary and caption text at least 3.8:1.
+  `test/desktop-theme-contrast.test.ts` and
+  `test/desktop-theme-live-glass.test.ts` check the colour model;
+  screenshots check the real composition, including decorations such as the
+  particle whale and grid.
+- The wallpaper layer must carry `data-background` (`fluid` or `wallpaper`).
+  Without it the video dimming overlay stays on over the fluid, which greyed
+  light mode and darkened dark mode before 0.0.4.

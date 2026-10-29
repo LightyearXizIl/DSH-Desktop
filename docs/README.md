@@ -9,7 +9,7 @@
 | 定位 | 面向 Windows 的 DeepSeek Harness 社区桌面客户端；Electron 外壳，复用 Harness 的 Agent 运行时与 Web UI，不另建运行时或业务前端 |
 | 作者 | NullPointer（GitHub [@LightyearXizIl](https://github.com/LightyearXizIl)） |
 | 仓库 | [LightyearXizIl/DSH-Desktop](https://github.com/LightyearXizIl/DSH-Desktop) |
-| 当前版本 | Desktop `0.0.3`；Harness `@deepseek-ai/dsh@0.2.1-rc.4`；Electron `43.0.0` |
+| 当前版本 | Desktop `0.0.4`（2026-10-29 发布）；Harness `@deepseek-ai/dsh@0.2.1-rc.4`；Electron `43.0.0` |
 | 发布平台 | Windows x64，未签名 NSIS 安装包，发布在 GitHub Releases |
 | 许可证 | MIT（见根目录 `LICENSE`） |
 
@@ -111,7 +111,7 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 | `patches/` | 34 个可重放补丁（见 [补丁清单](harness/patch-inventory.md)） |
 | `build/` | Profile 组合层 `*.patch.yml`、Harness 入口、恢复页 / 安全模式页 / 启动页 HTML、图标、NSIS 脚本 |
 | `scripts/` | 构建、打包门禁、PPT / Office / 主题生成器、验证脚本 |
-| `test/` | 约 223 个测试文件（行为、契约与真实子进程回归） |
+| `test/` | 约 230 个测试文件（行为、契约与真实子进程回归） |
 
 | 内置包 | 作用 |
 | --- | --- |
@@ -153,9 +153,27 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 | 继承的 CI 与签名工具 | `.github/workflows/`、`.github/scripts/`、`scripts/sign-windows-unpacked.mjs`、`scripts/jsign-windows-hook.mjs`、`scripts/electron-builder-windows.mjs` 中的 Jsign 分支 | 依赖本项目没有的签名硬件、镜像仓库与通知 Webhook，不在当前发布流程中使用 |
 | 测试断言绑定前身的官网 | `test/release.test.ts` 中 “routes stable downloads through the website” 要求 README 链接前身官网 | README 已去掉该链接，此用例会失败，需要同步修改测试 |
 | 版权声明 | 根 `LICENSE`、`packages/dsh-desktop-theme/LICENSE`、`packages/dsh-image-generation/LICENSE` | MIT 许可要求保留原版权声明，不能直接删除；根 `LICENSE` 已追加本项目的版权行 |
-| 0.0.3 原生启动页导航验收报 `UnknownVizError` | 开发环境 | 尚未解决 |
+| 0.0.3 原生启动页导航验收报 `UnknownVizError` | 开发环境 | 尚未解决，0.0.4 未重新验证 |
 
-## 7. 文档维护规则
+除前身残留外，当前还有这些已知问题：
+
+| 问题 | 位置 | 影响 |
+| --- | --- | --- |
+| 打包审批集成测试在 Windows 上失败 | `test/generation-build-approval.integration.test.js` | Git Bash 自带的 `tar` 把 `C:` 解析为远程主机；全量 `npm test` 因此固定有这一项失败，与产品代码无关 |
+| 0.0.3 无法自动更新到 0.0.4 | 0.0.3 安装包自带的 `app-update.yml` | 仍校验前身发行者的签名，会拒绝未签名的 0.0.4；用户需手动安装一次，之后可正常自动更新 |
+| 轨迹“助手”角色标签对比度偏低 | 上游 Harness 样式 | 10px 紫色小标签约 2.3～2.8:1，只能靠打包生成的类名定位，主题没有覆盖 |
+| 影像生成的 GrsAI 未做真实付费请求 | `packages/dsh-image-generation/` | 接口按文档和本机模拟服务验证；对话内不预览视频，视频不支持参考图、首尾帧和参考音频 |
+
+## 7. 当前进展（2026-10-29）
+
+接手开发前先看这一节，再看 [CHANGELOG.md](../CHANGELOG.md) 的最新条目。
+
+- **分支**：0.0.4 的全部改动在 `feat/liquid-glass`，已推送到远端但尚未合入 `main`（`main` 是它的祖先，可以快进合并）。
+- **发布**：GitHub Release `v0.0.4` 已发布并标记为 Latest，注释标签指向 `feat/liquid-glass` 上的提交 `0353203`。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 与 CHANGELOG 记录一致。
+- **未执行的验收**：安装程序本身的安装与覆盖升级、安装后启动、全新机器安装、真实模型请求、真实 GrsAI Key 的付费生成、macOS 构建。
+- **主题实测方法**：Liquid Glass 在 8 种组合下的检查方式见 [`packages/dsh-desktop-theme/README.md`](../packages/dsh-desktop-theme/README.md) 的 “Visual audit” 一节。
+
+## 8. 文档维护规则
 
 - 新文档放进对应的子目录，并在开头链接回本页、在本页“文档地图”中登记。
 - 以下路径被测试或脚本引用，**不要移动或改名**：`docs/architecture.md`、`docs/development.md`、`docs/release-runbook.md`、`docs/preset-packages.md`、`docs/office-runtime.md`、`docs/workbench-*.md`（6 份）。

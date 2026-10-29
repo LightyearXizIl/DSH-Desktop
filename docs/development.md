@@ -80,7 +80,10 @@ client source changes; `npm run build` and the test pre-hooks also rebuild it.
 Theme CSS must preserve upstream layout geometry and use Harness design tokens
 and controls instead of global border-radius overrides. The host-owned update
 and About dialogs are also part of the theme contract and must use the same
-progress percentage for copy, ARIA values and the visual fill.
+progress percentage for copy, ARIA values and the visual fill. Check visual
+changes in all eight light/dark × mica/compatibility × fluid/wallpaper
+combinations; the procedure is in the theme package README under
+[Visual audit](../packages/dsh-desktop-theme/README.md#visual-audit).
 
 ## Maintaining upstream patches
 
