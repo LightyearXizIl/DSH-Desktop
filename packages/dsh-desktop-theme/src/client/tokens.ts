@@ -4,6 +4,29 @@ const both = (value: string) => ({ light: value, dark: value })
 const FONT_STACK = "'Space Grotesk Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', "
   + "'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif"
 
+/**
+ * Liquid Glass material, published through the theme override layer so every
+ * pane follows the active scheme without a hand-written dark branch. The
+ * tint is an `r g b` triple for `rgb(var(--tint) / alpha)`; the floor is the
+ * minimum pane opacity that keeps text legible over the brightest or deepest
+ * fluid bloom, and the frost setting only adds opacity on top of it.
+ */
+const GLASS_TOKENS: ThemeTokenOverrides = {
+  '--dsh-desktop-glass-tint': { light: '255 255 255', dark: '17 23 33' },
+  '--dsh-desktop-glass-floor': { light: '0.76', dark: '0.72' },
+  '--dsh-desktop-glass-stroke': { light: 'rgba(19, 45, 83, 0.14)', dark: 'rgba(160, 190, 230, 0.16)' },
+  '--dsh-desktop-glass-edge': { light: 'rgba(255, 255, 255, 0.6)', dark: 'rgba(255, 255, 255, 0.08)' },
+  '--dsh-desktop-glass-shadow': { light: '0 10px 34px rgba(19, 45, 83, 0.12)', dark: '0 10px 34px rgba(2, 6, 14, 0.4)' },
+  // Cards inside a pane: a lighter (light) or lifted (dark) tile over it.
+  '--dsh-desktop-glass-tile': { light: 'rgba(255, 255, 255, 0.56)', dark: 'rgba(148, 180, 220, 0.07)' },
+  // Transcript text floats over the bare backdrop in mica mode.
+  '--dsh-desktop-halo': { light: 'rgba(255, 255, 255, 0.82)', dark: 'rgba(5, 9, 15, 0.78)' },
+  // Upstream draws the on track with brand-primary, which is near-white in
+  // dark mode, under a white thumb.
+  '--dsh-desktop-switch-on': { light: '#3A6FD1', dark: '#4F84E0' },
+  '--dsh-desktop-switch-off': { light: 'rgba(19, 45, 83, 0.26)', dark: 'rgba(160, 190, 230, 0.28)' },
+}
+
 export const BASE_TOKENS: ThemeTokenOverrides = {
   '--dsw-font-family': both(FONT_STACK),
   '--dsw-alias-bg-base': { light: '#F4F8FD', dark: '#0C121B' },
@@ -25,10 +48,13 @@ export const BASE_TOKENS: ThemeTokenOverrides = {
   '--dsw-alias-border-l4': { light: 'rgba(19, 45, 83, 0.32)', dark: 'rgba(148, 180, 220, 0.34)' },
   '--dsw-alias-border-inverted': { light: 'rgba(19, 45, 83, 0.06)', dark: 'rgba(148, 180, 220, 0.12)' },
   '--dsw-alias-border-inverted2': { light: 'rgba(19, 45, 83, 0.08)', dark: 'rgba(148, 180, 220, 0.08)' },
+  // Text sits on translucent glass over a moving backdrop. These steps keep
+  // secondary text at 4.5:1 and tertiary near it over the glass floor below,
+  // even where a saturated fluid bloom passes behind the pane.
   '--dsw-alias-label-primary': { light: '#13243E', dark: '#EAF2FC' },
-  '--dsw-alias-label-secondary': { light: '#40597A', dark: '#AFC3DC' },
-  '--dsw-alias-label-tertiary': { light: '#5D7696', dark: '#8399B5' },
-  '--dsw-alias-label-caption': { light: '#7E93AC', dark: '#6B829F' },
+  '--dsw-alias-label-secondary': { light: '#364D6C', dark: '#C3D3E7' },
+  '--dsw-alias-label-tertiary': { light: '#44597A', dark: '#A3B6CF' },
+  '--dsw-alias-label-caption': { light: '#5A6F8C', dark: '#8DA2BD' },
   '--dsw-alias-label-dimmed': { light: '#C9D4E2', dark: '#4E5F76' },
   '--dsw-alias-label-primary-bluish': { light: '#2E5EB8', dark: '#BFD6F6' },
   '--dsw-alias-label-primary-dimmed': { light: '#1E3556', dark: '#D7E3F4' },
@@ -42,8 +68,11 @@ export const BASE_TOKENS: ThemeTokenOverrides = {
   '--dsw-alias-state-business-tertiary': { light: '#DCE9FB', dark: '#1D2C44' },
   '--dsw-alias-state-success-tertiary': { light: '#DDF3E4', dark: '#12271C' },
   '--dsw-alias-state-warn-tertiary': { light: '#FCEED6', dark: '#2A2416' },
-  '--dsw-alias-button-primary-fill': { light: '#3F76D8', dark: '#4A7FD9' },
-  '--dsw-alias-button-primary-hover': { light: '#5C8DE0', dark: '#5E8FE6' },
+  // Upstream's amber warning label is 2.6:1 on the light glass.
+  '--dsw-alias-state-warn-label': { light: '#9A5410', dark: '#F2B65A' },
+  // White labels need 4.5:1 on the fill; the hover stays above that too.
+  '--dsw-alias-button-primary-fill': { light: '#3A6FD1', dark: '#3B6CCB' },
+  '--dsw-alias-button-primary-hover': { light: '#3567C4', dark: '#3567C4' },
   '--dsw-alias-button-primary-dimmed': { light: '#DCE9FB', dark: '#162130' },
   '--dsw-alias-button-info-fill': { light: '#3F76D8', dark: '#6E9BE8' },
   '--dsw-alias-button-info-hover': { light: '#5C8DE0', dark: '#7FA8EF' },
@@ -94,12 +123,22 @@ export const BASE_TOKENS: ThemeTokenOverrides = {
     light: '0 0 1px rgba(19, 45, 83, 0.08), 0 12px 32px rgba(19, 45, 83, 0.12)',
     dark: '0 0 1px rgba(2, 6, 14, 0.6), 0 12px 32px rgba(2, 6, 14, 0.55)',
   },
+  // The off thumb is a mid grey upstream; on a dark glass track it vanished.
+  '--dsw-alias-switch-thumb': { light: '#FFFFFF', dark: '#D5E0EE' },
+  // Menus already paint through upstream's material layer (a child that
+  // filters only the background), so the glass rides these tokens instead of
+  // a backdrop-filter on the menu element itself.
+  '--dsw-menu-surface-fill': { light: 'rgba(250, 252, 255, 0.86)', dark: 'rgba(23, 30, 42, 0.86)' },
+  '--dsw-menu-backdrop-filter': both('blur(28px) saturate(160%)'),
+  ...GLASS_TOKENS,
 }
 
 const COMPAT_SURFACES: ThemeTokenOverrides = {
   '--dsw-alias-bg-layer-1': { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(17, 26, 39, 0.55)' },
   '--dsw-alias-bg-layer-2': { light: 'rgba(236, 242, 250, 0.5)', dark: 'rgba(22, 33, 48, 0.55)' },
-  '--dsw-alias-bg-layer-3': { light: 'rgba(226, 235, 247, 0.45)', dark: 'rgba(28, 42, 61, 0.5)' },
+  // Upstream also uses layer-3 as the label colour of inverted tags, so it
+  // stays dense enough to read even though compat surfaces are glass.
+  '--dsw-alias-bg-layer-3': { light: 'rgba(226, 235, 247, 0.78)', dark: 'rgba(28, 42, 61, 0.8)' },
   '--dsw-alias-bg-overlay': { light: 'rgba(220, 231, 244, 0.6)', dark: 'rgba(34, 51, 74, 0.6)' },
   '--dsw-alias-bg-module-platform': { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(17, 26, 39, 0.55)' },
   '--dsw-alias-bg-multi-select': { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(22, 33, 48, 0.55)' },

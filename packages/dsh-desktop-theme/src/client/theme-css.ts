@@ -5,9 +5,73 @@ export const THEME_RUNTIME_STYLES = String.raw`
 [data-dsh-desktop-theme] [data-dsh-desktop-conversation] [data-dsh-desktop-inputbar] {
   background: transparent;
 }
-[data-dsh-desktop-theme] {
-  --dsh-desktop-glass-card-light: color-mix(in srgb, rgb(255 255 255) calc(42% * var(--dsh-desktop-frost, 1)), transparent);
-  --dsh-desktop-glass-card-dark: color-mix(in srgb, rgb(34 38 47) calc(50% * var(--dsh-desktop-frost, 1)), transparent);
+/* The trajectory split, toolbar and table all paint from the layer-1 token.
+   Re-point it inside the view so the same mica backdrop shows through; the
+   module's hashed classes are not a public seam. */
+[data-dsh-desktop-theme] [data-dsh-desktop-trajectory] {
+  --dsw-alias-bg-layer-1: transparent;
+  background: transparent;
+}
+/* The right sidebar dock paints its tab host and guide cards from the layer-1
+   token. Scope the token to the Session seat so the mica backdrop and fluid
+   canvas show through the whole right column; the dock's hashed classes stay
+   untouched. */
+[data-dsh-desktop-theme] [data-sidebar-right-session] {
+  --dsw-alias-bg-layer-1: transparent;
+  --dsw-alias-bg-base: transparent;
+}
+[data-dsh-desktop-theme] [data-sidebar-right-session] [data-dockkit-pane],
+[data-dsh-desktop-theme] [data-sidebar-right-session] [data-sidebar-right-guide-entry] {
+  background-color: transparent;
+}
+/* The chat group is a Desktop addition to the workspace tree. Give it the
+   same section-header shape as "工作区": no leading glyph, a quiet title and
+   the action cluster on the right. Creation stays the last action. */
+[data-dsh-desktop-theme] [data-chat-group] {
+  box-sizing: border-box;
+  height: 36px;
+  padding: 0 0 0 4px;
+  border-radius: var(--dsw-radius-md);
+  background: transparent;
+}
+[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_projectText {
+  flex: 1;
+  min-width: 0;
+}
+[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_projectText > span {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 14px;
+  font-weight: 400;
+}
+[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions {
+  display: inline-flex;
+  gap: 4px;
+  height: 28px;
+  margin-left: auto;
+}
+[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions button {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--dsw-radius-sm);
+}
+[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions > *:nth-child(1) {
+  order: 1;
+}
+[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions > *:nth-child(3) {
+  order: 2;
+}
+[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions > *:nth-child(2) {
+  order: 3;
+}
+/* Liquid Glass material. The tint, floor, stroke and shadow are scheme-aware
+   theme tokens (tokens.ts) published on body, so these derived values are
+   declared there too. Frost only adds opacity above the legibility floor. */
+[data-dsh-desktop-theme] body {
+  --dsh-desktop-glass-alpha: calc(var(--dsh-desktop-glass-floor, 0.74) + (0.96 - var(--dsh-desktop-glass-floor, 0.74)) * var(--dsh-desktop-frost-ratio, 0.07));
+  --dsh-desktop-glass-fill: rgb(var(--dsh-desktop-glass-tint, 255 255 255) / var(--dsh-desktop-glass-alpha));
+  --dsh-desktop-glass-raised: rgb(var(--dsh-desktop-glass-tint, 255 255 255) / calc(var(--dsh-desktop-glass-alpha) + 0.06));
+  --dsh-desktop-glass-filter: blur(var(--dsh-desktop-blur, 20px)) saturate(160%);
+  --dsh-desktop-glass-lift: inset 0 1px 0 var(--dsh-desktop-glass-edge), var(--dsh-desktop-glass-shadow);
 }
 [data-dsh-desktop-theme] [data-dsh-desktop-frame],
 [data-dsh-desktop-theme] [data-dsh-desktop-center],
@@ -153,17 +217,12 @@ export const THEME_RUNTIME_STYLES = String.raw`
   50% { opacity: 0.38; }
 }
 
+/* Controls inside a pane are tiles on that glass, not a second filter. */
 [data-dsh-desktop-float] [data-dsh-desktop-new-session] {
   border-radius: var(--dsw-radius-md);
-  background: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-desktop-surface-frost, 1)), transparent);
-  border: 1px solid rgba(19, 45, 83, 0.16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(var(--dsh-desktop-blur, 14px));
-}
-[data-dsh-desktop-float] body[data-ds-dark-theme] [data-dsh-desktop-new-session] {
-  background: color-mix(in srgb, rgb(42 46 56) calc(62% * var(--dsh-desktop-surface-frost, 1)), transparent);
-  border-color: rgba(148, 180, 220, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: var(--dsh-desktop-glass-tile);
+  border: 1px solid var(--dsh-desktop-glass-stroke);
+  box-shadow: inset 0 1px 0 var(--dsh-desktop-glass-edge);
 }
 /* Keep the upstream brand geometry and colors; only the content is visible. */
 [data-dsh-desktop-float] [data-dsh-desktop-brand] {
@@ -172,37 +231,62 @@ export const THEME_RUNTIME_STYLES = String.raw`
   box-shadow: none;
   backdrop-filter: none;
 }
+/* Windows pins the sidebar toggle to the caption row with position: fixed,
+   which is above the floating card's top edge. Seat it in the brand row ahead
+   of the wordmark so it belongs to the card; the collapsed rail keeps its
+   upstream caption-row position. */
+[data-windows-titlebar][data-dsh-desktop-float]
+  [data-dsh-desktop-frame]:not([data-sidebar-collapsed]) [data-dsh-desktop-sidebar] [data-window-drag] {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 6px;
+}
+[data-windows-titlebar][data-dsh-desktop-float]
+  [data-dsh-desktop-frame]:not([data-sidebar-collapsed]) [data-dsh-desktop-sidebar] [data-window-drag] > button:last-child {
+  position: static;
+  flex: none;
+}
 /* Chat bubbles are not a stable public seam. The generic compat token layer
    still glassifies them; mica mode leaves their stock shape intact. */
 [data-dsh-desktop-float] [data-composer-card] {
   position: relative;
   z-index: 8;
+  border: 1px solid transparent;
   border-radius: var(--dsw-radius-panel);
-  background: var(--dsh-desktop-glass-card-light);
-  border: 1px solid rgba(19, 45, 83, 0.26);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 10px 36px rgba(19, 45, 83, 0.16);
-  backdrop-filter: blur(var(--dsh-desktop-blur, 14px));
+  background: none;
 }
-[data-dsh-desktop-float] body[data-ds-dark-theme] [data-composer-card] {
-  background: var(--dsh-desktop-glass-card-dark);
-  border-color: rgba(148, 180, 220, 0.32);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 10px 36px rgba(2, 6, 14, 0.5);
-}
-[data-dsh-desktop-float] header {
+/* Only a conversation with a title floats its header. The hero header holds
+   nothing but the dock toggle, and page headers sit on the content pane. */
+[data-dsh-desktop-float] [data-phase='active'] header {
   margin: 12px 16px 0;
   padding: 10px 16px 8px;
-  border: 1px solid rgba(19, 45, 83, 0.26);
-  border-bottom-color: transparent;
+  border: 1px solid transparent;
   border-radius: var(--dsw-radius-xl);
-  background: var(--dsh-desktop-glass-card-light);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 10px 34px rgba(19, 45, 83, 0.16);
-  backdrop-filter: blur(var(--dsh-desktop-blur, 14px));
+  background: none;
 }
-[data-dsh-desktop-float] body[data-ds-dark-theme] header {
-  border-color: rgba(148, 180, 220, 0.32);
-  border-bottom-color: transparent;
-  background: var(--dsh-desktop-glass-card-dark);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 30px rgba(2, 6, 14, 0.32);
+/* Floating panes paint their glass on a ::before plate. A backdrop-filter or
+   transform on the pane itself makes it the containing block for its fixed
+   descendants, which threw every tooltip inside the sidebar, header and
+   composer far off its anchor. The hover tilt (spotlight.ts) writes
+   --dsh-desktop-tilt, so only the plate moves and the content stays put. */
+[data-dsh-desktop-float] [data-dsh-desktop-sidebar]::before,
+[data-dsh-desktop-float] [data-phase='active'] header::before,
+[data-dsh-desktop-float] [data-composer-card]::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid var(--dsh-desktop-glass-stroke);
+  border-radius: inherit;
+  background: var(--dsh-desktop-glass-fill);
+  backdrop-filter: var(--dsh-desktop-glass-filter);
+  box-shadow: var(--dsh-desktop-glass-lift);
+  transform: var(--dsh-desktop-tilt, none);
+  transition: transform 0.1s ease-out;
+}
+[data-dsh-desktop-float] [data-composer-card]::before {
+  background: var(--dsh-desktop-glass-raised);
 }
 /* The upstream layout owns the sidebar column; the stable inner root is its
    content. Apply the floating glass to the column itself so the card spans
@@ -213,36 +297,96 @@ export const THEME_RUNTIME_STYLES = String.raw`
   box-sizing: border-box;
   margin: 12px;
   padding: 0;
-  border: 1px solid rgba(19, 45, 83, 0.26);
-  border-right: 1px solid rgba(150, 190, 245, 0.65);
+  border: 1px solid transparent;
   border-radius: var(--dsw-radius-xl);
-  background: var(--dsh-desktop-glass-card-light);
-  backdrop-filter: blur(var(--dsh-desktop-blur, 14px));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 10px 34px rgba(19, 45, 83, 0.16);
-  overflow: hidden;
+  background: none;
+  /* The plate may scale past the column while it tilts. */
+  overflow: visible;
 }
-[data-dsh-desktop-float] [data-dsh-desktop-sidebar] > [data-dsh-sidebar-root] {
+[data-dsh-desktop-float] [data-dsh-desktop-sidebar] [data-dsh-sidebar-root] {
   padding: 10px 12px 14px;
 }
-[data-dsh-desktop-float] body[data-ds-dark-theme] [data-dsh-desktop-sidebar] {
-  border-color: rgba(148, 180, 220, 0.32);
-  border-right-color: rgba(148, 180, 220, 0.2);
-  background: var(--dsh-desktop-glass-card-dark);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 30px rgba(2, 6, 14, 0.32);
-}
+/* Collapsed keeps the upstream icon rail. A zero-width grid track cannot host
+   a floating card, and a backdrop-filter on it would become the containing
+   block for the fixed rail controls and clip them away. */
 [data-dsh-desktop-float] [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-sidebar] {
   box-sizing: border-box;
-  margin: 12px -12px 12px 12px;
+  margin: 0;
   padding: 0;
-  border-radius: var(--dsw-radius-lg);
-  transition: margin 150ms var(--ds-ease-in-out), border-radius 150ms var(--ds-ease-in-out), transform 0.1s ease-out;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  overflow: visible;
+}
+[data-dsh-desktop-float] [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-sidebar]::before {
+  display: none;
 }
 [data-dsh-desktop-float] [data-dsh-desktop-frame]:not([data-sidebar-collapsed]) [data-dsh-sidebar-root] {
   width: 100% !important;
 }
+/* Every center view except the conversation (workbench, plugins, tasks, more)
+   floats on one content pane beside the sidebar, so page text never lands on
+   the bare backdrop. The pane is a pseudo-element: a filter or transform on
+   the column itself would become the containing block for its fixed
+   popovers. Page roots that paint the base layer turn clear, and cards on the
+   pane become glass tiles. */
+[data-dsh-desktop-float] [data-dsh-desktop-center]:not(:has([data-phase])) {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  padding: 12px 12px 12px 0;
+  --dsw-alias-bg-base: transparent;
+  --dsw-alias-bg-layer-1: var(--dsh-desktop-glass-tile);
+}
+[data-dsh-desktop-float] [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-center]:not(:has([data-phase])) {
+  padding-left: 4px;
+}
+[data-dsh-desktop-float] [data-dsh-desktop-center]:not(:has([data-phase]))::before,
+[data-dsh-desktop-compat] [data-dsh-desktop-sidebar]::before,
+[data-dsh-desktop-compat] [data-dsh-desktop-center]::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--dsh-desktop-glass-fill);
+  backdrop-filter: var(--dsh-desktop-glass-filter);
+}
+[data-dsh-desktop-float] [data-dsh-desktop-center]:not(:has([data-phase]))::before {
+  inset: 12px 12px 12px 0;
+  border: 1px solid var(--dsh-desktop-glass-stroke);
+  border-radius: var(--dsw-radius-xl);
+  box-shadow: var(--dsh-desktop-glass-lift);
+}
+[data-dsh-desktop-float] [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-center]:not(:has([data-phase]))::before {
+  left: 4px;
+}
+/* Compatibility keeps the native columns and only swaps their surfaces for
+   full-bleed glass, so the stock layout and dividers stay as they are. */
+[data-dsh-desktop-compat] [data-dsh-desktop-sidebar],
+[data-dsh-desktop-compat] [data-dsh-desktop-center] {
+  position: relative;
+  isolation: isolate;
+}
+[data-dsh-desktop-compat] [data-dsh-desktop-sidebar]::before,
+[data-dsh-desktop-compat] [data-dsh-desktop-center]::before {
+  inset: 0;
+}
+[data-dsh-desktop-compat] [data-dsh-desktop-center]::before {
+  border-left: 1px solid var(--dsh-desktop-glass-stroke);
+}
+[data-dsh-desktop-compat] [data-dsh-desktop-center] {
+  --dsw-alias-bg-base: transparent;
+}
+/* The workbench market banner multiplies a light illustration over the
+   platform tone; once that tone is glass the art shows through bright under
+   light text. The banner sits on the glass pane instead. */
+[data-dsh-desktop-theme] [data-dsh-desktop-center] .dshWbMarketHeader {
+  background: transparent;
+}
 [data-dsh-desktop-float] [data-dsh-desktop-inputbar] { padding-bottom: 12px; }
-[data-dsh-desktop-float] [data-composer-card] textarea::placeholder { color: rgb(55 64 84 / 0.5); }
-[data-dsh-desktop-float] body[data-ds-dark-theme] [data-composer-card] textarea::placeholder { color: rgb(205 216 234 / 0.52); }
+[data-dsh-desktop-float] [data-composer-card] textarea::placeholder { color: var(--dsw-alias-label-tertiary); }
 
 [data-dsh-desktop-theme][data-dsh-desktop-spotlight] [data-dsh-desktop-spot] {
   position: relative;
@@ -269,13 +413,12 @@ export const THEME_RUNTIME_STYLES = String.raw`
 }
 [data-dsh-desktop-theme][data-dsh-desktop-spotlight] [data-dsh-desktop-spot][data-spot-on] [data-dsh-desktop-glow] { opacity: 1; }
 [data-dsh-desktop-theme][data-dsh-desktop-spotlight] [data-dsh-desktop-inputbar][data-dsh-desktop-spot] [data-dsh-desktop-glow] { border-radius: var(--dsw-radius-panel); }
-[data-dsh-desktop-theme][data-dsh-desktop-float] [data-dsh-desktop-sidebar]:has([role='dialog']) { backdrop-filter: none; }
-[data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-spot] { transition: transform 0.1s ease-out; }
-[data-dsh-desktop-theme] body [role='dialog'] {
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(50px);
+/* Modal panels (settings, confirmations) are raised glass. Non-modal popovers
+   that also carry role=dialog keep their stock surface. */
+[data-dsh-desktop-theme] body [role='dialog'][aria-modal='true'] {
+  background: var(--dsh-desktop-glass-raised);
+  backdrop-filter: blur(40px) saturate(160%);
 }
-[data-dsh-desktop-theme] body[data-ds-dark-theme] [role='dialog'] { background: rgba(17, 26, 39, 0.55); }
 [data-dsh-desktop-float] [role='treeitem'][aria-selected='true'] {
   box-shadow: inset 2px 0 0 var(--dsw-specific-sidebar-nav-item-active-accent), 0 0 16px rgba(110, 155, 232, 0.14);
 }
@@ -284,21 +427,20 @@ export const THEME_RUNTIME_STYLES = String.raw`
   box-shadow: 0 0 12px rgba(110, 155, 232, 0.16), inset 0 0 0 1px rgba(148, 180, 220, 0.22);
 }
 [data-dsh-desktop-float] [data-dsh-desktop-add] > button {
-  background: color-mix(in srgb, rgb(255 255 255) calc(40% * var(--dsh-desktop-frost, 1)), transparent);
-  border: 1px solid rgba(19, 45, 83, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(var(--dsh-desktop-blur, 14px));
+  background: var(--dsh-desktop-glass-tile);
+  border: 1px solid var(--dsh-desktop-glass-stroke);
+  box-shadow: inset 0 1px 0 var(--dsh-desktop-glass-edge);
 }
-[data-dsh-desktop-float] body[data-ds-dark-theme] [data-dsh-desktop-add] > button {
-  background: color-mix(in srgb, rgb(42 46 56) calc(40% * var(--dsh-desktop-frost, 1)), transparent);
-  border-color: rgba(148, 180, 220, 0.25);
+/* Switches: upstream paints the on track with brand-primary, near-white in
+   dark mode under a white thumb, and the off track with a faint border tone
+   that disappears on glass. Both keep the stock shape and aria-checked hook. */
+[data-dsh-desktop-theme] [role='switch'][aria-checked] {
+  background: var(--dsh-desktop-switch-off);
+  box-shadow: inset 0 0 0 0.5px var(--dsh-desktop-glass-stroke);
 }
-[data-dsh-desktop-float] [role='menu'] {
-  background: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-desktop-frost, 1)), transparent);
-  backdrop-filter: blur(var(--dsh-desktop-blur, 14px));
-}
-[data-dsh-desktop-float] body[data-ds-dark-theme] [role='menu'] {
-  background: color-mix(in srgb, rgb(28 32 42) calc(68% * var(--dsh-desktop-frost, 1)), transparent);
+[data-dsh-desktop-theme] [role='switch'][aria-checked='true'] {
+  background: var(--dsh-desktop-switch-on);
+  box-shadow: none;
 }
 [data-dsh-desktop-theme] [data-dsh-desktop-fade] {
   position: fixed;
@@ -326,25 +468,41 @@ export const THEME_RUNTIME_STYLES = String.raw`
   outline-offset: 1px;
 }
 [data-dsh-desktop-theme] ::selection { background: rgba(110, 155, 232, 0.35); }
-[data-dsh-desktop-theme] [data-conversation-scroll] { text-shadow: 0 0 1px rgba(0, 0, 0, 0.4); }
-[data-dsh-desktop-theme] body:not([data-ds-dark-theme]) [data-conversation-scroll] {
-  text-shadow: 0 0 1px rgba(255, 255, 255, 0.55), 0 1px 2px rgba(19, 45, 83, 0.08);
+/* Mica leaves the conversation (the hero chips and the transcript) on the
+   bare backdrop; a soft halo in the scheme's ground colour keeps it readable
+   over any part of the fluid. */
+[data-dsh-desktop-float] [data-phase] {
+  text-shadow: 0 0 1px var(--dsh-desktop-halo), 0 0 5px var(--dsh-desktop-halo), 0 0 12px var(--dsh-desktop-halo);
 }
-[data-dsh-desktop-float] [data-phase='hero'] { animation: dsh-desktop-hero-in 0.32s var(--ds-ease-in-out); }
-[data-dsh-desktop-float] [data-phase='active'] { animation: dsh-desktop-active-in 0.3s var(--ds-ease-in-out); }
-[data-dsh-desktop-float] [role='dialog'] { animation: dsh-desktop-dialog-in 0.24s var(--ds-ease-in-out); }
+/* Level changes share one motion language in both modes: the conversation
+   phases and every center page fade in (opacity only, so a page never
+   becomes a containing block for its fixed popovers mid-flight), settings
+   sections follow their tab, and modal panels rise into place. */
+[data-dsh-desktop-theme] [data-phase='hero'] { animation: dsh-desktop-hero-in 0.32s var(--ds-ease-in-out); }
+[data-dsh-desktop-theme] [data-phase='active'] { animation: dsh-desktop-active-in 0.3s var(--ds-ease-in-out); }
+[data-dsh-desktop-theme] [data-dsh-desktop-center] > [data-slot='main'] > *,
+[data-dsh-desktop-theme] [role='dialog'][aria-modal='true'] [data-slot='settings.section'] > *,
+[data-dsh-desktop-theme] [role='dialog'][aria-modal='true'] [role='tabpanel'] {
+  animation: dsh-desktop-page-in 0.22s var(--ds-ease-in-out);
+}
+[data-dsh-desktop-theme] [role='dialog'][aria-modal='true'] { animation: dsh-desktop-dialog-in 0.24s var(--ds-ease-in-out); }
 @keyframes dsh-desktop-hero-in { from { opacity: 0; } }
 @keyframes dsh-desktop-active-in { from { opacity: 0; } }
+@keyframes dsh-desktop-page-in { from { opacity: 0; } }
 @keyframes dsh-desktop-dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.985); } }
-[data-dsh-desktop-compat] [role='menu'],
-[data-dsh-desktop-compat] [role='dialog'],
 [data-dsh-desktop-compat] [role='tooltip'] { backdrop-filter: blur(12px); }
 @media (prefers-reduced-motion: reduce) {
-  [data-dsh-desktop-float] [data-phase='hero'],
-  [data-dsh-desktop-float] [data-phase='active'],
-  [data-dsh-desktop-float] [role='dialog'],
+  [data-dsh-desktop-theme] [data-phase='hero'],
+  [data-dsh-desktop-theme] [data-phase='active'],
+  [data-dsh-desktop-theme] [data-dsh-desktop-center] > [data-slot='main'] > *,
+  [data-dsh-desktop-theme] [role='dialog'][aria-modal='true'],
+  [data-dsh-desktop-theme] [role='dialog'][aria-modal='true'] [data-slot='settings.section'] > *,
+  [data-dsh-desktop-theme] [role='dialog'][aria-modal='true'] [role='tabpanel'],
   [data-dsh-desktop-theme] [data-dsh-desktop-ambient],
   [data-dsh-desktop-theme] [data-desktop-theme-critter] { animation: none; }
+  [data-dsh-desktop-float] [data-dsh-desktop-sidebar]::before,
+  [data-dsh-desktop-float] [data-phase='active'] header::before,
+  [data-dsh-desktop-float] [data-composer-card]::before { transition: none; }
   [data-dsh-desktop-theme] [data-desktop-theme-critter='bubble'] { opacity: 0; }
 }
 `

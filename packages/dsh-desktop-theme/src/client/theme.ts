@@ -224,6 +224,12 @@ export class ThemeLayer {
     root.removeAttribute('data-dsh-desktop-media')
     root.removeAttribute('data-dsh-desktop-spotlight')
     root.removeAttribute('data-dsh-desktop-press')
+    for (const name of [
+      '--dsh-desktop-blur', '--dsh-desktop-frost', '--dsh-desktop-surface-frost', '--dsh-desktop-frost-ratio',
+      '--dsh-desktop-wallpaper-blur', '--dsh-desktop-wallpaper-frost', '--dsh-desktop-video-blur',
+      '--dsh-desktop-video-dim', '--dsh-desktop-brightness-black', '--dsh-desktop-brightness-white',
+      '--dsh-desktop-glow-hue',
+    ]) root.style.removeProperty(name)
     this.videoUrl = undefined
     this.videoMarker = undefined
   }
@@ -248,6 +254,8 @@ export class ThemeLayer {
     style.setProperty('--dsh-desktop-blur', `${settings.blur}px`)
     style.setProperty('--dsh-desktop-frost', String(Math.min(settings.frost / 50, 1.4)))
     style.setProperty('--dsh-desktop-surface-frost', String(Math.min((settings.frost + 20) / 50, 1.4)))
+    // Glass panes rise from the legibility floor toward opaque as frost grows.
+    style.setProperty('--dsh-desktop-frost-ratio', String(settings.frost / 100))
     style.setProperty('--dsh-desktop-wallpaper-blur', `${settings.wallpaperBlur}px`)
     style.setProperty('--dsh-desktop-wallpaper-frost', String(settings.wallpaperFrost / 100))
     style.setProperty('--dsh-desktop-video-blur', `${settings.videoBlur}px`)

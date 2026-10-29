@@ -105,11 +105,11 @@ interface Seam {
 }
 
 const SEAMS: readonly Seam[] = [
-  // The sidebar root carries a stable upstream attribute; its direct parent is
-  // the three-column frame without relying on a hashed class name.
-  { attribute: 'data-dsh-desktop-sidebar', selector: '[data-dsh-sidebar-root]' },
+  // The sidebar root carries a stable upstream attribute; the glass card lives
+  // on its layout-owned column so the card keeps 12px insets inside the grid
+  // track instead of overflowing and being clipped by that track.
+  { attribute: 'data-dsh-desktop-sidebar', selector: '[data-dsh-sidebar-root]', closest: true },
   { attribute: 'data-dsh-desktop-frame', selector: '[data-dsh-desktop-sidebar]', closest: true },
-  { attribute: 'data-dsh-desktop-center', selector: '[data-dsh-desktop-center]', first: true },
   // The brand row is the only upstream control that must stay unglazed. The
   // new-session button is addressed separately so the brand never inherits a
   // generic "first labelled button" surface.
@@ -119,7 +119,9 @@ const SEAMS: readonly Seam[] = [
   { attribute: 'data-dsh-desktop-inputbar', selector: '[data-composer-seat] [data-composer-card]', closest: true },
   // The accessory slot anchor is a stable upstream seam for composer controls.
   { attribute: 'data-dsh-desktop-add', selector: '[data-composer-card] [data-slot="conversation.input.accessory"]' },
-  { attribute: 'data-dsh-desktop-spot', selector: 'header', first: true },
+  // Only the conversation header is a floating card; page headers are flat
+  // on the content pane and must not tilt on their own.
+  { attribute: 'data-dsh-desktop-spot', selector: "[data-phase='active'] header", first: true },
   { attribute: 'data-dsh-desktop-spot', selector: '[data-dsh-sidebar-root]', first: true },
   { attribute: 'data-dsh-desktop-spot', selector: '[data-dsh-desktop-inputbar]' },
   { attribute: 'data-dsh-desktop-spot', selector: '[data-composer-seat]' },
@@ -129,7 +131,7 @@ const SEAMS: readonly Seam[] = [
 function stamp(seam: Seam): void {
   if (seam.closest === true) {
     const anchor = document.querySelector(seam.selector)
-    const element = anchor?.parentElement
+    const element = paintBox(anchor?.parentElement ?? null)
     if (element !== null && element !== undefined && !element.hasAttribute(seam.attribute)) {
       element.setAttribute(seam.attribute, '')
     }
@@ -143,6 +145,18 @@ function stamp(seam: Seam): void {
   for (const element of document.querySelectorAll(seam.selector)) {
     if (!element.hasAttribute(seam.attribute)) element.setAttribute(seam.attribute, '')
   }
+}
+
+/**
+ * Slot wrappers can be `display: contents`; they have no box, so a glass card
+ * stamped there would paint nothing. Walk to the first ancestor that lays out.
+ */
+function paintBox(element: Element | null): Element | null {
+  let current = element
+  while (current !== null && getComputedStyle(current).display === 'contents') {
+    current = current.parentElement
+  }
+  return current
 }
 
 export function startSeamStamper(): () => void {
@@ -162,15 +176,17 @@ export function startSeamStamper(): () => void {
   return () => {
     observer.disconnect()
     if (queued !== 0) cancelAnimationFrame(queued)
+    // `data-dsh-desktop-center` is rendered by the tracked layout patch. React
+    // will not restore an attribute this disposer strips, so clearing it left
+    // the center column opaque after the theme was toggled off and on again.
     document.querySelectorAll('[data-dsh-desktop-frame], [data-dsh-desktop-surface], '
       + '[data-dsh-desktop-sidebar], [data-dsh-desktop-brand], [data-dsh-desktop-new-session], '
-      + '[data-dsh-desktop-center], [data-dsh-desktop-conversation], [data-dsh-desktop-inputbar], [data-dsh-desktop-add], '
+      + '[data-dsh-desktop-conversation], [data-dsh-desktop-inputbar], [data-dsh-desktop-add], '
       + '[data-dsh-desktop-spot]')
       .forEach((element) => {
         for (const attribute of [
           'data-dsh-desktop-frame',
           'data-dsh-desktop-sidebar',
-          'data-dsh-desktop-center',
           'data-dsh-desktop-surface',
           'data-dsh-desktop-brand',
           'data-dsh-desktop-new-session',

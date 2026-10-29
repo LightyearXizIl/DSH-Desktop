@@ -24,4 +24,25 @@ describe('Desktop host plugin control in Plugins settings', () => {
     expect(registrations).toContainEqual(expect.objectContaining({ name: 'settings.plugins.tab', id: 'desktop-host-plugins' }))
     expect(registrations.some(entry => entry.name === 'settings.plugins.tab' && entry.id === 'desktop-market-management')).toBe(marketComposed)
   })
+
+  it('labels the management tab apart from the market plugin\'s own tab', () => {
+    const dictionaries = []
+    let client
+    const source = readFileSync(new URL('../packages/dsh-desktop-market-installer/client.js', import.meta.url), 'utf8')
+    runInNewContext(source, {
+      window: { __ModuleLoader__: { load(entry) { client = entry.factory(createRequire(import.meta.url)) } } },
+      __DSH_BOOT__: { entries: [{ id: 'dshmarket' }] },
+      document: { querySelector: () => ({}) }
+    })
+    client.apply({
+      effect(callback) { callback() },
+      locale: { register(_ns, copy) { dictionaries.push(copy) }, bind: () => key => key },
+      slots: { inject(_name, callback) { callback() }, register() {} }
+    })
+    // The installed dsh-market adds a tab named 插件市场 / Plugin market; a
+    // second tab with the same name made the sub-tab bar read as a duplicate.
+    const copy = dictionaries.find(entry => entry.zh?.managementTab !== undefined)
+    expect(copy?.zh.managementTab).toBe('市场管理')
+    expect(copy?.en.managementTab).toBe('Market management')
+  })
 })

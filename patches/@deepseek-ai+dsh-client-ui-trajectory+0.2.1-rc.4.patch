@@ -28,3 +28,11 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-trajectory/lib/client.js b/
  			if (request.error === "trajectory.compaction-interrupted") return t("layout.compactionInterrupted");
  			return request.error;
  		}
+@@ -8085,6 +8091,7 @@ window.__ModuleLoader__.load({
+ 			return (0, react_jsx_runtime.jsxs)("div", {
+ 				className: views_module_css_default.root,
+ 				"data-conversation-composer-overlay": "",
++				"data-dsh-desktop-trajectory": "",
+ 				children: [
+ 					(0, react_jsx_runtime.jsx)(TrajectoryToolbar, {
+ 						actualDuration,

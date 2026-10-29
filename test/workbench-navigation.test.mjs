@@ -258,6 +258,17 @@ describe('native Workspace navigation with workbench routing', () => {
     expect(source).toContain('rowKeys.push(group.workspaceId === void 0 ? "chat-heading" : `workspace:${group.key}`);')
   })
 
+  it('renders the chat heading like the workspace heading', () => {
+    const start = source.indexOf('if (isChat) return')
+    const end = source.indexOf('const [menuOpen', start)
+    const chatRow = source.slice(start, end)
+    // The chat heading is a plain section header: no leading glyph, and the
+    // actions are search, collapse, then create (create last).
+    expect(chatRow).not.toContain('Rows_module_css_default.slot')
+    expect(chatRow.indexOf('actions.chatSearch')).toBeLessThan(chatRow.indexOf('actions.chatCollapse'))
+    expect(chatRow.indexOf('actions.chatCollapse')).toBeLessThan(chatRow.indexOf('actions.newSession'))
+  })
+
   it('registers one reactive sidebar session filter and restores all sessions on release', () => {
     const { service } = fixture()
     const listeners = new Set()

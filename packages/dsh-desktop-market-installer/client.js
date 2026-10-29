@@ -32,7 +32,8 @@ window.__ModuleLoader__.load({
       repository: 'View dsh-market on GitHub',
       repositoryButton: 'View on GitHub',
       futureUpdates: 'After installation, dsh-market will notify you when its own updates are available.',
-      managementTab: 'Plugin market',
+      // The installed dsh-market registers its own "Plugin market" tab beside this one.
+      managementTab: 'Market management',
       managementIntro: 'Manage the optional dsh-market integration installed by DSH Desktop.',
       installedVersion: 'Installed version',
       uninstall: 'Uninstall plugin market',
@@ -68,7 +69,7 @@ window.__ModuleLoader__.load({
       repository: '在 GitHub 查看 dsh-market',
       repositoryButton: '在 GitHub 查看',
       futureUpdates: '安装后，dsh-market 会在有新版本时提示并提供升级。',
-      managementTab: '插件市场',
+      managementTab: '市场管理',
       managementIntro: '管理由 DSH Desktop 安装的可选 dsh-market 集成。',
       installedVersion: '当前版本',
       uninstall: '卸载插件市场',

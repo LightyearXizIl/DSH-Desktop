@@ -349,16 +349,43 @@ describe('desktop theme client', () => {
       'utf8'
     )
     expect(themeCss).not.toContain('width: auto !important;')
-    expect(themeCss).toContain('margin: 12px -12px 12px 12px;')
     expect(themeCss).toContain('padding: 0;')
     expect(themeCss).toContain('margin: 12px;')
-    expect(themeCss).toContain('[data-dsh-desktop-sidebar] > [data-dsh-sidebar-root]')
+    expect(themeCss).toContain('[data-dsh-desktop-sidebar] [data-dsh-sidebar-root]')
     expect(themeCss).toContain('padding: 10px 12px 14px;')
+    expect(themeCss).toContain('backdrop-filter: none;')
+    // The glass card is a containing block, so the Windows-fixed collapse
+    // toggle must be seated in the brand row instead of landing on the logo.
+    expect(themeCss).toContain('flex-direction: row-reverse;')
+    expect(themeCss).toContain('[data-window-drag] > button:last-child')
     expect(themeCss).toContain('[data-dsh-desktop-brand]')
     expect(themeCss).toContain('[data-dsh-desktop-new-session]')
     expect(themeCss).toContain('[data-dsh-desktop-conversation]')
     expect(themeCss).toContain('[data-dsh-desktop-conversation] [data-conversation-scroll]')
+    expect(themeCss).toContain('[data-dsh-desktop-trajectory]')
+    expect(themeCss).toContain('--dsw-alias-bg-layer-1: transparent;')
+    expect(themeCss).toContain('[data-sidebar-right-session]')
+    expect(themeCss).toContain('[data-sidebar-right-guide-entry]')
     expect(themeCss).toContain('background: transparent;')
+  })
+
+  it('marks the trajectory root so the theme can scope its surfaces', async () => {
+    const [patch, installed] = await Promise.all([
+      readFile(patchPath('@deepseek-ai/dsh-client-ui-trajectory'), 'utf8'),
+      readFile(
+        path.join(
+          projectRoot,
+          'node_modules',
+          '@deepseek-ai',
+          'dsh-client-ui-trajectory',
+          'lib',
+          'client.js'
+        ),
+        'utf8'
+      ),
+    ])
+    expect(patch).toContain('+\t\t\t\t"data-dsh-desktop-trajectory": "",')
+    expect(installed).toContain('"data-dsh-desktop-trajectory": "",')
   })
 
   it('keeps the composer and sidebar seams on the elements the effects measure', async () => {
@@ -370,6 +397,15 @@ describe('desktop theme client', () => {
       path.join(projectRoot, 'packages', 'dsh-desktop-theme', 'src', 'client', 'spotlight.ts'),
       'utf8'
     )
+    // The card must sit on the layout-owned column, not on the inner root: the
+    // root is already full-width inside its track, so a 12px margin there
+    // overflows the track and the overflow clip cuts the card's right and
+    // bottom edges.
+    expect(source).toContain("{ attribute: 'data-dsh-desktop-sidebar', selector: '[data-dsh-sidebar-root]', closest: true }")
+    // The sidebar slot wrapper is `display: contents`; stamping the card there
+    // paints nothing, so the stamper must walk to the first laid-out ancestor.
+    expect(source).toContain('const element = paintBox(anchor?.parentElement ?? null)')
+    expect(source).toContain("getComputedStyle(current).display === 'contents'")
     expect(source).toContain("{ attribute: 'data-dsh-desktop-spot', selector: '[data-dsh-sidebar-root]', first: true }")
     expect(source).toContain("{ attribute: 'data-dsh-desktop-brand', selector: '[data-dsh-sidebar-root] [data-dsh-sidebar-brand]', first: true }")
     expect(source).toContain("{ attribute: 'data-dsh-desktop-new-session', selector: '[data-dsh-sidebar-root] [data-dsh-sidebar-new-session]', first: true }")
@@ -377,6 +413,18 @@ describe('desktop theme client', () => {
     expect(source).not.toContain('data-dsh-desktop-stats')
     expect(spotlight).toContain("spot.matches('[data-dsh-sidebar-root]')")
     expect(spotlight).not.toContain("spot.matches('[data-dsh-desktop-sidebar]')")
+    // The tilt rides the --dsh-desktop-tilt variable onto each pane's ::before
+    // plate. A transform (or backdrop-filter) on the pane itself made it the
+    // containing block for its fixed tooltips and the Windows caption toggle;
+    // the behaviour is covered in desktop-theme-tilt.test.ts.
+    expect(spotlight).not.toContain('style.transform =')
+    const themeCss = await readFile(
+      path.join(projectRoot, 'packages', 'dsh-desktop-theme', 'src', 'client', 'theme-css.ts'),
+      'utf8'
+    )
+    expect(themeCss).toContain('transform: var(--dsh-desktop-tilt, none);')
+    expect(themeCss).toContain('[data-dsh-desktop-float] [data-dsh-desktop-sidebar]::before,')
+    expect(themeCss).toContain('[data-dsh-desktop-float] [data-composer-card]::before')
     const sidebar = await readFile(
       path.join(projectRoot, 'node_modules', '@deepseek-ai', 'dsh-client-ui-sidebar', 'lib', 'client.js'),
       'utf8'
@@ -385,13 +433,41 @@ describe('desktop theme client', () => {
     expect(sidebar).toContain('"data-dsh-sidebar-new-session": "",')
   })
 
+  it('leaves the upstream-owned center marker in place across theme toggles', async () => {
+    const [source, bundle, themeCss, layoutPatch] = await Promise.all([
+      readFile(
+        path.join(projectRoot, 'packages', 'dsh-desktop-theme', 'src', 'client', 'ambient.ts'),
+        'utf8'
+      ),
+      readFile(
+        path.join(projectRoot, 'packages', 'dsh-desktop-theme', 'lib', 'client.js'),
+        'utf8'
+      ),
+      readFile(
+        path.join(projectRoot, 'packages', 'dsh-desktop-theme', 'src', 'client', 'theme-css.ts'),
+        'utf8'
+      ),
+      readFile(patchPath('@deepseek-ai/dsh-client-ui-layout'), 'utf8'),
+    ])
+    // The layout patch renders this marker. React keeps its own copy of the
+    // attribute list, so a theme disposer that removes it would leave the
+    // center column opaque after the theme is toggled off and on again.
+    expect(layoutPatch).toContain('"data-dsh-desktop-center": "",')
+    for (const text of [source, bundle]) {
+      expect(text).not.toContain("attribute: 'data-dsh-desktop-center'")
+      expect(text).not.toContain('"data-dsh-desktop-center",')
+    }
+    expect(source).not.toContain("'data-dsh-desktop-center',")
+    expect(themeCss).toContain('[data-dsh-desktop-center]')
+  })
+
   it('registers a settings page and owns its locale and slot lifetime', async () => {
     const document = {
       documentElement: {
         setAttribute: vi.fn(),
         removeAttribute: vi.fn(),
         toggleAttribute: vi.fn(),
-        style: { setProperty: vi.fn() },
+        style: { setProperty: vi.fn(), removeProperty: vi.fn() },
       },
       body: { hasAttribute: () => false, prepend: vi.fn(), appendChild: vi.fn() },
       head: { appendChild: vi.fn() },
@@ -463,6 +539,10 @@ describe('desktop theme client', () => {
     expect(typeof registrations[0]?.config.inject).toBe('function')
     for (const dispose of effects.reverse()) dispose()
     expect(document.documentElement.removeAttribute).toHaveBeenCalledWith('data-dsh-desktop-theme')
+    // Turning the appearance off also drops the material variables it wrote
+    // onto <html>, so nothing of the theme lingers in the page.
+    expect(document.documentElement.style.removeProperty).toHaveBeenCalledWith('--dsh-desktop-frost-ratio')
+    expect(document.documentElement.style.removeProperty).toHaveBeenCalledWith('--dsh-desktop-blur')
     expect(document.querySelectorAll).toHaveBeenCalled()
   })
 })
