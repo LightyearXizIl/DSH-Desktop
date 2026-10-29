@@ -5,7 +5,6 @@ import { projectRoot } from './patch-path'
 
 interface SpotlightModule {
   startSpotlight: () => () => void
-  TILT_PROPERTY: string
 }
 
 // The theme sources import each other with `.ts` extensions under the
@@ -14,22 +13,20 @@ interface SpotlightModule {
 // the theme package's typecheck covers its types.
 const SPOTLIGHT_URL = path.join(projectRoot, 'packages', 'dsh-desktop-theme', 'src', 'client', 'spotlight.ts')
 let startSpotlight: SpotlightModule['startSpotlight']
-let TILT_PROPERTY = ''
 
 beforeAll(async () => {
   const loaded: unknown = await import(/* @vite-ignore */ SPOTLIGHT_URL)
-  if (!isSpotlightModule(loaded)) throw new Error('spotlight.ts no longer exports startSpotlight / TILT_PROPERTY')
+  if (!isSpotlightModule(loaded)) throw new Error('spotlight.ts no longer exports startSpotlight')
   startSpotlight = loaded.startSpotlight
-  TILT_PROPERTY = loaded.TILT_PROPERTY
 })
 
 function isSpotlightModule(value: unknown): value is SpotlightModule {
   if (typeof value !== 'object' || value === null) return false
-  const record = value as Record<string, unknown>
-  return typeof record.startSpotlight === 'function' && typeof record.TILT_PROPERTY === 'string'
+  return typeof (value as Record<string, unknown>).startSpotlight === 'function'
 }
 
 const RECT = { left: 12, top: 52, right: 268, bottom: 888, width: 256, height: 836, x: 12, y: 52 }
+const TILT = /^perspective\(800px\) rotateX\(.+\) rotateY\(.+\) scale\(1\.01\)$/u
 
 function mountSidebar(): { frame: HTMLElement; column: HTMLElement; root: HTMLElement; button: HTMLElement } {
   document.body.innerHTML = `
@@ -60,13 +57,17 @@ function hover(target: Element, x: number, y: number): void {
   target.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: x, clientY: y }))
 }
 
+/** Let the overlay keeper's MutationObserver deliver. */
+const mutationsSettled = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0))
+
 describe('Liquid Glass hover tilt', () => {
   let stop: (() => void) | undefined
 
   beforeEach(() => {
     document.documentElement.setAttribute('data-dsh-desktop-press', '')
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ ...RECT, toJSON: () => RECT } as DOMRect)
-    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { callback(0); return 1 })
+    // Run the frame at once; the handle is already spent, so report none pending.
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { callback(0); return 0 })
     vi.stubGlobal('cancelAnimationFrame', () => {})
     vi.stubGlobal('matchMedia', () => ({ matches: false }))
   })
@@ -80,23 +81,50 @@ describe('Liquid Glass hover tilt', () => {
     document.body.innerHTML = ''
   })
 
-  it('tilts the sidebar card through its plate, never by transforming the pane', () => {
+  it('tilts the whole sidebar card, its contents included', () => {
     const { column, root, button } = mountSidebar()
     stop = startSpotlight()
     hover(button, 40, 100)
-    // The column carries the plate; a transform on it (or on the root) would
-    // make it the containing block for the tooltips and caption toggle inside.
-    expect(column.style.getPropertyValue(TILT_PROPERTY)).toMatch(/^perspective\(800px\) rotateX\(.+\) rotateY\(.+\) scale\(1\.01\)$/u)
-    expect(column.style.transform).toBe('')
+    // The column is the glass card; transforming it carries the text along.
+    expect(column.style.transform).toMatch(TILT)
     expect(root.style.transform).toBe('')
   })
 
-  it('releases the tilt when the pointer leaves the card', () => {
+  it('lays the card flat the moment a tooltip mounts inside it', async () => {
     const { column, button } = mountSidebar()
     stop = startSpotlight()
     hover(button, 40, 100)
-    button.dispatchEvent(new MouseEvent('pointerout', { bubbles: true, clientX: 600, clientY: 400 }))
-    expect(column.style.getPropertyValue(TILT_PROPERTY)).toBe('')
+    expect(column.style.transform).toMatch(TILT)
+    // A transform makes the card the containing block of the tooltip's
+    // fixed, viewport-based coordinates; flat, the tooltip lands on its anchor.
+    const tooltip = document.createElement('span')
+    tooltip.setAttribute('role', 'tooltip')
+    button.after(tooltip)
+    await mutationsSettled()
+    expect(column.style.transform).toBe('')
+    // And it stays flat while the tooltip is open.
+    hover(button, 60, 120)
+    expect(column.style.transform).toBe('')
+    tooltip.remove()
+    await mutationsSettled()
+    hover(button, 60, 120)
+    expect(column.style.transform).toMatch(TILT)
+  })
+
+  it('glides back to rest when the pointer leaves the card', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      const { column, button } = mountSidebar()
+      stop = startSpotlight()
+      hover(button, 40, 100)
+      button.dispatchEvent(new MouseEvent('pointerout', { bubbles: true, clientX: 600, clientY: 400 }))
+      expect(column.style.transform).toBe('perspective(800px) rotateX(0rad) rotateY(0rad) scale(1)')
+      vi.advanceTimersByTime(300)
+      // No residual transform keeps the card a containing block.
+      expect(column.style.transform).toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('rests while the settings overlay is open over the sidebar', () => {
@@ -106,7 +134,7 @@ describe('Liquid Glass hover tilt', () => {
     column.appendChild(dialog)
     stop = startSpotlight()
     hover(button, 40, 100)
-    expect(column.style.getPropertyValue(TILT_PROPERTY)).toBe('')
+    expect(column.style.transform).toBe('')
   })
 
   it('never tilts the collapsed rail, which has no card', () => {
@@ -114,7 +142,7 @@ describe('Liquid Glass hover tilt', () => {
     frame.setAttribute('data-sidebar-collapsed', '')
     stop = startSpotlight()
     hover(button, 40, 100)
-    expect(column.style.getPropertyValue(TILT_PROPERTY)).toBe('')
+    expect(column.style.transform).toBe('')
   })
 
   it('stays flat when the hover tilt setting is off', () => {
@@ -123,7 +151,7 @@ describe('Liquid Glass hover tilt', () => {
     document.documentElement.setAttribute('data-dsh-desktop-spotlight', '')
     stop = startSpotlight()
     hover(button, 40, 100)
-    expect(column.style.getPropertyValue(TILT_PROPERTY)).toBe('')
+    expect(column.style.transform).toBe('')
     document.documentElement.removeAttribute('data-dsh-desktop-spotlight')
   })
 })

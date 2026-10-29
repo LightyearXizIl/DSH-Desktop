@@ -52,24 +52,30 @@ the inner root fills the card and supplies content padding. When collapsed,
 the zero-width sidebar column clears its card styles and backdrop-filter so
 fixed-position caption controls remain visible and unclipped.
 
-Glass panes paint their material on a `::before` plate and the hover tilt
-writes `--dsh-desktop-tilt`, which only the plate applies. Never put a
-`backdrop-filter` or `transform` on a pane that has fixed-position descendants:
-it becomes their containing block and throws tooltips, the Windows caption
-toggle and the settings overlay off their anchors. The sidebar tilts like the
-other panes, rests while the settings overlay is open, and never tilts as the
-collapsed rail.
+Glass panes paint their material on a `::before` plate, so a pane never carries
+a `backdrop-filter` of its own. The hover tilt writes an inline `transform` on
+the whole pane so its text tilts with the card. A transform makes the pane the
+containing block of its fixed-position descendants, so the spotlight snaps the
+pane flat the moment a tooltip, menu, listbox or dialog
+(`FIXED_OVERLAY_SELECTOR`) mounts inside it and does not tilt it again until
+that overlay is gone. Never add a static `transform` or `backdrop-filter` to a
+pane: tooltips, the Windows caption toggle and the settings overlay would lose
+their anchors. The sidebar tilts like the other panes, rests while the settings
+overlay is open, and never tilts as the collapsed rail.
 
-The material lives in theme override tokens (`--dsh-desktop-glass-*`, halo and
+The material lives in theme override tokens (`--dsh-desktop-glass-*`, bubble and
 switch colours) with light and dark values; do not add `body[data-ds-dark-theme]`
 branches for glass surfaces. Pane opacity starts at a legibility floor and the
 frost setting only adds to it. `test/desktop-theme-contrast.test.ts` checks the
 text tokens against every fluid bloom; keep it passing when retuning colours.
 
-Behind the conversation the center column stays transparent so the fluid
-backdrop remains visible, with a text halo for legibility. Every other center
-view floats on one content pane in mica mode; compatibility mode gives the
-sidebar and center column full-bleed glass. Center pages, settings sections,
+In mica mode pages sit on one content pane beside the sidebar. An active
+conversation's transcript has no pane: it reads straight on the backdrop under
+its floating header, and user bubbles use the raised glass. The trajectory view
+is its own glass card, aligned with the header and ending above the composer,
+which it never encloses. The hero stays on the bare backdrop with the particle
+whale. Do not add text shadows to the transcript. Compatibility
+mode gives the sidebar and center column full-bleed glass. Center pages, settings sections,
 sub-tab panels and modal dialogs share an opacity-only enter animation that
 `prefers-reduced-motion` disables.
 The layout patch adds only the `data-dsh-desktop-center` marker used to remove

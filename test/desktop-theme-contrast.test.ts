@@ -48,13 +48,26 @@ function blooms(scheme: Scheme): Rgb[] {
   return out
 }
 
-/** Worst contrast of a label over the glass floor across every bloom. */
-function worstOnGlass(label: string, scheme: Scheme): number {
+/** The blooms of the shipped default backdrop (hue 320, depth 25). */
+function defaultBlooms(scheme: Scheme): Rgb[] {
+  const tones = fluidToneColors(scheme === 'dark', 320, 25)
+  return [hex(tones.color1), hex(tones.color2), hex(tones.color3)]
+}
+
+/** Worst contrast of a label over the glass floor across the given blooms. */
+function worstOnGlass(label: string, scheme: Scheme, backdrop: Rgb[] = blooms(scheme)): number {
   const tint = triple(token('--dsh-desktop-glass-tint', scheme))
   const floor = Number(token('--dsh-desktop-glass-floor', scheme))
   const text = hex(token(label, scheme))
-  return Math.min(...blooms(scheme).map((bloom) => contrast(text, mix(tint, bloom, floor))))
+  return Math.min(...backdrop.map((bloom) => contrast(text, mix(tint, bloom, floor))))
 }
+
+const STATUS_LABELS = [
+  '--dsw-alias-state-error-primary',
+  '--dsw-alias-state-warn-primary',
+  '--dsw-alias-state-warn-label',
+  '--dsw-alias-state-success-primary',
+] as const
 
 describe('Liquid Glass legibility', () => {
   it.each(['light', 'dark'] as const)('keeps %s text legible on the glass floor over any fluid bloom', (scheme) => {
@@ -64,6 +77,17 @@ describe('Liquid Glass legibility', () => {
     expect(worstOnGlass('--dsw-alias-label-secondary', scheme)).toBeGreaterThanOrEqual(4.5)
     // Tertiary hints are never fainter than the large-text minimum.
     expect(worstOnGlass('--dsw-alias-label-tertiary', scheme)).toBeGreaterThanOrEqual(3.8)
+  })
+
+  it.each(['light', 'dark'] as const)('keeps %s status text readable on the conversation glass', (scheme) => {
+    // Status lines (stopped, failed, token limit) and trajectory role tags use
+    // these colours as text on the conversation pane. Upstream's bright
+    // green-500 / amber-500 washed out to under 2:1 on the light pane.
+    for (const label of STATUS_LABELS) {
+      expect(worstOnGlass(label, scheme, defaultBlooms(scheme)), label).toBeGreaterThanOrEqual(4.5)
+      expect(worstOnGlass(label, scheme), label).toBeGreaterThanOrEqual(2.8)
+    }
+    expect(worstOnGlass('--dsw-alias-state-business-primary', scheme, defaultBlooms(scheme))).toBeGreaterThanOrEqual(4.5)
   })
 
   it.each(['light', 'dark'] as const)('gives white %s button labels 4.5:1 on the primary fill and hover', (scheme) => {

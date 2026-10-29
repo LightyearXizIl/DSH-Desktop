@@ -19,8 +19,6 @@ const GLASS_TOKENS: ThemeTokenOverrides = {
   '--dsh-desktop-glass-shadow': { light: '0 10px 34px rgba(19, 45, 83, 0.12)', dark: '0 10px 34px rgba(2, 6, 14, 0.4)' },
   // Cards inside a pane: a lighter (light) or lifted (dark) tile over it.
   '--dsh-desktop-glass-tile': { light: 'rgba(255, 255, 255, 0.56)', dark: 'rgba(148, 180, 220, 0.07)' },
-  // Transcript text floats over the bare backdrop in mica mode.
-  '--dsh-desktop-halo': { light: 'rgba(255, 255, 255, 0.82)', dark: 'rgba(5, 9, 15, 0.78)' },
   // Upstream draws the on track with brand-primary, which is near-white in
   // dark mode, under a white thumb.
   '--dsh-desktop-switch-on': { light: '#3A6FD1', dark: '#4F84E0' },
@@ -64,12 +62,20 @@ export const BASE_TOKENS: ThemeTokenOverrides = {
   '--dsw-alias-brand-text': { light: '#13243E', dark: '#EAF2FC' },
   '--dsw-alias-brand-primary-invert': { light: '#FFFFFF', dark: '#0C121B' },
   '--dsw-alias-brand-primary-new-colorprimary-new-color': { light: '#3F76D8', dark: '#6E9BE8' },
-  '--dsw-alias-state-business-primary': { light: '#3F76D8', dark: '#6E9BE8' },
+  // Also the active conversation tab label; #3F76D8 was 3.3:1 on the light glass.
+  '--dsw-alias-state-business-primary': { light: '#2F63C2', dark: '#6E9BE8' },
   '--dsw-alias-state-business-tertiary': { light: '#DCE9FB', dark: '#1D2C44' },
   '--dsw-alias-state-success-tertiary': { light: '#DDF3E4', dark: '#12271C' },
   '--dsw-alias-state-warn-tertiary': { light: '#FCEED6', dark: '#2A2416' },
   // Upstream's amber warning label is 2.6:1 on the light glass.
   '--dsw-alias-state-warn-label': { light: '#9A5410', dark: '#F2B65A' },
+  // Status text and trajectory role tags mix these into labels; upstream's
+  // bright green-500 / amber-500 wash out on the light glass. Dark keeps them.
+  '--dsw-alias-state-warn-primary': { light: '#92400E', dark: '#F59E0B' },
+  '--dsw-alias-state-success-primary': { light: '#166534', dark: '#22C55E' },
+  // Upstream's dark red (#F25A5A) drops to 3.8:1 where a teal bloom shows
+  // through the transcript.
+  '--dsw-alias-state-error-primary': { light: '#B91C1C', dark: '#FF8A8A' },
   // White labels need 4.5:1 on the fill; the hover stays above that too.
   '--dsw-alias-button-primary-fill': { light: '#3A6FD1', dark: '#3B6CCB' },
   '--dsw-alias-button-primary-hover': { light: '#3567C4', dark: '#3567C4' },

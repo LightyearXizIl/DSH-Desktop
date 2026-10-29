@@ -9,31 +9,31 @@
  *   transparent 70%)`, official values). The glow sits BEHIND the glass
  *   (z-index -1) so it diffuses through the translucent surface and never
  *   covers content;
- * - a cursor-driven rigid tilt, the official card's exact recipe
- *   (sign-verified from its inline transform):
+ * - a cursor-driven rigid tilt written inline per pointermove, the official
+ *   card's exact recipe (sign-verified from its inline transform):
  *   `perspective(800px) rotateX(θx) rotateY(θy) scale(1.01)` with
  *   θx = −k·Δy, θy = +k·Δx — the edge under the cursor sinks, the far edge
  *   lifts (cursor right ⇒ right sinks; cursor top ⇒ top sinks), ≈1° at the
- *   pane edge, 0.1s ease-out transition.
+ *   pane edge, 0.1s ease-out transition. The whole pane tilts, its text
+ *   included.
  *
  * Port notes:
- * - the tilt is written to the `--dsh-desktop-tilt` custom property and only
- *   the pane's ::before glass plate applies it (theme-css.ts). A transform on
- *   the pane itself would make it the containing block for its fixed
- *   descendants — tooltips, the Windows caption toggle, the settings overlay
- *   that mounts inside the sidebar column — and throw them off their anchors;
- * - the sidebar's plate lives on its layout-owned column, so the variable is
- *   written there; the collapsed rail has no plate and never tilts, and the
- *   sidebar rests while the settings overlay is open over it;
+ * - a transform makes the pane the containing block for its position: fixed
+ *   descendants, and tooltips, menus and the settings overlay compute their
+ *   fixed coordinates against the viewport. So a pane rests flat while one
+ *   of those overlays is mounted inside it: the moment one appears the tilt
+ *   is dropped without a glide, and the overlay lands on its anchor;
+ * - the sidebar's glass card is its layout-owned column, so the column
+ *   tilts (not the stamped inner root); the collapsed rail has no card and
+ *   never tilts, and the sidebar rests while the settings overlay is open;
  * - the fused composer+stats spot is the wider invisible inputbar wrapper:
- *   the hover region and glow geometry are computed against the VISIBLE
- *   glass (see visualRect / glassLocalRect in spot-core.ts), so the wrapper's
- *   side gutters never respond; the composer card's plate inherits the
- *   variable from the wrapper;
- * - the plate rides a short CSS transition, so releasing the variable glides
- *   it home; reduced motion skips the tilt;
- * - geometry is measured ONCE per hover session and refreshed on DOM/layout
- *   changes, so the per-frame path does zero layout reads.
+ *   the hover region, glow geometry and tilt pivot are computed against the
+ *   VISIBLE glass (see visualRect / glassLocalRect in spot-core.ts), so the
+ *   wrapper's side gutters never respond;
+ * - the tilt rides a short CSS transition and reduced motion skips it;
+ * - geometry is measured ONCE per hover session in untransformed local space
+ *   (offset-based — immune to the pane's own rotation) and refreshed on
+ *   DOM/layout changes, so the per-frame path does zero layout reads.
  *
  * Two html-attribute gates from the layer's settings: `data-dsh-desktop-spotlight`
  * (glow) and `data-dsh-desktop-press` (tilt). Hover tracking runs when EITHER is
@@ -51,8 +51,8 @@ export const SPOTLIGHT_ATTRIBUTE = 'data-dsh-desktop-spotlight'
 /** html attribute the layer uses to switch the tilt effect (its toggle). */
 export const PRESS_ATTRIBUTE = 'data-dsh-desktop-press'
 
-/** Custom property the glass plates read their tilt transform from. */
-export const TILT_PROPERTY = '--dsh-desktop-tilt'
+/** Overlays that position themselves with fixed, viewport coordinates. */
+export const FIXED_OVERLAY_SELECTOR = '[role="tooltip"], [role="menu"], [role="listbox"], [role="dialog"]'
 
 /** Glow radius, px — matches the official card. */
 const GLOW_RADIUS = 180
@@ -65,6 +65,9 @@ const TILT_MAX = 0.0175
 
 /** Tilt perspective distance, px (official value). */
 const TILT_PERSPECTIVE = 800
+
+/** Ease-back settle time (ms) — must outlast the CSS transform transition. */
+const SETTLE_MS = 240
 
 /** The glow is live only while its gate attribute is on <html>. */
 function glowGated(): boolean {
@@ -100,20 +103,26 @@ function inertSpot(spot: HTMLElement): boolean {
 }
 
 /**
- * The element whose plate tilts. The sidebar's glass plate is on its
- * layout-owned column, not the stamped inner root; every other pane carries
- * its own plate (or, for the composer, passes the variable down to it).
+ * The element that tilts. The sidebar's glass card is its layout-owned
+ * column, not the stamped inner root; every other pane tilts itself.
  */
 function tiltTarget(spot: HTMLElement): HTMLElement {
   if (!isSidebarSpot(spot)) return spot
   return spot.closest<HTMLElement>('[data-dsh-desktop-sidebar]') ?? spot
 }
 
-/** Whether the tilt may run on this pane right now. */
+/** Whether a fixed-position overlay is mounted inside the tilting element. */
+function hostsFixedOverlay(target: HTMLElement): boolean {
+  return target.querySelector(FIXED_OVERLAY_SELECTOR) !== null
+}
+
+/** Whether the tilt may run on this pane right now (DOM queries only). */
 function tiltable(spot: HTMLElement): boolean {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
+  const target = tiltTarget(spot)
+  if (hostsFixedOverlay(target)) return false
   if (!isSidebarSpot(spot)) return true
-  return spot.closest('[data-sidebar-collapsed]') === null && !settingsDialogOpen()
+  return target.closest('[data-sidebar-collapsed]') === null && !settingsDialogOpen()
 }
 
 /** One hover session: geometry captured at entry, kept fresh by the feed. */
@@ -121,7 +130,8 @@ interface SpotSession {
   spot: HTMLElement
   /** The visible glass region in viewport space (cursor math). */
   visual: DOMRect
-  /** The visible glass region in spot-local space (glow geometry). */
+  /** The visible glass region in spot-local, UNtransformed space (glow
+   *  geometry + tilt pivot). */
   local: { left: number; top: number; width: number; height: number }
   /** Glow overlay (null while the glow toggle is off). */
   glow: HTMLElement | null
@@ -140,13 +150,44 @@ export function startSpotlight(): () => void {
   let session: SpotSession | null = null
   let raf = 0
   let refreshRaf = 0
-  /** Elements currently carrying a JS-written tilt (wipe only those). */
+  /** Elements currently carrying a JS-written transform (wipe only those). */
   const tilted = new Set<HTMLElement>()
+  /** Pending ease-back removal timers per element (leave → neutral → cleanup). */
+  const settle = new Map<HTMLElement, number>()
 
-  /** Release a tilt; the plate's transition glides it back to rest. */
-  const release = (target: HTMLElement): void => {
+  /** Ease a tilted element back to neutral, then drop the inline transform. */
+  const easeBack = (target: HTMLElement): void => {
     if (!tilted.delete(target)) return
-    target.style.removeProperty(TILT_PROPERTY)
+    // Neutral transform lets the CSS transition glide the pane home; the
+    // inline transform is removed after the flight (a residual transform
+    // would keep the pane a containing block for fixed descendants).
+    target.style.transform =
+      `perspective(${TILT_PERSPECTIVE}px) rotateX(0rad) rotateY(0rad) scale(1)`
+    const id = window.setTimeout(() => {
+      settle.delete(target)
+      target.style.removeProperty('transform')
+      target.style.removeProperty('transform-origin')
+    }, SETTLE_MS)
+    settle.set(target, id)
+  }
+
+  /**
+   * Drop a tilt at once. Removing the inline transform while the transition
+   * is live would keep the COMPUTED transform alive for ~0.1s and hold an
+   * overlay that just mounted inside the pane off its anchor for those frames.
+   */
+  const snapFlat = (target: HTMLElement): void => {
+    const id = settle.get(target)
+    if (id !== undefined) {
+      clearTimeout(id)
+      settle.delete(target)
+    }
+    if (!tilted.delete(target) && target.style.transform === '') return
+    target.style.setProperty('transition', 'none')
+    target.style.removeProperty('transform')
+    target.style.removeProperty('transform-origin')
+    void target.offsetWidth
+    target.style.removeProperty('transition')
   }
 
   /** Drop every effect this controller wrote onto a pane. */
@@ -158,7 +199,7 @@ export function startSpotlight(): () => void {
     }
     const glow = spot.querySelector<HTMLElement>(`:scope > [${GLOW_ATTR}]`)
     if (glow !== null) glow.style.removeProperty('background-image')
-    release(tiltTarget(spot))
+    easeBack(tiltTarget(spot))
   }
 
   /** Capture (or refresh) the hover geometry; sets the glow overlay box. */
@@ -175,12 +216,12 @@ export function startSpotlight(): () => void {
     return { spot, visual, local, glow }
   }
 
-  /** Write the glow gradient and/or the tilt for the pointer position. */
+  /** Write the glow gradient and/or the tilt transform for the pointer position. */
   const paint = (s: SpotSession, clientX: number, clientY: number): void => {
     if (raf !== 0) return
     raf = requestAnimationFrame(() => {
       raf = 0
-      const { spot, visual } = s
+      const { spot, visual, local } = s
       // Over a gutter / padding region, not the glass — nothing to paint.
       if (!inside(visual, clientX, clientY)) {
         clearSpot(spot)
@@ -205,22 +246,30 @@ export function startSpotlight(): () => void {
       }
       const target = tiltTarget(spot)
       if (tiltGated() && tiltable(spot)) {
+        const id = settle.get(target)
+        if (id !== undefined) {
+          clearTimeout(id)
+          settle.delete(target)
+        }
         // Normalized cursor offset from the glass center, clamped to ±0.5 —
         // the official card's formula, sign-verified against its inline
         // transform: cursor right ⇒ rotateY POSITIVE, cursor TOP ⇒ rotateX
         // POSITIVE — the edge under the cursor sinks, the far edge lifts.
         const dx = Math.min(0.5, Math.max(-0.5, (clientX - visual.left) / visual.width - 0.5))
         const dy = Math.min(0.5, Math.max(-0.5, (clientY - visual.top) / visual.height - 0.5))
-        // The plate pivots about its own center (transform-origin default).
-        target.style.setProperty(
-          TILT_PROPERTY,
-          `perspective(${TILT_PERSPECTIVE}px) rotateX(${TILT_MAX * -2 * dy}rad) rotateY(${TILT_MAX * 2 * dx}rad) scale(1.01)`,
-        )
+        // Rotate about the visible glass center in untransformed local space;
+        // the sidebar column is its own glass box.
+        target.style.transformOrigin = target === spot
+          ? `${local.left + local.width / 2}px ${local.top + local.height / 2}px`
+          : `${target.offsetWidth / 2}px ${target.offsetHeight / 2}px`
+        target.style.transform =
+          `perspective(${TILT_PERSPECTIVE}px) rotateX(${TILT_MAX * -2 * dy}rad) rotateY(${TILT_MAX * 2 * dx}rad) scale(1.01)`
         tilted.add(target)
-      } else {
-        // Tilt toggled off mid-hover (or a resting pane): release only the
-        // tilt this controller wrote.
-        release(target)
+      } else if (tilted.has(target)) {
+        // Tilt toggled off mid-hover, or the pane must rest (an overlay is
+        // open in it): release only the transform this controller wrote.
+        if (hostsFixedOverlay(target)) snapFlat(target)
+        else easeBack(target)
       }
     })
   }
@@ -239,8 +288,8 @@ export function startSpotlight(): () => void {
     // The settings overlay renders INSIDE the sidebar column: while it is
     // open, the sidebar stays out of every hover effect.
     if (isSidebarSpot(spot) && settingsDialogOpen()) return
-    // Gutter/padding entries never start a session, so the glass check
-    // comes first.
+    // Gutter/padding entries never start a session (and must not cancel a
+    // pending ease-back settle), so the glass check comes first.
     const next = measure(spot)
     if (!inside(next.visual, event.clientX, event.clientY)) return
     spot.setAttribute(ON_ATTR, '')
@@ -258,13 +307,18 @@ export function startSpotlight(): () => void {
     clearSpot(spot)
   }
 
-  // The glow divs live with the panes through React re-renders; DOM/layout
-  // changes also refresh the active hover session (coalesced).
+  // The glow divs live with the panes through React re-renders; DOM changes
+  // also refresh the active hover session (coalesced) and flatten a tilted
+  // pane the moment a tooltip, menu or the settings overlay mounts in it.
   const keeper = startOverlayKeeper(() => {
-    // The settings dialog mounts over the sidebar: put the sidebar at rest.
+    for (const target of [...tilted]) {
+      if (hostsFixedOverlay(target)) snapFlat(target)
+    }
     if (settingsDialogOpen()) {
       for (const spot of spotElements()) {
-        if (isSidebarSpot(spot) && (spot === current || tilted.has(tiltTarget(spot)))) clearSpot(spot)
+        if (!isSidebarSpot(spot)) continue
+        if (spot === current) clearSpot(spot)
+        snapFlat(tiltTarget(spot))
       }
     }
     if (session === null || refreshRaf !== 0) return
@@ -285,8 +339,13 @@ export function startSpotlight(): () => void {
     keeper()
     if (raf !== 0) cancelAnimationFrame(raf)
     if (refreshRaf !== 0) cancelAnimationFrame(refreshRaf)
+    for (const id of settle.values()) clearTimeout(id)
+    settle.clear()
     for (const spot of spotElements()) spot.removeAttribute(ON_ATTR)
-    for (const target of tilted) target.style.removeProperty(TILT_PROPERTY)
+    for (const target of tilted) {
+      target.style.removeProperty('transform')
+      target.style.removeProperty('transform-origin')
+    }
     tilted.clear()
   }
 }

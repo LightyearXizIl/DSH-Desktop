@@ -369,6 +369,22 @@ describe('desktop theme client', () => {
     expect(themeCss).toContain('background: transparent;')
   })
 
+  it('keeps the transcript bare and floats only the trajectory on glass', async () => {
+    const themeCss = await readFile(
+      path.join(projectRoot, 'packages', 'dsh-desktop-theme', 'src', 'client', 'theme-css.ts'),
+      'utf8'
+    )
+    // Shadowed transcript text looked smeared, and a pane over the whole
+    // conversation boxed in the transcript and the composer.
+    expect(themeCss).not.toContain('text-shadow')
+    expect(themeCss).not.toContain('[data-conversation-content]::before')
+    expect(themeCss).not.toContain('[data-conversation-scroll]::before')
+    // The trajectory carries its own plate, lined up with the floating header,
+    // so the pane ends above the composer instead of reaching under it.
+    expect(themeCss).toMatch(/\[data-dsh-desktop-float\] \[data-dsh-desktop-trajectory\] \{\s+position: relative;\s+isolation: isolate;[^}]*margin: 8px 14px 12px 16px;/u)
+    expect(themeCss).toContain('[data-dsh-desktop-float] [data-dsh-desktop-trajectory]::before {')
+  })
+
   it('marks the trajectory root so the theme can scope its surfaces', async () => {
     const [patch, installed] = await Promise.all([
       readFile(patchPath('@deepseek-ai/dsh-client-ui-trajectory'), 'utf8'),
@@ -413,16 +429,15 @@ describe('desktop theme client', () => {
     expect(source).not.toContain('data-dsh-desktop-stats')
     expect(spotlight).toContain("spot.matches('[data-dsh-sidebar-root]')")
     expect(spotlight).not.toContain("spot.matches('[data-dsh-desktop-sidebar]')")
-    // The tilt rides the --dsh-desktop-tilt variable onto each pane's ::before
-    // plate. A transform (or backdrop-filter) on the pane itself made it the
-    // containing block for its fixed tooltips and the Windows caption toggle;
-    // the behaviour is covered in desktop-theme-tilt.test.ts.
-    expect(spotlight).not.toContain('style.transform =')
+    // The whole pane tilts (text included) but lays flat while a fixed overlay
+    // is open in it; the glass stays on a ::before plate so the pane is never
+    // a containing block at rest. Behaviour: desktop-theme-tilt.test.ts.
+    expect(spotlight).toContain("'[role=\"tooltip\"], [role=\"menu\"], [role=\"listbox\"], [role=\"dialog\"]'")
     const themeCss = await readFile(
       path.join(projectRoot, 'packages', 'dsh-desktop-theme', 'src', 'client', 'theme-css.ts'),
       'utf8'
     )
-    expect(themeCss).toContain('transform: var(--dsh-desktop-tilt, none);')
+    expect(themeCss).not.toContain('--dsh-desktop-tilt')
     expect(themeCss).toContain('[data-dsh-desktop-float] [data-dsh-desktop-sidebar]::before,')
     expect(themeCss).toContain('[data-dsh-desktop-float] [data-composer-card]::before')
     const sidebar = await readFile(

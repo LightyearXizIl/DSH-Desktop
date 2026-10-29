@@ -12,6 +12,40 @@ export const THEME_RUNTIME_STYLES = String.raw`
   --dsw-alias-bg-layer-1: transparent;
   background: transparent;
 }
+/* The transcript stays on the bare backdrop (no pane, no text shadow); user
+   bubbles are its only filled surface and take the raised glass. */
+[data-dsh-desktop-float] [data-phase] {
+  --dsw-specific-bubble: var(--dsh-desktop-glass-raised);
+  --dsw-specific-bubble-highlight: var(--dsh-desktop-glass-raised);
+}
+/* The trajectory view floats on its own glass pane, inset to line up with
+   the floating header above it. The plate is the view's own, so it ends
+   above the composer instead of reaching under it; the timeline plot and
+   table bands become tiles on that glass. */
+[data-dsh-desktop-float] [data-dsh-desktop-trajectory] {
+  position: relative;
+  isolation: isolate;
+  /* The upstream scroll body keeps a 2px right margin the header does not
+     have, so the right inset is 2px short of the header's 16px. */
+  margin: 8px 14px 12px 16px;
+  /* The view area is a column flexbox; auto width stretches inside the inset
+     where the module's own width: 100% would overflow it. */
+  width: auto;
+  border-radius: var(--dsw-radius-xl);
+  --dsw-alias-bg-layer-2: var(--dsh-desktop-glass-tile);
+  --dsw-alias-bg-layer-3: var(--dsh-desktop-glass-tile);
+}
+[data-dsh-desktop-float] [data-dsh-desktop-trajectory]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid var(--dsh-desktop-glass-stroke);
+  border-radius: inherit;
+  background: var(--dsh-desktop-glass-fill);
+  backdrop-filter: var(--dsh-desktop-glass-filter);
+}
 /* The right sidebar dock paints its tab host and guide cards from the layer-1
    token. Scope the token to the Session seat so the mica backdrop and fluid
    canvas show through the whole right column; the dock's hashed classes stay
@@ -264,11 +298,11 @@ export const THEME_RUNTIME_STYLES = String.raw`
   border-radius: var(--dsw-radius-xl);
   background: none;
 }
-/* Floating panes paint their glass on a ::before plate. A backdrop-filter or
-   transform on the pane itself makes it the containing block for its fixed
-   descendants, which threw every tooltip inside the sidebar, header and
-   composer far off its anchor. The hover tilt (spotlight.ts) writes
-   --dsh-desktop-tilt, so only the plate moves and the content stays put. */
+/* Floating panes paint their glass on a ::before plate. A backdrop-filter on
+   the pane itself would make it the containing block for its fixed
+   descendants for good, which threw every tooltip inside the sidebar, header
+   and composer far off its anchor. The hover tilt (spotlight.ts) transforms
+   the whole pane, text included, only while no tooltip or menu is open in it. */
 [data-dsh-desktop-float] [data-dsh-desktop-sidebar]::before,
 [data-dsh-desktop-float] [data-phase='active'] header::before,
 [data-dsh-desktop-float] [data-composer-card]::before {
@@ -282,7 +316,9 @@ export const THEME_RUNTIME_STYLES = String.raw`
   background: var(--dsh-desktop-glass-fill);
   backdrop-filter: var(--dsh-desktop-glass-filter);
   box-shadow: var(--dsh-desktop-glass-lift);
-  transform: var(--dsh-desktop-tilt, none);
+}
+[data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-spot],
+[data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-sidebar] {
   transition: transform 0.1s ease-out;
 }
 [data-dsh-desktop-float] [data-composer-card]::before {
@@ -468,12 +504,6 @@ export const THEME_RUNTIME_STYLES = String.raw`
   outline-offset: 1px;
 }
 [data-dsh-desktop-theme] ::selection { background: rgba(110, 155, 232, 0.35); }
-/* Mica leaves the conversation (the hero chips and the transcript) on the
-   bare backdrop; a soft halo in the scheme's ground colour keeps it readable
-   over any part of the fluid. */
-[data-dsh-desktop-float] [data-phase] {
-  text-shadow: 0 0 1px var(--dsh-desktop-halo), 0 0 5px var(--dsh-desktop-halo), 0 0 12px var(--dsh-desktop-halo);
-}
 /* Level changes share one motion language in both modes: the conversation
    phases and every center page fade in (opacity only, so a page never
    becomes a containing block for its fixed popovers mid-flight), settings
@@ -500,9 +530,8 @@ export const THEME_RUNTIME_STYLES = String.raw`
   [data-dsh-desktop-theme] [role='dialog'][aria-modal='true'] [role='tabpanel'],
   [data-dsh-desktop-theme] [data-dsh-desktop-ambient],
   [data-dsh-desktop-theme] [data-desktop-theme-critter] { animation: none; }
-  [data-dsh-desktop-float] [data-dsh-desktop-sidebar]::before,
-  [data-dsh-desktop-float] [data-phase='active'] header::before,
-  [data-dsh-desktop-float] [data-composer-card]::before { transition: none; }
+  [data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-spot],
+  [data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-sidebar] { transition: none; }
   [data-dsh-desktop-theme] [data-desktop-theme-critter='bubble'] { opacity: 0; }
 }
 `
