@@ -2,6 +2,34 @@
 
 本文件记录 DSH Desktop 自身版本的实质改动。Desktop 与上游 Harness 的版本号独立维护，Harness 升级不自动改变 Desktop 版本号。
 
+## 未发布
+
+### 更新内容
+
+#### Liquid Glass 主题
+
+- **对话视图不再有玻璃面板**：进行中会话的对话视图去掉标题卡下方那块玻璃面板，正文直接显示在流体背景上；用户气泡改用更实的浮起玻璃，保证不靠面板也能看清。
+- **轨迹视图单独成卡**：轨迹改为自己的一张玻璃卡片，左右与标题卡对齐，底部停在输入框上方，不再把输入框包进去。
+- **卡片文字跟随倾斜**：悬停倾斜从卡片背后的 `::before` 玻璃板改为整张卡片（侧栏、标题卡、输入框、页面浮片），文字和按钮与卡片一起倾斜。卡片里一旦挂出提示框、菜单、下拉列表或对话框，卡片立即放平，避免倾斜让它们成为定位参照而偏离按钮；鼠标离开后平滑回正。
+
+#### 影像生成（原“生图工具”）
+
+- **改名**：内置插件“生图工具 / Image generation”改名为“影像生成 / Image & video generation”，设置页签、安装器、系统提示和 Skill 中的入口说明同步更新。
+- **接入 GrsAI**：服务商新增 [GrsAI](https://grsai.ai/zh)。生图支持 Nano Banana（`nano-banana-fast` 等 5 个）和 GPT Image（`gpt-image-2` 等 5 个）；默认国内直连地址 `https://grsai.dakka.com.cn`，海外可改为 `https://grsaiapi.com`。保存时只查询一次积分余额，不提交生成任务。
+- **生视频**：新增 `video_generate` 工具，支持 GrsAI 的 Veo 3.1（`veo3.1-fast`、`veo3.1-pro`）、MiniMax H3（`minimax-h3`，1–15 秒）和 Agnes Video 2.5（`agnes-video-2.5`，4–12 秒，另支持 21:9、4:3、1:1、3:4），可指定比例和时长，保存为工作区 `.workbuddy/generated-videos/<sha256>.mp4`。比例或时长超出所选模型范围时，在提交、扣积分之前就报错。生视频只要求保存过 GrsAI Key，与当前选用哪家生图无关；未保存时系统提示让模型不要调用。
+- **文本生成**：GrsAI 的文本模型（Gemini、GPT 等 14 个，默认 `gemini-3.1-pro`）作为生成式接口放在影像生成里，新增 `text_generate` 工具，走 OpenAI 兼容的 `/v1/chat/completions`；它不替代 Agent 自己的模型，系统提示只让 Agent 在用户要该模型的输出、第二份草稿或批量文案时调用。
+- **积分余额**：影像生成卡片的 GrsAI 区域显示该 Key 的积分余额，打开时和每次保存后读取一次，可手动刷新。
+- **设置卡片**：选择 GrsAI 时多出“视频模型”“文本模型”两个下拉，以及积分余额和地址说明。
+- **任务与下载**：Nano Banana、GPT Image、MiniMax、Agnes 改走 GrsAI 新版统一接口 `/v1/api/generate` + `/v1/api/result`，Veo 仍走旧版接口（新版文档未收录）；图片最长等 3 分钟，视频最长等 14 分钟；违规和内容审核失败单独报错，不透传服务商原文。结果链接只通过 HTTPS 下载（跟随重定向后仍须 HTTPS），不携带 Key，视频上限 200 MB，并检查 MP4 文件头。
+
+### 验证
+
+- 新增 `test/image-generation-grsai.test.mjs`（按 GrsAI 两种任务契约和 OpenAI 兼容对话接口实现的本机模拟服务：余额校验与积分接口、坏 Key、生图请求体与轮询、三类视频模型的比例和时长、违规与失败分类、HTTPS 下载、`video_generate` 落盘、`text_generate` 请求与错误分类、系统提示切换）；`test/image-generation-settings-ui.test.mjs` 新增积分余额与视频/文本模型下拉的界面用例；重写 `test/desktop-theme-tilt.test.ts`（整卡倾斜、挂出提示框时放平、离开后回正）；更新 `test/desktop-theme.test.ts`、`test/desktop-host-plugin-settings.test.js`。
+
+### 说明
+
+- 未用真实 GrsAI Key 发起付费生成或文本请求；接口字段按 GrsAI 控制台文档和新版 API 文档核对（2026-10-29），文本模型列表取自 GrsAI 公开的 `/v1/models`。对话内暂不预览视频，需在工作区打开；视频暂不支持参考图、首尾帧和参考音频，分辨率固定为各模型较低档位。
+
 ## 0.0.4 — 2026-10-29
 
 ### 更新内容
@@ -9,8 +37,10 @@
 #### Liquid Glass 主题
 
 - **改名**：内置主题由“玻璃主题 / Glass theme”更名为 Liquid Glass，设置页签、标题和说明同步更新。
-- **文字清晰度**：玻璃材质改为主题 token（深浅两套值），面板不透明度从可读下限起步，磨砂度只在其上增加；浅色模式加深二、三级文字，深色模式提亮三级文字，主按钮蓝色加深，白字对比度不低于 4.5:1。云母模式会话区为正文加入柔和光晕。新增对比度回归测试，覆盖所有流体色团。
-- **页面玻璃**：云母模式下工作台、插件、自动化任务等非会话页面统一放在一块内容玻璃面板上，页面卡片改为面板上的玻璃浮片；首页不再显示空的标题卡片。兼容模式保留原生排版，侧栏和中间栏改为全幅玻璃底面。
+- **文字清晰度**：玻璃材质改为主题 token（深浅两套值），面板不透明度从可读下限起步，磨砂度只在其上增加；浅色模式加深二、三级文字，深色模式提亮三级文字，主按钮蓝色加深，白字对比度不低于 4.5:1；浅色模式加深错误、警告、成功和强调蓝，深色模式提亮错误红。新增对比度回归测试，覆盖所有流体色团。
+- **页面玻璃**：云母模式下所有中间视图都放在玻璃上。工作台、插件、自动化任务等页面放在一块内容玻璃面板上，页面卡片是面板上的玻璃浮片；进行中的会话在悬浮标题卡下方有一块与之对齐的玻璃面板，对话和轨迹两个视图共用；首页不显示空的标题卡片，仍直接显示在流体背景和粒子鲸鱼上。对话正文不加文字阴影。兼容模式保留原生排版，侧栏和中间栏改为全幅玻璃底面。
+- **轨迹视图**：不再从侧栏缝隙铺到窗口右边缘，改为和标题卡左右对齐；时间轴和表格底色改为玻璃浮片。
+- **用户气泡**：改为面板上的淡色玻璃浮片。
 - **开关**：修复深色模式下开关开启时白色滑块落在近白轨道上无法分辨的问题，关闭态轨道也加深。
 - **弹窗与菜单**：模态弹窗改为更实的玻璃；菜单改用上游材质 token，不再在菜单元素本身加滤镜。
 - **提示框定位**：玻璃底和悬停倾斜移到面板的 `::before` 玻璃板上，修复侧栏、标题卡和输入框里的悬停提示因面板成为定位参照而偏离按钮（输入框提示甚至跑出屏幕）的问题。
@@ -26,31 +56,42 @@
 - **深层视图**：修复多次开关主题后中间列变回不透明的问题；轨迹视图和右侧栏改为透出流体背景。
 - **更新弹窗**：更新与关于弹窗改为云母玻璃卡片；进度文字、无障碍数值和进度条统一使用同一个取整百分比。
 
+#### 会话与工作区
+
+- **不在工作区**：首页工作区下拉菜单最上方新增“不在工作区”。选中后会新建一个聊天会话，并把尚未发送的草稿和附件带过去；聊天会话的工作区标签显示“不在工作区”，菜单里对应项打勾。
+
+#### 设置
+
+- **左侧导航合并**：启动动画移到“内置插件”，作为子页签；插件市场在设置里只保留“内置插件 → 插件市场”一处。已安装 dsh-market 时，通过它公开的 `setSettingsVisible` 隐藏其设置分区，市场主界面仍从主侧栏进入。左侧导航现在只剩账号与余额、通用设置、模型、内置插件、Agent 预设和关于。
+- **内置插件子页签合并**：生图工具同一时间只显示一个页签（内置插件开启时是生图工具自己的配置卡片，关闭时是重新启用的开关）；安装器不再单独提供市场管理页签，版本、更新和卸载都在 dsh-market 自带的卡片里。
+- **导航图标**：“关于”改用信息图标，不再与“通用设置”共用齿轮。
+- **启动动画页**：改用官方开关和设置页的行式布局，与 Liquid Glass 页一致。
+
 #### 启动动画
 
 - 默认身份资料改为：身份名称 `NullPointer`、身份编号 `007`、权限等级 `01`，覆盖 Host 默认配置、运行时兜底、设置页示例和离线预览。
 
-#### 更新与插件设置
+#### 更新
 
 - **更新签名校验**：自动更新不再校验代码签名。`package.json` 去掉了前身项目的发行者名称，打包后的 `resources/app-update.yml` 不再包含 `publisherName`；更新包完整性依赖 `latest.yml` 的 SHA-512 和 GitHub 的 HTTPS 下载。
-- **市场管理页签**：DSH Desktop 安装器提供的管理页签改名为“市场管理 / Market management”，不再与 dsh-market 自带的“插件市场”页签重名。
 
 ### 验证
 
 - `node scripts/verify-target.mjs win32 x64` 通过；本地 Electron 为锁定版本 43.0.0。`npm run typecheck`、`npm run build` 通过。
-- 全量 `npm test`：2251 项中 2241 项通过、8 项跳过、2 项失败，两项均与本版改动无关：`test/generation-build-approval.integration.test.js`（Git Bash 自带的 `tar` 把 `C:` 解析为远程主机）和 `test/release.test.ts` 的 README 官网链接断言（README 已不再链接前身官网，见文档索引的已知遗留问题）。
-- 新增 `test/desktop-theme-contrast.test.ts`（用真实流体配色函数检查玻璃下限上的文字、主按钮和开关对比度）和 `test/desktop-theme-tilt.test.ts`（在 jsdom 中驱动悬停倾斜）；更新 `test/desktop-theme.test.ts`、`test/desktop-host-plugin-settings.test.js`、`test/workbench-navigation.test.mjs`、`test/startup-screen-plugin.test.ts`。
-- 在独立开发 Profile 中，按云母、兼容 × 深色、浅色逐页做截图像素对比度测量（首页、工作台、插件、自动化任务和设置的全部页签），除下文一处外，文字对比度均不低于 4.5:1；侧栏和输入框的悬停提示回到按钮旁；侧栏悬停倾斜，设置弹窗打开和收起为图标栏时保持静止。
+- 全量 `npm test`：2260 项中 2250 项通过、8 项跳过、2 项失败，两项均与本版改动无关：`test/generation-build-approval.integration.test.js`（Git Bash 自带的 `tar` 把 `C:` 解析为远程主机）和 `test/release.test.ts` 的 README 官网链接断言（README 已不再链接前身官网，见文档索引的已知遗留问题）。
+- 新增 `test/desktop-theme-contrast.test.ts`（用真实流体配色函数检查玻璃下限上的文字、状态色、主按钮和开关对比度）、`test/desktop-theme-tilt.test.ts`（在 jsdom 中驱动悬停倾斜）和 `test/no-workspace-picker-patch.test.ts`（工作区选择器的“不在工作区”与“关于”图标）；更新 `test/desktop-theme.test.ts`、`test/desktop-host-plugin-settings.test.js`、`test/workbench-navigation.test.mjs`、`test/startup-screen-plugin.test.ts`。
+- 修改的三个上游补丁（`dsh-client-ui-workspace`、`dsh-client-ui-conversation`、`dsh-client-ui-settings-general`）用 patch-package 在全新的原始包上重放成功。
+- 在独立开发 Profile 中，按云母、兼容 × 深色、浅色逐页做截图像素对比度测量（首页、工作台、插件、自动化任务、设置的全部页签，以及带有复制会话的对话和轨迹视图），除下文几处外，文字对比度均不低于 4.5:1；侧栏和输入框的悬停提示回到按钮旁；侧栏悬停倾斜，设置弹窗打开和收起为图标栏时保持静止；“不在工作区”能切换到聊天会话，标签和选中状态正确；设置左侧导航和内置插件子页签按上述合并显示。
 - 打包门禁通过：Harness、bootstrap、原生模块、终端和 696 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换。
-- Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：285189893 字节，SHA-256 `FEF29A0DC1040BDF631587E259BBA29DE88816C2B6F576C37FD9D4D04FEF7EAD`；`latest.yml` 版本为 `0.0.4`，SHA-512 为 `E91OGZ2xQ1aGDqoopVCir7CCnVVlAqBzAe/wdYXxBNnIQsh1w1HS1pnu/SGVXEjIbZ8mts+ZZb29HyI9qh2QjQ==`；`app-update.yml` 不含 `publisherName`。
-- 打包后的 `win-unpacked\DSH Desktop.exe` 启动后进入主界面，Liquid Glass 云母模式生效，有标题的会话标题卡正常浮起。
+- Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：285190773 字节，SHA-256 `6DF3010D59FF44775CDEE1CCE21A8C5EE2FE87099E828E29DBF754D3A8B7FFAB`；`latest.yml` 版本为 `0.0.4`，SHA-512 为 `L6KFAnAvjyiSjU35Ae4fObJ82Nz4uQhuC3vKzUhBuLdV2VDRnDOyT1VXUS7OuwNyl5UkIUeLDpqvr/8uw4Svqw==`；`app-update.yml` 不含 `publisherName`。
 
 ### 说明
 
 - 本次 Windows x64 安装包为未签名的社区构建，Authenticode 状态为 `NotSigned`。
 - 已安装 0.0.3 的用户无法自动更新到 0.0.4：0.0.3 自带的更新配置仍会校验前身发行者的签名，会拒绝未签名的 0.0.4。需要手动安装一次 0.0.4，之后的版本可以正常自动更新。
-- 未执行的验收：运行安装程序本身的安装和覆盖升级流程、全新机器安装、真实模型请求、macOS 构建。
-- 浅色云母模式的首页，粒子鲸鱼正好叠在“标准模式”按钮背后时，这个按钮的文字对比度约为 3.6～3.7:1。
+- 未执行的验收：运行安装程序本身的安装和覆盖升级流程、安装后的启动、全新机器安装、真实模型请求、macOS 构建。
+- 安装了 dsh-market 的情况只做了代码与契约验证；开发 Profile 没有安装市场，隐藏其设置分区的效果没有实机看到。
+- 浅色云母模式的首页，粒子鲸鱼正好叠在“标准模式”按钮背后时，这个按钮的文字对比度约为 3.6～3.7:1；轨迹里“助手”这个 10px 的紫色角色小标签沿用上游配色，对比度约 3～4:1。
 - 0.0.3 记录的“原生启动页导航验收返回 `UnknownVizError`”本次未重新验证。
 
 ## 0.0.3 — 2026-10-28
