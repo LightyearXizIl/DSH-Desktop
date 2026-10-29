@@ -160,9 +160,9 @@
     requireInteraction: true,
     allowSkip: true,
     sound: false,
-    identity: 'JOYCE MOORE',
-    identityId: '0087',
-    accessLevel: '3',
+    identity: 'NullPointer',
+    identityId: '007',
+    accessLevel: '01',
     brand1: 'DEEPSEEK',
     brand2: 'SYNTHESIZE INTELLIGENCE',
     brand3a: 'HARNESS',
@@ -189,16 +189,16 @@
   <div class="pane">
     <div class="row">
       <label>身份名称（终幕「欢迎 xxx 访问」）</label>
-      <input type="text" id="fIdentity" value="JOYCE MOORE" maxlength="48">
+      <input type="text" id="fIdentity" value="NullPointer" maxlength="48">
     </div>
     <div class="row2">
       <div class="row">
         <label>身份编号</label>
-        <input type="text" id="fId" value="0087" maxlength="12">
+        <input type="text" id="fId" value="007" maxlength="12">
       </div>
       <div class="row">
         <label>权限等级</label>
-        <input type="text" id="fLevel" value="3" maxlength="32">
+        <input type="text" id="fLevel" value="01" maxlength="32">
       </div>
     </div>
     <div class="row2">
@@ -310,12 +310,12 @@
           <div class="__ss_group">
             <div class="__ss_groupTitle">身份资料</div>
             <div class="__ss_field"><label class="__ss_label">身份名称</label>
-              <input class="__ss_input" type="text" id="sIdentity" value="JOYCE MOORE" maxlength="64">
+              <input class="__ss_input" type="text" id="sIdentity" value="NullPointer" maxlength="64">
               <div class="__ss_hint">终幕「欢迎 xxx 访问 / WELCOME, XXX」里的 xxx，也出现在第二步的身份卡上。</div>
             </div>
             <div class="__ss_two">
-              <div class="__ss_field"><label class="__ss_label">身份编号</label><input class="__ss_input __ss_inputMono" type="text" id="sId" value="0087"><div class="__ss_hint">显示在身份卡上，建议用数字编号（如 0087）。</div></div>
-              <div class="__ss_field"><label class="__ss_label">权限等级</label><input class="__ss_input __ss_inputMono" type="text" id="sLevel" value="3"></div>
+              <div class="__ss_field"><label class="__ss_label">身份编号</label><input class="__ss_input __ss_inputMono" type="text" id="sId" value="007"><div class="__ss_hint">显示在身份卡上，建议用数字编号（如 007）。</div></div>
+              <div class="__ss_field"><label class="__ss_label">权限等级</label><input class="__ss_input __ss_inputMono" type="text" id="sLevel" value="01"></div>
             </div>
           </div>
 
@@ -382,9 +382,9 @@
 
   function applyConfig() {
     var c = window.__DSH_STARTUP__;
-    c.identity = $('fIdentity').value || 'JOYCE MOORE';
+    c.identity = $('fIdentity').value || 'NullPointer';
     c.identityId = $('fId').value || '';
-    c.accessLevel = $('fLevel').value || '3';
+    c.accessLevel = $('fLevel').value || '01';
     c.theme = $('fTheme').value;
     c.speed = Number($('fSpeed').value);
     c.requireInteraction = $('fInteract').checked;
@@ -543,8 +543,8 @@
   });
   $('sReload').addEventListener('click', function () { $('sNotice').textContent = '已放弃修改。'; });
   $('sReset').addEventListener('click', function () {
-    $('sIdentity').value = 'JOYCE MOORE'; $('sId').value = '0087';
-    $('sLevel').value = '3'; $('sTheme').value = 'light';
+    $('sIdentity').value = 'NullPointer'; $('sId').value = '007';
+    $('sLevel').value = '01'; $('sTheme').value = 'light';
     $('sSpeed').value = 1; $('sSpeedVal').textContent = '1.00×';
     $('sInteract').checked = true; $('sSkip').checked = true; $('sSound').checked = false;
     $('sBrand1').value = 'DEEPSEEK'; $('sBrand2').value = 'SYNTHESIZE INTELLIGENCE';

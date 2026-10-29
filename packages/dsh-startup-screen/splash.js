@@ -87,9 +87,9 @@
     sfx: 'audio',               // audio=真素材（用户音频里抠的音效）/ synth=现场合成
     voiceSource: 'asset',       // asset=优先用真声素材 / tts=全部 TTS 合成
     voiceLead: 240,             // 提示音之后留一小段空白再开口
-    identity: 'JOYCE MOORE',    // ← 设置页可改的"身份名称"
-    identityId: '0087',
-    accessLevel: '3',
+    identity: 'NullPointer',    // ← 设置页可改的"身份名称"
+    identityId: '007',
+    accessLevel: '01',
     brand1: 'DEEPSEEK',
     brand2: 'SYNTHESIZE INTELLIGENCE',
     brand3a: 'HARNESS',

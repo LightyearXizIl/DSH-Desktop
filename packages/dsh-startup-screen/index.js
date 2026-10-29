@@ -54,9 +54,9 @@ const DEFAULTS = {
   sfx: 'audio',               // 音效来源：audio=lib/assets 里的真素材 / synth=现场合成
   voiceSource: 'asset',       // 语音来源：asset=优先用真声素材（拿不到自动回落 TTS）/ tts=全 TTS
   voiceLead: 240,             // 提示音之后留一小段空白再开口
-  identity: 'JOYCE MOORE',    // ← 设置页里可改的「身份名称」
-  identityId: '0087',
-  accessLevel: '3',
+  identity: 'NullPointer',    // ← 设置页里可改的「身份名称」
+  identityId: '007',
+  accessLevel: '01',
   brand1: 'DEEPSEEK',
   brand2: 'SYNTHESIZE INTELLIGENCE',
   brand3a: 'HARNESS',

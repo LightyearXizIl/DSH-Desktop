@@ -239,6 +239,7 @@ window.__ModuleLoader__.load({
     /* 本地兜底默认值：Host 半侧若是旧版本（配置里还没有语音字段），
        面板也要能正常显示这些控件，而不是一片 undefined。 */
     var FALLBACK = {
+      identity: 'NullPointer', identityId: '007', accessLevel: '01',
       voice: true, voiceLang: 'en', voiceName: '', voiceRate: 0.88, voicePitch: 0.85,
       voiceVolume: 0.9, voiceCue: true, voiceLead: 240, voiceSource: 'asset',
       sound: true, soundVolume: 0.5
@@ -391,9 +392,9 @@ window.__ModuleLoader__.load({
           h(Field, {
             label: '身份名称',
             hint: '终幕「欢迎 xxx 访问 / WELCOME, XXX」里的 xxx，也出现在第二步的身份卡上。'
-          }, h(TextInput, { value: draft.identity, placeholder: '例如：JOYCE MOORE', onChange: (v) => set('identity', v) })),
+          }, h(TextInput, { value: draft.identity, placeholder: '例如：NullPointer', onChange: (v) => set('identity', v) })),
           h('div', { className: '__ss_two' },
-            h(Field, { label: '身份编号', hint: '显示在第二步身份卡上，建议用数字（如 0087）。' },
+            h(Field, { label: '身份编号', hint: '显示在第二步身份卡上，建议用数字（如 007）。' },
               h(TextInput, { value: draft.identityId, mono: true, onChange: (v) => set('identityId', v) })),
             h(Field, { label: '权限等级' },
               h(TextInput, { value: draft.accessLevel, mono: true, onChange: (v) => set('accessLevel', v) }))

@@ -88,8 +88,18 @@ it('loads the bundled startup screen in a real Harness and serves its UI, config
       headers: { Cookie: cookie }
     })
     expect(configResponse.status).toBe(200)
-    const config = await configResponse.json() as { ok?: boolean; version?: string; config?: { enabled?: boolean } }
+    const config = await configResponse.json() as {
+      ok?: boolean
+      version?: string
+      config?: { enabled?: boolean }
+      defaults?: { identity?: string; identityId?: string; accessLevel?: string }
+    }
     expect(config).toMatchObject({ ok: true, version: '1.1.2', config: { enabled: true } })
+    expect(config.defaults).toMatchObject({
+      identity: 'NullPointer',
+      identityId: '007',
+      accessLevel: '01'
+    })
 
     const cssResponse = await fetch(new URL('/dsh-startup/splash.css', snapshot.url), {
       headers: { Cookie: cookie }
