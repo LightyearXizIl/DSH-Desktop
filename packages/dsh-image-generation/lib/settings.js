@@ -17,6 +17,8 @@ function described(state, writable) {
 
 /** Keep each validated endpoint/model/key together in one atomic host credential record. */
 export function createSettings(ctx, validate = validateConnection) {
+  // Failures go out at warn: the Desktop log bridge keeps warnings and errors.
+  const warn = (...args) => (ctx.logger.warn ?? ctx.logger.info).apply(ctx.logger, args)
   async function read() {
     let record
     try {
@@ -40,7 +42,7 @@ export function createSettings(ctx, validate = validateConnection) {
       return described(state, await describeWritable())
     } catch (error) {
       const safe = safeError(error)
-      ctx.logger.info('image-generation: settings describe failed; code=%s', safe.code)
+      warn('image-generation: settings describe failed; code=%s', safe.code)
       throw safe
     }
   }
@@ -65,14 +67,24 @@ export function createSettings(ctx, validate = validateConnection) {
     const state = await read()
     return Boolean(state.profiles.grsai?.key)
   }
-  /** The saved GrsAI key's credit balance, read on demand and never cached. */
-  async function credits(signal) {
+  /**
+   * A GrsAI key's credit balance, read on demand and never cached: the saved
+   * key, or a key typed into the card before saving (used once, not stored).
+   */
+  async function credits(signal, draft) {
     try {
-      const spec = await grsaiSpec()
+      let spec
+      if (draft === undefined) spec = await grsaiSpec()
+      else {
+        if (!draft || typeof draft !== 'object' || Array.isArray(draft)) throw new ImageError('CONFIGURATION', 'Enter a valid GrsAI key.')
+        const key = typeof draft.apiKey === 'string' ? draft.apiKey.trim() : ''
+        if (!key || key.length > 4096 || /[\s\x00-\x1f\x7f]/u.test(key)) throw new ImageError('KEY_REQUIRED', 'Enter a valid API key.')
+        spec = { ...profile('grsai', { baseUrl: draft.baseUrl }), key }
+      }
       return { credits: await grsaiCredits(spec, spec.key, { signal }) }
     } catch (error) {
       const safe = safeError(error)
-      ctx.logger.info('image-generation: credit balance failed; code=%s http=%s', safe.code, safe.providerStatus)
+      warn('image-generation: credit balance failed; code=%s http=%s provider_code=%s', safe.code, safe.providerStatus, safe.providerCode)
       throw safe
     }
   }
@@ -91,6 +103,16 @@ export function createSettings(ctx, validate = validateConnection) {
     return { before, spec, effectiveKey }
   }
   async function models(input, signal) {
+    // GrsAI publishes its catalog without a key, so the menus load before one is saved.
+    if (input?.provider === 'grsai') {
+      try {
+        return await listModels('grsai', profile('grsai', input), undefined, { signal })
+      } catch (error) {
+        const safe = safeError(error)
+        warn('image-generation: GrsAI catalog failed; code=%s', safe.code)
+        throw safe
+      }
+    }
     const { spec, effectiveKey } = await prepared(input)
     return listModels(input.provider, spec, effectiveKey, { signal })
   }
@@ -112,7 +134,7 @@ export function createSettings(ctx, validate = validateConnection) {
       return await describe()
     } catch (error) {
       const safe = safeError(error)
-      ctx.logger.info('image-generation: configuration save failed; provider=%s code=%s', input.provider, safe.code)
+      warn('image-generation: configuration save failed; provider=%s code=%s http=%s provider_code=%s', input.provider, safe.code, safe.providerStatus, safe.providerCode)
       throw safe
     }
   }

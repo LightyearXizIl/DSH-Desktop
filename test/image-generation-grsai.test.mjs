@@ -18,7 +18,7 @@ import {
 } from '../packages/dsh-image-generation/index.js'
 import { createSettings } from '../packages/dsh-image-generation/lib/settings.js'
 import { DEFAULTS, MODEL_CATALOG, generate, profile } from '../packages/dsh-image-generation/lib/provider.js'
-import { download, grsaiVideoRequest, videoCapabilities } from '../packages/dsh-image-generation/lib/grsai.js'
+import { catalogFromFlight, download, grsaiCatalog, grsaiVideoRequest, videoCapabilities } from '../packages/dsh-image-generation/lib/grsai.js'
 
 const cleanups = []
 afterEach(async () => { for (const cleanup of cleanups.splice(0).reverse()) await cleanup(); vi.restoreAllMocks() })
@@ -119,16 +119,20 @@ const runVideo = (f, args) => f.ctx.tools.execute({ callId: 'video', name: 'vide
 
 describe('GrsAI provider', () => {
   it('lists GrsAI with image and video models, a host-only base and the mainland default', () => {
-    expect(DEFAULTS.grsai).toEqual({ baseUrl: 'https://grsai.dakka.com.cn', model: 'nano-banana-fast', videoModel: 'veo3.1-fast', textModel: 'gemini-3.1-pro' })
+    // The catalog sells MiniMax and Agnes; Veo stays usable for saved choices.
+    expect(DEFAULTS.grsai).toEqual({ baseUrl: 'https://grsai.dakka.com.cn', model: 'nano-banana-fast', videoModel: 'minimax-h3', textModel: 'gemini-3.1-pro' })
     expect(MODEL_CATALOG.grsai.textModels.slice(0, 2)).toEqual(['gemini-3.1-pro', 'gpt-5.6-sol'])
     // The text menu carries chat models only; image models live in their own list.
     expect(MODEL_CATALOG.grsai.textModels.some(model => /image|banana/.test(model))).toBe(false)
     expect(() => profile('grsai', { textModel: 'bad model' })).toThrow(/valid text model/)
     expect(MODEL_CATALOG.grsai.models).toEqual(expect.arrayContaining(['nano-banana-pro', 'gpt-image-2']))
-    expect(MODEL_CATALOG.grsai.videoModels).toEqual(['veo3.1-fast', 'veo3.1-pro', 'minimax-h3', 'agnes-video-2.5'])
+    expect(MODEL_CATALOG.grsai.videoModels).toEqual(['minimax-h3', 'agnes-video-2.5', 'veo3.1-fast', 'veo3.1-pro'])
+    expect(MODEL_CATALOG.grsai.canFetch).toBe(true)
     // A pasted endpoint collapses to the documented host.
     expect(profile('grsai', { baseUrl: 'https://grsaiapi.com/v1/draw/completions' }).baseUrl).toBe('https://grsaiapi.com')
-    expect(() => profile('grsai', { videoModel: 'sora-2' })).toThrow(/supported video model/)
+    // Models GrsAI adds later are accepted; only malformed ids are refused.
+    expect(profile('grsai', { videoModel: 'agnes-video-3' }).videoModel).toBe('agnes-video-3')
+    expect(() => profile('grsai', { videoModel: 'bad model' })).toThrow(/valid video model/)
   })
 
   it('saves a key with one balance check that submits no generation and keeps the key out of results and logs', async () => {
@@ -136,7 +140,7 @@ describe('GrsAI provider', () => {
     const result = await save(f, s.baseUrl)
     expect(s.calls).toHaveLength(1)
     expect(s.calls[0]).toMatchObject({ url: '/client/openapi/getAPIKeyCredits', method: 'POST', auth: 'Bearer grsai-good-key', body: { apiKey: 'grsai-good-key' } })
-    expect(result.profiles.grsai).toMatchObject({ configured: true, validation: 'credits', videoModel: 'veo3.1-fast' })
+    expect(result.profiles.grsai).toMatchObject({ configured: true, validation: 'credits', videoModel: 'minimax-h3' })
     expect(JSON.stringify(result)).not.toContain('grsai-good-key')
     expect(JSON.stringify(f.log.mock.calls)).not.toContain('grsai-good-key')
   })
@@ -198,6 +202,68 @@ describe('GrsAI provider', () => {
     expect(() => grsaiVideoRequest('agnes-video-2.5', 'p', '16:9', 13)).toThrow(expect.objectContaining({ code: 'DURATION' }))
     expect(() => grsaiVideoRequest('minimax-h3', 'p', '16:9', 16)).toThrow(expect.objectContaining({ code: 'DURATION' }))
     expect(videoCapabilities('veo3.1-fast')).toEqual({ ratios: ['16:9', '9:16'], duration: null })
+    // A video model added after this release gets the unified API's common fields only.
+    expect(grsaiVideoRequest('seedance-2', 'p', '1:1')).toEqual({ legacy: false, body: { model: 'seedance-2', prompt: 'p', aspectRatio: '1:1' } })
+    expect(grsaiVideoRequest('seedance-2', 'p', '16:9', 8).body).toEqual({ model: 'seedance-2', prompt: 'p', aspectRatio: '16:9', duration: 8 })
+  })
+})
+
+describe('GrsAI model catalog', () => {
+  const flight = models => [
+    '0:{"P":null,"b":"build"}',
+    `7:["$","div",null,{"className":"mx-auto","children":["$","$L18",null,{"models":${JSON.stringify(models)},"rate":20000}]}]`,
+    '8:["$","p",null,{"children":"footer"}]',
+  ].join('\n')
+  const sold = [
+    { name: 'minimax-h3', type: 'video', closeModel: false },
+    { name: 'agnes-video-3', type: 'video', closeModel: false },
+    { name: 'retired-video', type: 'video', closeModel: true },
+    { name: 'nano-banana-3', type: 'image', closeModel: false },
+    { name: 'gpt-5.6-sol', type: 'text', closeModel: false },
+    { name: 'gemini-4-pro', type: 'text', closeModel: false },
+    { name: 'gemini-3.1-pro', type: 'text', closeModel: false },
+  ]
+
+  it('reads every model and its kind from the public catalog page, leaving withdrawn ones out', async () => {
+    expect(catalogFromFlight(flight(sold))).toHaveLength(7)
+    expect(catalogFromFlight('0:{"P":null}\nnot a row')).toBeUndefined()
+    const fetchImpl = vi.fn(async url => (String(url).includes('grsai.ai') ? new Response(flight(sold)) : new Response('', { status: 500 })))
+    const catalog = await grsaiCatalog({ baseUrl: 'https://grsai.dakka.com.cn' }, { fetchImpl })
+    expect(catalog).toEqual({
+      source: 'catalog',
+      models: ['nano-banana-3'],
+      videoModels: ['minimax-h3', 'agnes-video-3'],
+      // The documented examples lead the text menu.
+      textModels: ['gemini-3.1-pro', 'gpt-5.6-sol', 'gemini-4-pro'],
+    })
+    const [url, init] = fetchImpl.mock.calls[0]
+    expect(url).toBe('https://grsai.ai/zh/dashboard/models')
+    expect(init).toMatchObject({ redirect: 'error', headers: { RSC: '1' } })
+    // No key is needed or sent.
+    expect(JSON.stringify(fetchImpl.mock.calls)).not.toMatch(/Bearer/)
+  })
+
+  it('falls back to GET /v1/models for text and image, then to the shipped lists', async () => {
+    const endpoint = vi.fn(async url => (String(url).endsWith('/v1/models')
+      ? Response.json({ data: [{ id: 'gemini-4-pro' }, { id: 'nano-banana-3' }, { id: 'gpt-image-3' }] })
+      : new Response('down', { status: 503 })))
+    expect(await grsaiCatalog({ baseUrl: 'https://grsaiapi.com' }, { fetchImpl: endpoint })).toEqual({
+      source: 'models-endpoint', models: ['nano-banana-3', 'gpt-image-3'], videoModels: MODEL_CATALOG.grsai.videoModels, textModels: ['gemini-4-pro'],
+    })
+    expect(endpoint.mock.calls[1][0]).toBe('https://grsaiapi.com/v1/models')
+    const offline = vi.fn(async () => { throw new TypeError('fetch failed') })
+    expect(await grsaiCatalog({ baseUrl: 'https://grsaiapi.com' }, { fetchImpl: offline })).toEqual({
+      source: 'builtin', models: MODEL_CATALOG.grsai.models, videoModels: MODEL_CATALOG.grsai.videoModels, textModels: MODEL_CATALOG.grsai.textModels,
+    })
+  })
+
+  it('serves the catalog through the models route before any key is saved', async () => {
+    const f = await fixture()
+    const flightText = flight(sold)
+    const realFetch = globalThis.fetch
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => (String(url).startsWith('https://grsai.ai/') ? new Response(flightText) : realFetch(url, init)))
+    const result = await f.settings.models({ provider: 'grsai', revision: 0, baseUrl: 'https://grsai.dakka.com.cn' })
+    expect(result).toMatchObject({ source: 'provider', origin: 'catalog', canFetch: true, videoModels: ['minimax-h3', 'agnes-video-3'] })
   })
 })
 
@@ -316,6 +382,23 @@ describe('text_generate', () => {
 })
 
 describe('GrsAI credits', () => {
+  it('checks a typed key\'s balance before it is saved, without storing it', async () => {
+    const f = await fixture(); const s = await grsai()
+    const plugin = await mountPlugin(f)
+    const check = body => plugin.route('/api/image-generation.credits').fetch(new Request('http://local/api/image-generation.credits', { method: 'POST', body: JSON.stringify(body) }))
+    const response = await check({ apiKey: 'grsai-good-key', baseUrl: s.baseUrl })
+    const text = await response.text()
+    expect(JSON.parse(text)).toEqual({ credits: 5000 })
+    expect(text).not.toContain('grsai-good-key')
+    expect((await f.settings.describe()).profiles.grsai.configured).toBe(false)
+    // A rejected key says so; a missing one is refused before any request.
+    expect(await (await check({ apiKey: 'grsai-bad-key', baseUrl: s.baseUrl })).json()).toMatchObject({ code: 'AUTH' })
+    const before = s.calls.length
+    expect(await (await check({ apiKey: ' ', baseUrl: s.baseUrl })).json()).toMatchObject({ code: 'KEY_REQUIRED' })
+    expect(s.calls.length).toBe(before)
+    expect(JSON.stringify(f.log.mock.calls)).not.toMatch(/grsai-(good|bad)-key/)
+  })
+
   it('reads the saved key\'s balance through the credits route, never returning the key', async () => {
     const f = await fixture(); const s = await grsai()
     const plugin = await mountPlugin(f)

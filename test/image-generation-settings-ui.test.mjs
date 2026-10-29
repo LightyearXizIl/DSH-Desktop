@@ -82,7 +82,8 @@ it('shows the saved GrsAI key\'s credit balance in the GrsAI section', async () 
   const entry = entries.find(item => item.options.name === 'settings.plugins.tab')
   const settings = { revision: 2, provider: 'grsai', writable: true, catalogs: MODEL_CATALOG,
     profiles: Object.fromEntries(Object.entries(DEFAULTS).map(([name, defaults]) => [name, { ...defaults, configured: name === 'grsai', validation: name === 'grsai' ? 'credits' : null }])) }
-  const fetchMock = vi.fn(async path => ({ ok: true, text: async () => JSON.stringify(path.endsWith('.credits') ? { credits: 12345 } : settings) }))
+  const catalog = { source: 'provider', origin: 'catalog', canFetch: true, models: ['nano-banana-fast', 'nano-banana-3'], videoModels: ['minimax-h3', 'agnes-video-3'], textModels: ['gemini-3.1-pro', 'gemini-4-pro'] }
+  const fetchMock = vi.fn(async path => ({ ok: true, text: async () => JSON.stringify(path.endsWith('.credits') ? { credits: 12345 } : path.endsWith('.models') ? catalog : settings) }))
   vi.stubGlobal('fetch', fetchMock)
   const container = document.createElement('div')
   document.body.append(container)
@@ -95,11 +96,15 @@ it('shows the saved GrsAI key\'s credit balance in the GrsAI section', async () 
     expect(balance?.textContent).toContain('creditsUnit')
     const creditCall = fetchMock.mock.calls.find(([path]) => path === '/api/image-generation.credits')
     expect(creditCall?.[1].method).toBe('GET')
-    // The video model list carries every supported GrsAI video family.
-    expect(MODEL_CATALOG.grsai.videoModels).toEqual(['veo3.1-fast', 'veo3.1-pro', 'minimax-h3', 'agnes-video-2.5'])
-    // Text generation sits beside images and video in the same GrsAI section.
-    expect(container.querySelector('button[name=videoModel]')?.textContent).toContain('veo3.1-fast')
+    // Opening the GrsAI section loads the live catalog without a key.
+    const catalogCall = fetchMock.mock.calls.find(([path]) => path === '/api/image-generation.models')
+    expect(catalogCall?.[1].method).toBe('POST')
+    expect(JSON.parse(catalogCall[1].body)).toMatchObject({ provider: 'grsai', baseUrl: 'https://grsai.dakka.com.cn' })
+    expect(container.textContent).toContain('catalogOnline')
+    // The saved choices stay selected after the live lists replace the shipped ones.
+    expect(container.querySelector('button[name=videoModel]')?.textContent).toContain('minimax-h3')
     expect(container.querySelector('button[name=textModel]')?.textContent).toContain('gemini-3.1-pro')
+    expect(container.querySelector('button.dshImageFetch')?.disabled).toBe(false)
   } finally {
     await act(async () => root.unmount())
     container.remove()

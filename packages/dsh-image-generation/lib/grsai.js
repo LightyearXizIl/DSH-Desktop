@@ -8,28 +8,36 @@
 // - The legacy draw API, still the only documented route for Veo: a POST with
 //   `webHook: "-1"` returns `{ code, data: { id } }`, and POST /v1/draw/result
 //   reports `running | succeeded | failed`.
-// Result URLs stay valid for two hours.
+// Result URLs stay valid for two hours. The model menus come from GrsAI's
+// public model catalog (see grsaiCatalog); the lists below are the offline
+// fallback, matching that catalog on 2026-10-29.
 import { ImageError, readBounded, safeError } from './errors.js'
 
 export const GRSAI_DEFAULT_BASE = 'https://grsai.dakka.com.cn'
 export const GRSAI_DEFAULT_IMAGE_MODEL = 'nano-banana-fast'
-export const GRSAI_DEFAULT_VIDEO_MODEL = 'veo3.1-fast'
+// The catalog no longer sells Veo; saved Veo selections keep working.
+export const GRSAI_DEFAULT_VIDEO_MODEL = 'minimax-h3'
 export const GRSAI_IMAGE_MODELS = Object.freeze([
   'nano-banana-fast',
-  'nano-banana',
+  'nano-banana-2-lite',
   'nano-banana-2',
   'nano-banana-2.1',
   'nano-banana-pro',
+  'nano-banana-2-cl',
+  'nano-banana-2-2k-cl',
+  'nano-banana-2-4k-cl',
+  'nano-banana-pro-cl',
+  'nano-banana-pro-vip',
+  'nano-banana-pro-4k-vip',
   'gpt-image-2',
   'gpt-image-2-vip',
   'gpt-image-2.5',
   'gpt-image-2.5-flare',
   'gpt-image-2.5-sunburst',
 ])
-export const GRSAI_VIDEO_MODELS = Object.freeze(['veo3.1-fast', 'veo3.1-pro', 'minimax-h3', 'agnes-video-2.5'])
+export const GRSAI_VIDEO_MODELS = Object.freeze(['minimax-h3', 'agnes-video-2.5', 'veo3.1-fast', 'veo3.1-pro'])
 export const GRSAI_DEFAULT_TEXT_MODEL = 'gemini-3.1-pro'
-// The text models GrsAI's public GET /v1/models lists (2026-10-29), the two
-// its documents use as examples first.
+// The two text models GrsAI's documents use as examples come first.
 export const GRSAI_TEXT_MODELS = Object.freeze([
   'gemini-3.1-pro',
   'gpt-5.6-sol',
@@ -58,13 +66,16 @@ const VIDEO_FAMILIES = {
   veo: { ratios: ['16:9', '9:16'], duration: null },
   minimax: { ratios: ['16:9', '9:16'], duration: { min: 1, max: 15, default: 6 }, resolution: '768p' },
   agnes: { ratios: ['16:9', '9:16', '21:9', '4:3', '1:1', '3:4'], duration: { min: 4, max: 12, default: 5 }, resolution: '720p' },
+  // A model the catalog added after this release: send the unified API's
+  // common fields and let GrsAI reject what it does not accept.
+  other: { ratios: ['16:9', '9:16', '21:9', '4:3', '1:1', '3:4'], duration: { min: 1, max: 60 } },
 }
 
 function videoFamily(model) {
   if (model.startsWith('veo')) return 'veo'
   if (model.startsWith('minimax')) return 'minimax'
   if (model.startsWith('agnes')) return 'agnes'
-  throw new ImageError('MODEL', 'Choose a supported video model.')
+  return 'other'
 }
 
 /** Ratios and duration range the given video model accepts. */
@@ -250,9 +261,9 @@ export function grsaiVideoRequest(model, prompt, ratio, duration) {
   if (!ratios.includes(ratio)) throw new ImageError('RATIO', `${model} supports ${ratios.join(', ')}.`)
   if (family === 'veo') return { legacy: true, path: '/v1/video/veo', body: { model, prompt, aspectRatio: ratio } }
   const seconds = duration ?? range.default
-  if (!Number.isInteger(seconds) || seconds < range.min || seconds > range.max) throw new ImageError('DURATION', `${model} renders ${range.min}-${range.max} seconds.`)
+  if (seconds !== undefined && (!Number.isInteger(seconds) || seconds < range.min || seconds > range.max)) throw new ImageError('DURATION', `${model} renders ${range.min}-${range.max} seconds.`)
   const aspectRatio = family === 'minimax' ? (ratio === '9:16' ? 'portrait' : 'landscape') : ratio
-  return { legacy: false, body: { model, prompt, aspectRatio, resolution, duration: seconds } }
+  return { legacy: false, body: { model, prompt, aspectRatio, ...(resolution ? { resolution } : {}), ...(seconds === undefined ? {} : { duration: seconds }) } }
 }
 
 export async function grsaiVideo(spec, key, prompt, { ratio, duration }, options = {}) {
@@ -297,6 +308,83 @@ export async function grsaiText(spec, key, { prompt, instructions, maxTokens }, 
     inputTokens: count(payload.usage?.prompt_tokens),
     outputTokens: count(payload.usage?.completion_tokens),
   }
+}
+
+const CATALOG_PAGE = 'https://grsai.ai/zh/dashboard/models'
+const CATALOG_LISTS = { image: 'models', video: 'videoModels', text: 'textModels' }
+const IMAGE_MODEL = /nano-banana|gpt-image|image/u
+const validId = name => /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$/u.test(name)
+
+/**
+ * Find the model list in a Next.js flight (RSC) response: newline-separated
+ * `<id>:<json>` rows, one of which carries `{ models: [{ name, type, ... }] }`.
+ */
+export function catalogFromFlight(text) {
+  for (const line of text.split('\n')) {
+    const row = /^[0-9a-z]+:(.*)$/u.exec(line)
+    if (!row || !row[1].includes('"models":[')) continue
+    let value
+    try { value = JSON.parse(row[1]) } catch { continue }
+    const stack = [value]
+    while (stack.length > 0) {
+      const node = stack.pop()
+      if (!node || typeof node !== 'object') continue
+      if (Array.isArray(node.models) && node.models.length > 0
+        && node.models.every(model => typeof model?.name === 'string' && typeof model?.type === 'string')) return node.models
+      stack.push(...Object.values(node))
+    }
+  }
+  return undefined
+}
+
+async function fetchText(url, maxBytes, { signal, fetchImpl = fetch, headers } = {}) {
+  const response = await fetchImpl(url, { redirect: 'error', signal, ...(headers ? { headers } : {}) })
+  if (!response.ok) throw rejected(response)
+  return (await readBounded(response, maxBytes, signal)).toString('utf8')
+}
+
+/** The documented example models lead the text menu; the rest keep GrsAI's order. */
+function rankText(ids) {
+  const lead = GRSAI_TEXT_MODELS.slice(0, 2)
+  return [...lead.filter(id => ids.includes(id)), ...ids.filter(id => !lead.includes(id))]
+}
+
+/**
+ * GrsAI's current models by kind, read without a key. The public pricing page
+ * is the only source that types every model and lists video, so its flight
+ * data is parsed defensively; when it fails, GET /v1/models still answers text
+ * and image, and the shipped lists cover the rest.
+ * @returns `{ source, models, videoModels, textModels }`, where source is
+ * `catalog`, `models-endpoint` or `builtin`.
+ */
+export async function grsaiCatalog(spec, options = {}) {
+  const signal = AbortSignal.any([AbortSignal.timeout(20_000), ...(options.signal ? [options.signal] : [])])
+  try {
+    const listed = catalogFromFlight(await fetchText(CATALOG_PAGE, 4 * 1024 * 1024, { ...options, signal, headers: { RSC: '1' } }))
+    const lists = { models: [], videoModels: [], textModels: [] }
+    for (const model of listed ?? []) {
+      const list = CATALOG_LISTS[model.type]
+      // A withdrawn model stays out of the menus; a saved one still works.
+      if (list && model.closeModel !== true && validId(model.name) && !lists[list].includes(model.name)) lists[list].push(model.name)
+    }
+    if (lists.models.length + lists.videoModels.length + lists.textModels.length > 0) {
+      return { source: 'catalog', ...lists, textModels: rankText(lists.textModels) }
+    }
+  } catch {
+    // Fall through to the next source; only the caller's cancellation stops here.
+    options.signal?.throwIfAborted()
+  }
+  try {
+    const listed = JSON.parse(await fetchText(`${spec.baseUrl}/v1/models`, 1024 * 1024, { ...options, signal }))
+    const ids = (Array.isArray(listed?.data) ? listed.data : []).map(model => model?.id).filter(id => typeof id === 'string' && validId(id))
+    if (ids.length > 0) {
+      return { source: 'models-endpoint', models: ids.filter(id => IMAGE_MODEL.test(id)), videoModels: [...GRSAI_VIDEO_MODELS], textModels: rankText(ids.filter(id => !IMAGE_MODEL.test(id))) }
+    }
+  } catch {
+    // Fall through to the next source; only the caller's cancellation stops here.
+    options.signal?.throwIfAborted()
+  }
+  return { source: 'builtin', models: [...GRSAI_IMAGE_MODELS], videoModels: [...GRSAI_VIDEO_MODELS], textModels: [...GRSAI_TEXT_MODELS] }
 }
 
 /** The key's credit balance: one request that generates nothing. */

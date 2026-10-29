@@ -2,7 +2,7 @@ import { ImageError, readBounded, safeError } from './errors.js'
 import {
   GRSAI_DEFAULT_BASE, GRSAI_DEFAULT_IMAGE_MODEL, GRSAI_DEFAULT_TEXT_MODEL, GRSAI_DEFAULT_VIDEO_MODEL,
   GRSAI_IMAGE_MODELS, GRSAI_TEXT_MODELS, GRSAI_VIDEO_MODELS,
-  grsaiImage, grsaiValidate,
+  grsaiCatalog, grsaiImage, grsaiValidate,
 } from './grsai.js'
 
 export { ImageError, readBounded, safeError }
@@ -30,7 +30,8 @@ export const MODEL_CATALOG = Object.freeze({
     'doubao-seedream-4-0-250828',
   ] },
   // GrsAI's documented image, video and text models; one key covers all three.
-  grsai: { source: 'builtin', canFetch: false, models: [...GRSAI_IMAGE_MODELS], videoModels: [...GRSAI_VIDEO_MODELS], textModels: [...GRSAI_TEXT_MODELS] },
+  // The shipped lists are the offline menu; the card refreshes them from GrsAI.
+  grsai: { source: 'builtin', canFetch: true, models: [...GRSAI_IMAGE_MODELS], videoModels: [...GRSAI_VIDEO_MODELS], textModels: [...GRSAI_TEXT_MODELS] },
 })
 
 const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$/
@@ -42,7 +43,8 @@ export function profile(provider, input = {}) {
   let extra = {}
   if (provider === 'grsai') {
     const videoModel = String(input.videoModel ?? DEFAULTS.grsai.videoModel).trim()
-    if (!GRSAI_VIDEO_MODELS.includes(videoModel)) throw new ImageError('MODEL', 'Choose a supported video model.')
+    // Models GrsAI adds after this release come from its live catalog.
+    if (!MODEL_ID.test(videoModel)) throw new ImageError('MODEL', 'Enter a valid video model ID.')
     // Any chat model id works on the OpenAI-compatible route; the list is a menu.
     const textModel = String(input.textModel ?? DEFAULTS.grsai.textModel).trim()
     if (!MODEL_ID.test(textModel)) throw new ImageError('MODEL', 'Enter a valid text model ID.')
@@ -127,6 +129,11 @@ async function request(url, key, { signal, body, maxBytes = 2 * 1024 * 1024, fet
 
 /** Read the account's visible models without submitting image generation. */
 export async function listModels(provider, spec, key, options = {}) {
+  if (provider === 'grsai') {
+    // GrsAI publishes its catalog without a key.
+    const { source, ...lists } = await grsaiCatalog(spec, options)
+    return { source: source === 'builtin' ? 'builtin' : 'provider', origin: source, canFetch: true, ...lists }
+  }
   if (provider !== 'openai') throw new ImageError('MODEL_DISCOVERY', 'This provider does not offer account model discovery here. Choose a built-in model or enter a model ID.')
   const signal = AbortSignal.any([AbortSignal.timeout(15_000), ...(options.signal ? [options.signal] : [])])
   const result = await request(`${spec.baseUrl}/models`, key, { ...options, signal })

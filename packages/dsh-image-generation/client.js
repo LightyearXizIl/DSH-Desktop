@@ -7,8 +7,11 @@ window.__ModuleLoader__.load({
     const NS = 'settings.imageGeneration'
     const zh = {
       previewLoading: '正在加载图片…', previewRetry: '重新加载图片', generatedImage: '生成的图片', title: '影像生成', description: '接入生图、生视频和文本生成模型，在对话、PPT 和文档中生成图片、短视频与文字', provider: '服务商', bytedance: 'Seedream', openai: 'OpenAI', grsai: 'GrsAI',
-      videoModel: '视频模型', textModel: '文本模型', grsaiHint: 'GrsAI 一个 Key 同时提供生图、生视频（Veo 3.1、MiniMax H3、Agnes Video 2.5）和文本生成（Gemini、GPT），保存后对话中可以直接调用。默认使用国内直连地址，海外网络可在高级设置中改为 https://grsaiapi.com。',
+      videoModel: '视频模型', textModel: '文本模型', grsaiHint: 'GrsAI 一个 Key 同时提供生图、生视频和文本生成，三个模型列表都从 GrsAI 在线获取，保存后对话中可以直接调用。默认使用国内直连地址，海外网络可在高级设置中改为 https://grsaiapi.com。',
       credits: '积分余额', creditsUnit: '积分', creditsLoading: '正在查询…', creditsFailed: '暂时无法查询', creditsRefresh: '刷新余额',
+      creditsCheck: '查询余额', creditsNeedKey: '填写 API Key 后可查询', creditsAuth: 'Key 无效或不存在', creditsNetwork: '无法连接 GrsAI',
+      refreshModels: '刷新模型列表', catalogOnline: '已从 GrsAI 在线获取最新模型：生图 {image} 个，视频 {video} 个，文本 {text} 个。',
+      catalogEndpoint: '已在线获取生图和文本模型；GrsAI 模型清单暂时打不开，视频模型使用内置列表。', catalogFallback: '暂时无法在线获取模型，正在使用内置列表，可点击「刷新模型列表」重试。',
       apiKey: 'API Key', keyPlaceholder: '输入服务商的 API Key', savedKey: '输入新 Key 可替换',
       advanced: '高级设置', model: '模型 ID', baseUrl: 'API 地址',
       save: '保存', saving: '正在校验…', saved: '已保存，连接校验通过', loading: '正在读取配置…', reload: '重新读取配置', readOnly: '当前配置由管理员管理。',
@@ -28,8 +31,11 @@ window.__ModuleLoader__.load({
     }
     const en = {
       previewLoading: 'Loading image…', previewRetry: 'Reload image', generatedImage: 'Generated image', title: 'Image & video generation', description: 'Connect image, video and text generation models to create pictures, short clips and copy in chat, presentations and documents.', provider: 'Provider', bytedance: 'Seedream', openai: 'OpenAI', grsai: 'GrsAI',
-      videoModel: 'Video model', textModel: 'Text model', grsaiHint: 'One GrsAI key covers images, video (Veo 3.1, MiniMax H3, Agnes Video 2.5) and text generation (Gemini, GPT); once saved, chat can call them directly. The default is the mainland direct host; outside mainland China, switch to https://grsaiapi.com under Advanced settings.',
+      videoModel: 'Video model', textModel: 'Text model', grsaiHint: 'One GrsAI key covers images, video and text generation, and all three model lists load from GrsAI online; once saved, chat can call them directly. The default is the mainland direct host; outside mainland China, switch to https://grsaiapi.com under Advanced settings.',
       credits: 'Credit balance', creditsUnit: 'credits', creditsLoading: 'Checking…', creditsFailed: 'Unavailable right now', creditsRefresh: 'Refresh balance',
+      creditsCheck: 'Check balance', creditsNeedKey: 'Enter an API key to check', creditsAuth: 'The key is invalid or unknown', creditsNetwork: 'Cannot reach GrsAI',
+      refreshModels: 'Refresh model list', catalogOnline: 'Latest models loaded from GrsAI: {image} image, {video} video, {text} text.',
+      catalogEndpoint: 'Image and text models loaded online; the GrsAI catalog is unreachable, so video uses the built-in list.', catalogFallback: 'Models could not be loaded online, so the built-in list is in use. Refresh the model list to retry.',
       apiKey: 'API Key', keyPlaceholder: 'Enter your provider API key', savedKey: 'Enter a new key to replace it',
       advanced: 'Advanced settings', model: 'Model ID', baseUrl: 'API URL',
       save: 'Save', saving: 'Validating…', saved: 'Saved. Connection validated.', loading: 'Loading settings…', reload: 'Reload settings', readOnly: 'These settings are managed by your administrator.',
@@ -73,12 +79,12 @@ window.__ModuleLoader__.load({
     const emptyDrafts = {
       bytedance: { baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', model: 'doubao-seedream-4-5-251128', configured: false, validation: null, apiKey: '' },
       openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-image-1.5', configured: false, validation: null, apiKey: '' },
-      grsai: { baseUrl: 'https://grsai.dakka.com.cn', model: 'nano-banana-fast', videoModel: 'veo3.1-fast', textModel: 'gemini-3.1-pro', configured: false, validation: null, apiKey: '' },
+      grsai: { baseUrl: 'https://grsai.dakka.com.cn', model: 'nano-banana-fast', videoModel: 'minimax-h3', textModel: 'gemini-3.1-pro', configured: false, validation: null, apiKey: '' },
     }
     const emptyCatalogs = {
       openai: { source: 'builtin', canFetch: true, models: [emptyDrafts.openai.model] },
       bytedance: { source: 'builtin', canFetch: false, models: [emptyDrafts.bytedance.model] },
-      grsai: { source: 'builtin', canFetch: false, models: [emptyDrafts.grsai.model], videoModels: [emptyDrafts.grsai.videoModel], textModels: [emptyDrafts.grsai.textModel] },
+      grsai: { source: 'builtin', canFetch: true, models: [emptyDrafts.grsai.model], videoModels: [emptyDrafts.grsai.videoModel], textModels: [emptyDrafts.grsai.textModel] },
     }
     function ImageSelect({ name, label, value, options, onChange, disabled }) {
       const [open, setOpen] = React.useState(false)
@@ -117,22 +123,34 @@ window.__ModuleLoader__.load({
      * when the section opens and after every save, never on a timer: each read
      * is a request to GrsAI.
      */
-    function GrsaiCredits({ t, callApi, revision }) {
-      const [state, setState] = React.useState({ kind: 'loading' })
+    function GrsaiCredits({ t, callApi, revision, configured, draftKey, baseUrl }) {
+      const [state, setState] = React.useState({ kind: configured ? 'loading' : 'idle' })
       const [attempt, setAttempt] = React.useState(0)
-      React.useEffect(() => {
-        const controller = new AbortController()
+      const request = React.useRef(null)
+      const check = React.useCallback(useTypedKey => {
+        request.current?.abort()
+        const controller = new AbortController(); request.current = controller
         setState({ kind: 'loading' })
-        callApi('credits', {}, controller.signal).then(
-          result => { if (!controller.signal.aborted) setState(Number.isFinite(result.credits) ? { kind: 'ready', credits: result.credits } : { kind: 'failed' }) },
-          () => { if (!controller.signal.aborted) setState({ kind: 'failed' }) })
-        return () => controller.abort()
-      }, [callApi, revision, attempt])
-      const value = state.kind === 'ready' ? `${state.credits.toLocaleString()} ${t('creditsUnit')}` : t(state.kind === 'loading' ? 'creditsLoading' : 'creditsFailed')
+        // A typed key is checked once and never stored; otherwise the saved key answers.
+        callApi('credits', useTypedKey ? { apiKey: draftKey, baseUrl } : undefined, controller.signal).then(
+          result => { if (!controller.signal.aborted) setState(Number.isFinite(result.credits) ? { kind: 'ready', credits: result.credits } : { kind: 'failed', code: 'RESPONSE' }) },
+          error => { if (!controller.signal.aborted) setState({ kind: 'failed', code: error?.code }) })
+      }, [callApi, draftKey, baseUrl])
+      React.useEffect(() => {
+        if (!configured) { setState({ kind: 'idle' }); return }
+        check(false)
+        return () => request.current?.abort()
+      }, [configured, revision, attempt])
+      React.useEffect(() => () => request.current?.abort(), [])
+      const failure = code => t(code === 'AUTH' ? 'creditsAuth' : code === 'UNAVAILABLE' || code === 'TIMEOUT' ? 'creditsNetwork' : 'creditsFailed')
+      const value = state.kind === 'ready' ? `${state.credits.toLocaleString()} ${t('creditsUnit')}`
+        : state.kind === 'loading' ? t('creditsLoading') : state.kind === 'failed' ? failure(state.code) : t('creditsNeedKey')
+      const typed = Boolean(draftKey)
       return h('div', { className: 'dshImageCredits', 'data-testid': 'grsai-credits' },
         h('span', { className: 'dshImageCreditsLabel' }, t('credits')),
         h('span', { className: 'dshImageCreditsValue', 'data-state': state.kind, role: 'status', 'aria-live': 'polite' }, value),
-        h('button', { className: 'dshImageFetch', type: 'button', disabled: state.kind === 'loading', onClick: () => setAttempt(value => value + 1) }, t('creditsRefresh')))
+        h('button', { className: 'dshImageFetch', type: 'button', disabled: state.kind === 'loading' || (!configured && !typed),
+          onClick: () => (typed ? check(true) : setAttempt(value => value + 1)) }, t(configured && !typed ? 'creditsRefresh' : 'creditsCheck')))
     }
     function ImageCard({ t, callApi }) {
       const [expanded, setExpanded] = React.useState(false)
@@ -229,15 +247,39 @@ window.__ModuleLoader__.load({
         if (key === 'apiKey' || key === 'baseUrl') setCatalogs(previous => ({ ...previous, [provider]: undefined }))
         setStatus(''); setError('')
       }
-      const fetchModels = async () => {
+      const fetchModels = async ({ quiet = false } = {}) => {
         if (inFlight.current || !saved || loadFailed) return
         inFlight.current = true; setFetching(true); setError(''); setStatus('')
         try {
           const result = await callApi('models', { revision: saved.revision, provider, model: draft.model || undefined, baseUrl: draft.baseUrl, apiKey: draft.apiKey }, lifetime.current.signal)
+          // Only a well-formed catalog replaces the menus the card renders from.
+          const lists = ['models', ...(provider === 'grsai' ? ['videoModels', 'textModels'] : [])]
+          if (!lists.every(list => Array.isArray(result?.[list]) && result[list].every(model => typeof model === 'string'))) throw { code: 'RESPONSE' }
           setCatalogs(previous => ({ ...previous, [provider]: result }))
           setCustomModels(previous => ({ ...previous, [provider]: !result.models.includes(draft.model) }))
-        } catch (error) { if (!lifetime.current.signal.aborted) setError(error.code || 'UNAVAILABLE') }
+          if (provider === 'grsai' && !draft.configured) {
+            // Before the first save, start from models the catalog actually sells.
+            const pick = (list, current) => (Array.isArray(list) && list.length > 0 && !list.includes(current) ? list[0] : current)
+            setDrafts(previous => ({ ...previous, grsai: { ...previous.grsai,
+              model: pick(result.models, previous.grsai.model), videoModel: pick(result.videoModels, previous.grsai.videoModel), textModel: pick(result.textModels, previous.grsai.textModel) } }))
+            setCustomModels(previous => ({ ...previous, grsai: false }))
+          }
+        } catch (error) {
+          if (lifetime.current.signal.aborted) return
+          if (quiet) setCatalogs(previous => ({ ...previous, [provider]: { ...(saved.catalogs[provider] || emptyCatalogs[provider]), origin: 'builtin' } }))
+          else setError(error.code || 'UNAVAILABLE')
+        }
         finally { inFlight.current = false; if (!lifetime.current.signal.aborted) setFetching(false) }
+      }
+      const autoFetched = React.useRef(new Set())
+      React.useEffect(() => {
+        if (!expanded || provider !== 'grsai' || !saved || loadFailed || !draft?.baseUrl || autoFetched.current.has(draft.baseUrl)) return
+        autoFetched.current.add(draft.baseUrl)
+        void fetchModels({ quiet: true })
+      }, [expanded, provider, saved, loadFailed, draft?.baseUrl])
+      const catalogNote = current => {
+        if (current.origin === 'catalog') return t('catalogOnline').replace('{image}', current.models.length).replace('{video}', current.videoModels.length).replace('{text}', current.textModels.length)
+        return t(current.origin === 'models-endpoint' ? 'catalogEndpoint' : 'catalogFallback')
       }
       const save = async event => {
         event.preventDefault()
@@ -274,20 +316,23 @@ window.__ModuleLoader__.load({
                 options: [{ id: 'bytedance', label: t('bytedance') }, { id: 'openai', label: t('openai') }, { id: 'grsai', label: t('grsai') }],
                 onChange: value => { setProvider(value); setStatus(''); setError('') } }),
               provider === 'grsai' && h('p', { className: 'dshImageHint' }, t('grsaiHint')),
-              provider === 'grsai' && saved?.profiles?.grsai?.configured && h(GrsaiCredits, { t, callApi, revision: saved.revision }),
               field('apiKey', 'apiKey', 'password', t(draft.configured ? 'savedKey' : 'keyPlaceholder')),
+              provider === 'grsai' && h(GrsaiCredits, { t, callApi, revision: saved?.revision, configured: Boolean(saved?.profiles?.grsai?.configured), draftKey: (draft.apiKey || '').trim(), baseUrl: draft.baseUrl }),
               h(ImageSelect, { name: 'model', label: t('modelSelect'), value: customModels[provider] || !catalog.models.includes(draft.model) ? '__custom__' : draft.model, disabled: busy || fetching || !writable,
                 options: [...catalog.models.map(model => ({ id: model, label: model })), { id: '__custom__', label: t('customModel') }],
                 onChange: value => { const custom = value === '__custom__'; setCustomModels(previous => ({ ...previous, [provider]: custom })); if (!custom) edit('model', value) } }),
               (customModels[provider] || !catalog.models.includes(draft.model)) && field('model', 'model'),
               Array.isArray(catalog.videoModels) && h(ImageSelect, { name: 'videoModel', label: t('videoModel'), value: draft.videoModel, disabled: busy || fetching || !writable,
-                options: catalog.videoModels.map(model => ({ id: model, label: model })),
+                options: [...new Set([...catalog.videoModels, draft.videoModel].filter(Boolean))].map(model => ({ id: model, label: model })),
                 onChange: value => edit('videoModel', value) }),
               Array.isArray(catalog.textModels) && h(ImageSelect, { name: 'textModel', label: t('textModel'), value: draft.textModel, disabled: busy || fetching || !writable,
                 // A model saved by an older list stays selectable.
                 options: [...new Set([...catalog.textModels, draft.textModel].filter(Boolean))].map(model => ({ id: model, label: model })),
                 onChange: value => edit('textModel', value) }),
-              catalog.canFetch && h('button', { className: 'dshImageFetch', type: 'button', disabled: !(draft.apiKey || '').trim() && !draft.configured, onClick: fetchModels }, t(fetching ? 'fetchingModels' : 'fetchModels')),
+              // GrsAI lists its catalog without a key; OpenAI needs one.
+              catalog.canFetch && h('button', { className: 'dshImageFetch', type: 'button', disabled: provider !== 'grsai' && !(draft.apiKey || '').trim() && !draft.configured, onClick: () => fetchModels() },
+                t(fetching ? 'fetchingModels' : provider === 'grsai' ? 'refreshModels' : 'fetchModels')),
+              provider === 'grsai' && catalogs.grsai && h('p', { className: 'dshImageHint', role: 'status' }, catalogNote(catalogs.grsai)),
               catalog.source === 'provider' && catalog.models.length === 0 && h('p', { className: 'dshImageHint', role: 'status' }, t('emptyModels')),
               h('details', { className: 'dshImageAdvanced' }, h('summary', null, t('advanced')), field('baseUrl', 'baseUrl'))),
             h('div', { className: 'dshImageActions' },
@@ -362,7 +407,7 @@ window.__ModuleLoader__.load({
       inject: ['slots', 'locale', 'uiConversation'],
       apply(ctx) {
         const callApi = async (endpoint, payload, signal) => {
-          const settings = endpoint === 'settings' || endpoint === 'credits'
+          const settings = endpoint === 'settings' || (endpoint === 'credits' && payload === undefined)
           const response = await fetch(`/api/image-generation.${endpoint}`, {
             method: settings ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store', signal,
             ...(settings ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload ?? {}) }),

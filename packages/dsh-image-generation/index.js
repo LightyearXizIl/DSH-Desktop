@@ -23,6 +23,9 @@ export const TEXT_PROMPT_SECTION = 'tool:text-generation'
 export const UNCONFIGURED_TEXT_PROMPT = 'Do not call text_generate. Text generation needs a GrsAI key saved in Settings > Built-in plugins > Image & video generation. Never ask for an API key in conversation.'
 export const CONFIGURED_TEXT_PROMPT = 'text_generate sends one prompt to the GrsAI text model saved in Settings (such as Gemini or GPT) and returns its reply. Call it when the user asks for that model\'s output, a second model\'s draft, or bulk copy from it; answer ordinary requests yourself.'
 
+/** Failures go out at warn: the Desktop log bridge keeps warnings and errors. */
+const failureLog = ctx => (...args) => (ctx.logger.warn ?? ctx.logger.info).apply(ctx.logger, args)
+
 /** An MP4 starts with an ISO base media `ftyp` box. */
 function isMp4(data) {
   return data.length > 12 && data.toString('latin1', 4, 8) === 'ftyp'
@@ -31,7 +34,7 @@ function isMp4(data) {
 export function videoTool(ctx, settings) {
   return defineTool({
     name: 'video_generate',
-    description: 'Generate one short video clip through GrsAI (the saved model: Veo 3.1, MiniMax H3 or Agnes Video 2.5) and save it as an MP4 in the session workspace. Requires a saved GrsAI key. Generation usually takes a few minutes. Describe subject, motion, camera and mood in the prompt.',
+    description: 'Generate one short video clip with the GrsAI video model saved in Settings (such as MiniMax H3 or Agnes Video 2.5) and save it as an MP4 in the session workspace. Requires a saved GrsAI key. Generation usually takes a few minutes. Describe subject, motion, camera and mood in the prompt.',
     parameters: {
       prompt: { type: 'string', required: true, description: 'Subject, action, camera movement, setting, lighting and mood of the clip.' },
       style_context: { type: 'string', description: 'Shared visual style to keep consistent with other assets.' },
@@ -73,7 +76,7 @@ export function videoTool(ctx, settings) {
         return { ...asset, asset_id: `sha256:${asset.sha256}`, media_type: 'video/mp4', bytes: data.length, provider: 'grsai', model: spec.videoModel }
       } catch (error) {
         const safe = safeError(error)
-        ctx.logger.info('image-generation: video failed; code=%s http=%s provider_code=%s', safe.code, safe.providerStatus, safe.providerCode)
+        failureLog(ctx)('image-generation: video failed; code=%s http=%s provider_code=%s', safe.code, safe.providerStatus, safe.providerCode)
         throw safe
       }
     },
@@ -121,7 +124,7 @@ export function textTool(ctx, settings) {
         }
       } catch (error) {
         const safe = safeError(error)
-        ctx.logger.info('image-generation: text failed; code=%s http=%s provider_code=%s', safe.code, safe.providerStatus, safe.providerCode)
+        failureLog(ctx)('image-generation: text failed; code=%s http=%s provider_code=%s', safe.code, safe.providerStatus, safe.providerCode)
         throw safe
       }
     },
@@ -166,7 +169,7 @@ export function imageTool(ctx, settings) {
         return { ...asset, asset_id: `sha256:${asset.sha256}`, media_type: 'image/png', width: image.width, height: image.height, bytes: image.data.length, provider: spec.provider, model: spec.model }
       } catch (error) {
         const safe = safeError(error)
-        ctx.logger.info('image-generation: generation failed; code=%s http=%s provider_code=%s parameter=%s request_id=%s', safe.code, safe.providerStatus, safe.providerCode, safe.parameter, safe.requestId)
+        failureLog(ctx)('image-generation: generation failed; code=%s http=%s provider_code=%s parameter=%s request_id=%s', safe.code, safe.providerStatus, safe.providerCode, safe.parameter, safe.requestId)
         throw safe
       }
     },
@@ -189,7 +192,10 @@ export async function apply(ctx) {
     path, methods, requestBody: 'buffered', fetch,
   })
   registerJson('/api/image-generation.settings', ['GET'], () => jsonResponse(() => settings.describe()))
-  registerJson('/api/image-generation.credits', ['GET'], request => jsonResponse(() => settings.credits(request.signal)))
+  // GET reads the saved key's balance; POST checks a key typed into the card before it is saved.
+  registerJson('/api/image-generation.credits', ['GET', 'POST'], request => jsonResponse(async () => request.method === 'POST'
+    ? settings.credits(request.signal, JSON.parse((await readBounded(request, 16_384, request.signal)).toString('utf8')))
+    : settings.credits(request.signal)))
   for (const suffix of ['save', 'models']) {
     registerJson(`/api/image-generation.${suffix}`, ['POST'], request => jsonResponse(async () => settings[suffix](
       JSON.parse((await readBounded(request, 16_384, request.signal)).toString('utf8')), request.signal,

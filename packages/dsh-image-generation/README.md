@@ -26,7 +26,7 @@ API 地址同时接受基础地址和控制台提供的完整 `/images/generatio
 | --- | --- | --- |
 | 字节 / 火山方舟 | `doubao-seedream-4-5-251128` | `https://ark.cn-beijing.volces.com/api/v3` |
 | OpenAI | `gpt-image-1.5` | `https://api.openai.com/v1` |
-| GrsAI | `nano-banana-fast`（视频 `veo3.1-fast`，文本 `gemini-3.1-pro`） | `https://grsai.dakka.com.cn` |
+| GrsAI | `nano-banana-fast`（视频 `minimax-h3`，文本 `gemini-3.1-pro`；三个下拉都从 GrsAI 在线拉取） | `https://grsai.dakka.com.cn` |
 
 保存自动发起一次非生图校验请求，界面显示校验中、保存成功或具体错误。失败保留输入及之前的有效配置。Key 更换后立即生效；各服务商分别保存配置和 Key。更换 API 地址的域名时需要重新填写 Key。
 
@@ -48,15 +48,26 @@ API 地址同时接受基础地址和控制台提供的完整 `/images/generatio
 
 | 能力 | 模型 | 接口 | 关键参数 |
 | --- | --- | --- | --- |
-| 生图 · Nano Banana | `nano-banana-fast`、`nano-banana`、`nano-banana-2`、`nano-banana-2.1`、`nano-banana-pro` | `POST /v1/api/generate` | `aspectRatio` 取 `16:9` 等比例，`imageSize: "1K"` |
+| 生图 · Nano Banana | `nano-banana-fast`、`nano-banana-2`、`nano-banana-2.1`、`nano-banana-pro` 及其 `-lite`、`-cl`、`-vip` 变体 | `POST /v1/api/generate` | `aspectRatio` 取 `16:9` 等比例，`imageSize: "1K"` |
 | 生图 · GPT Image | `gpt-image-2`、`gpt-image-2.5` | 同上 | `aspectRatio` 取比例 |
 | 生图 · GPT Image VIP | `gpt-image-2-vip`、`gpt-image-2.5-flare`、`gpt-image-2.5-sunburst` | 同上 | `aspectRatio` 只接受像素值，取 1K 档：方图 1024×1024，16:9 为 1280×720，9:16 为 720×1280，4:3 为 1152×864，3:4 为 864×1152 |
-| 生视频 · Veo 3.1 | `veo3.1-fast`、`veo3.1-pro` | `POST /v1/video/veo`（旧版接口，新版文档未收录） | `aspectRatio` 取 `16:9` 或 `9:16`，时长固定 |
+| 生视频 · Veo 3.1 | `veo3.1-fast`、`veo3.1-pro`（GrsAI 模型清单已不再列出，仅保留给已保存的选择） | `POST /v1/video/veo`（旧版接口，新版文档未收录） | `aspectRatio` 取 `16:9` 或 `9:16`，时长固定 |
 | 生视频 · MiniMax H3 | `minimax-h3` | `POST /v1/api/generate` | `aspectRatio` 取 `landscape` / `portrait`，`resolution: "768p"`，`duration` 1–15 秒（默认 6） |
 | 生视频 · Agnes Video 2.5 | `agnes-video-2.5` | 同上 | `aspectRatio` 取 `16:9`、`9:16`、`21:9`、`4:3`、`1:1`、`3:4`，`resolution: "720p"`，`duration` 4–12 秒（默认 5） |
-| 文本生成 | `gemini-3.1-pro`、`gpt-5.6-sol` 等 14 个（取自公开的 `GET /v1/models`） | `POST /v1/chat/completions` | OpenAI 兼容格式，`stream: false` |
+| 生视频 · 之后新增的模型 | 在线清单里出现、插件还不认识的视频模型 | `POST /v1/api/generate` | 只发统一接口的通用字段：`aspectRatio` 取六种比例之一，给了 `duration` 才带上，不带分辨率；参数不合适时由 GrsAI 报错 |
+| 文本生成 | `gemini-3.1-pro`、`gpt-5.6-sol` 等 | `POST /v1/chat/completions` | OpenAI 兼容格式，`stream: false` |
 
 视频分辨率固定取各模型的较低档位，因为费用随分辨率上升；需要更高档位时再加设置项。
+
+### 在线拉取模型
+
+生图、视频和文本三个下拉都从 GrsAI 在线拉取，网站上新增或下架的模型会直接反映在这里。打开卡片里的 GrsAI 区域时自动拉取一次，「刷新模型列表」可以重新拉取，不需要 Key：
+
+1. 首选 GrsAI 公开的「模型大全」页面（`https://grsai.ai/zh/dashboard/models`，带 `RSC: 1` 请求头取 Next.js 页面数据）。只有它给每个模型标了类型（`text` / `image` / `video`）并且列出视频模型；`closeModel` 为真的已下架模型不进下拉。这是网站页面而非公开 API，解析时只认 `{ models: [{ name, type }] }` 结构，找不到就换下一个来源。
+2. 页面打不开时，用公开的 `GET <主机>/v1/models` 取生图和文本模型（按名称区分），视频退回内置列表。
+3. 两者都失败时使用内置列表（与 2026-10-29 的在线清单一致），卡片会提示正在使用内置列表。
+
+已保存的模型即使不在新列表里也保留在下拉中，不会被自动改掉；尚未保存过 GrsAI 时，拉取后默认选中清单里实际在售的模型。2026-10-29 的清单中视频模型只有 `minimax-h3` 和 `agnes-video-2.5`，所以默认视频模型改为 `minimax-h3`。
 
 ### 任务与下载
 
@@ -72,11 +83,13 @@ GrsAI 返回的是 2 小时内有效的结果链接，因此这是唯一下载�
 
 ### 文本生成
 
-`text_generate` 把一个提示词发给 GrsAI 配置里的文本模型，返回模型回复。参数为 `prompt`、可选 `instructions`（作为 system 消息）和 `max_output_tokens`（1–32768）。被调用的模型看不到当前对话，所以提示词需要自带所需材料。它不替代 Agent 自己的模型：系统提示让 Agent 只在用户要求该模型的输出、第二个模型的草稿或批量文案时调用，普通回复仍由 Agent 自己完成。工具返回的文本前带一行 `[grsai <模型>, finish_reason=…]`；回复为空且 `finish_reason` 为 `content_filter` 时报内容审核错误。提示词和回复都不写入 Host 日志。文本模型下拉列出 GrsAI 公开模型列表中的文本模型，旧列表中保存过的模型仍保留可选。
+`text_generate` 把一个提示词发给 GrsAI 配置里的文本模型，返回模型回复。参数为 `prompt`、可选 `instructions`（作为 system 消息）和 `max_output_tokens`（1–32768）。被调用的模型看不到当前对话，所以提示词需要自带所需材料。它不替代 Agent 自己的模型：系统提示让 Agent 只在用户要求该模型的输出、第二个模型的草稿或批量文案时调用，普通回复仍由 Agent 自己完成。工具返回的文本前带一行 `[grsai <模型>, finish_reason=…]`；回复为空且 `finish_reason` 为 `content_filter` 时报内容审核错误。提示词和回复都不写入 Host 日志。文本模型下拉列出 GrsAI 公开模型列表中的文本模型，列表随在线清单更新，旧列表中保存过的模型仍保留可选。
 
 ### 积分余额
 
-积分余额显示在影像生成卡片的 GrsAI 区域：Key 就在这里配置，余额与它直接对应；上游的「账号与余额」页属于 DeepSeek 账号，没有扩展插槽。余额在打开该区域和每次保存后通过 `GET /api/image-generation.credits` 读取一次，可以手动刷新，不定时轮询，因为每次读取都是一次对 GrsAI 的请求。接口只返回 `{ credits }`，不回传 Key 或服务商原文。
+积分余额显示在影像生成卡片的 GrsAI 区域，就在 API Key 输入框下方：Key 在这里配置，余额与它直接对应；上游的「账号与余额」页属于 DeepSeek 账号，没有扩展插槽。已保存 Key 时，余额在打开该区域和每次保存后通过 `GET /api/image-generation.credits` 读取一次，可以手动刷新；还没保存时，填好 Key 后点「查询余额」，通过 `POST /api/image-generation.credits` 用这个 Key 查一次，Key 不会被保存。不定时轮询，因为每次读取都是一次对 GrsAI 的请求。接口只返回 `{ credits }` 或错误码，不回传 Key 或服务商原文；查询失败时卡片区分 Key 无效、连不上 GrsAI 和其他错误。
+
+插件的普通日志不进入 Desktop 的 `harness.log`（日志桥只记录警告和错误），所以余额查询、模型清单、保存和三个生成工具的失败都以 warn 级别记录，内容为错误码、HTTP 状态和服务商错误码，不含 Key、提示词或回复。
 
 生图失败时，工具和 Host 日志保留 HTTP 状态、服务商错误码、参数名及请求编号。错误响应最多读取 64 KB，仅提取受限格式的诊断字段；服务商原始错误文本可能回显 Key 或提示词，因此留在 Host 处理。模型根据具体原因反馈，参数错误交由插件修正。
 
@@ -114,6 +127,6 @@ npm run typecheck
 npm test
 ```
 
-测试使用本机模拟服务和真实 Harness 凭据存储、工具执行管线，覆盖三个服务商、单请求保存、成功/失败、修订冲突、凭据隔离、PNG 落盘、取消、体积限制和目录越界；`test/image-generation-grsai.test.mjs` 用按 GrsAI 任务契约实现的本机模拟服务，覆盖余额校验与积分接口、坏 Key、新版统一接口与 Veo 旧接口的请求体和轮询、各视频模型的比例与时长、内容审核失败、`video_generate` 落盘 MP4、`text_generate` 请求与错误分类，以及系统提示切换。Host smoke 启动隔离实例，验证插件启用后的 Client 入口、鉴权、Origin 及保存结果。真实付费模型与 Office 文档视觉验收需要单独进行。
+测试使用本机模拟服务和真实 Harness 凭据存储、工具执行管线，覆盖三个服务商、单请求保存、成功/失败、修订冲突、凭据隔离、PNG 落盘、取消、体积限制和目录越界；`test/image-generation-grsai.test.mjs` 用按 GrsAI 任务契约实现的本机模拟服务，覆盖余额校验与积分接口（含未保存 Key 的查询）、在线模型清单的解析与两级回退、坏 Key、新版统一接口与 Veo 旧接口的请求体和轮询、各视频模型的比例与时长、内容审核失败、`video_generate` 落盘 MP4、`text_generate` 请求与错误分类，以及系统提示切换。Host smoke 启动隔离实例，验证插件启用后的 Client 入口、鉴权、Origin 及保存结果。真实付费模型与 Office 文档视觉验收需要单独进行。
 
 接口参考：[OpenAI Images API](https://developers.openai.com/api/reference/resources/images/methods/generate)、[OpenAI 模型列表](https://developers.openai.com/api/reference/resources/models/methods/list)、[火山方舟生图 API](https://www.volcengine.com/docs/82379/1541523)、[火山方舟官方运行时 SDK](https://github.com/volcengine/volcengine-python-sdk/tree/master/volcenginesdkarkruntime/resources/images)、[火山管理接口及签名鉴权](https://github.com/volcengine/volcengine-python-sdk/blob/master/volcenginesdkark/api/ark_api.py)、[GrsAI](https://grsai.ai/zh)（接口文档在登录后的控制台中）。
