@@ -2,7 +2,7 @@
 
 本文件记录 DSH Desktop 自身版本的实质改动。Desktop 与上游 Harness 的版本号独立维护，Harness 升级不自动改变 Desktop 版本号。
 
-## 未发布
+## 0.0.4 — 2026-10-29
 
 ### 更新内容
 
@@ -18,9 +18,40 @@
 - **切换动效**：页面切换、设置左侧页签、子页签和模态弹窗统一使用淡入动效，两种模式一致，并遵守系统“减少动态效果”设置。
 - **工作台市场页头**：去掉在玻璃面板上会透亮、压低文字对比度的插画背景。
 
-#### 插件设置
+#### 云母主题后续修复
 
-- 由 DSH Desktop 安装器提供的市场管理页签改名为“市场管理 / Market management”，不再与 dsh-market 自带的“插件市场”页签重名。
+- **侧栏布局**：玻璃卡片放在布局拥有的侧栏列上（自动穿透 `display: contents` 插槽包装层），内部侧栏根节点负责内容填充；四周留白 12px、底部圆角完整；收起为图标栏时清除卡片样式，避免裁剪固定定位的控件。
+- **收起按钮**：Windows 展开状态下，“收起侧边栏”按钮排在品牌行最左侧，不再与 DeepSeek Logo 重叠；收起后固定在标题行。
+- **聊天标题栏**：与“工作区”保持一致的节标题样式（无前置图标、弱化文字、小号按钮），按钮顺序为搜索、收起列表、新建会话。
+- **深层视图**：修复多次开关主题后中间列变回不透明的问题；轨迹视图和右侧栏改为透出流体背景。
+- **更新弹窗**：更新与关于弹窗改为云母玻璃卡片；进度文字、无障碍数值和进度条统一使用同一个取整百分比。
+
+#### 启动动画
+
+- 默认身份资料改为：身份名称 `NullPointer`、身份编号 `007`、权限等级 `01`，覆盖 Host 默认配置、运行时兜底、设置页示例和离线预览。
+
+#### 更新与插件设置
+
+- **更新签名校验**：自动更新不再校验代码签名。`package.json` 去掉了前身项目的发行者名称，打包后的 `resources/app-update.yml` 不再包含 `publisherName`；更新包完整性依赖 `latest.yml` 的 SHA-512 和 GitHub 的 HTTPS 下载。
+- **市场管理页签**：DSH Desktop 安装器提供的管理页签改名为“市场管理 / Market management”，不再与 dsh-market 自带的“插件市场”页签重名。
+
+### 验证
+
+- `node scripts/verify-target.mjs win32 x64` 通过；本地 Electron 为锁定版本 43.0.0。`npm run typecheck`、`npm run build` 通过。
+- 全量 `npm test`：2251 项中 2241 项通过、8 项跳过、2 项失败，两项均与本版改动无关：`test/generation-build-approval.integration.test.js`（Git Bash 自带的 `tar` 把 `C:` 解析为远程主机）和 `test/release.test.ts` 的 README 官网链接断言（README 已不再链接前身官网，见文档索引的已知遗留问题）。
+- 新增 `test/desktop-theme-contrast.test.ts`（用真实流体配色函数检查玻璃下限上的文字、主按钮和开关对比度）和 `test/desktop-theme-tilt.test.ts`（在 jsdom 中驱动悬停倾斜）；更新 `test/desktop-theme.test.ts`、`test/desktop-host-plugin-settings.test.js`、`test/workbench-navigation.test.mjs`、`test/startup-screen-plugin.test.ts`。
+- 在独立开发 Profile 中，按云母、兼容 × 深色、浅色逐页做截图像素对比度测量（首页、工作台、插件、自动化任务和设置的全部页签），除下文一处外，文字对比度均不低于 4.5:1；侧栏和输入框的悬停提示回到按钮旁；侧栏悬停倾斜，设置弹窗打开和收起为图标栏时保持静止。
+- 打包门禁通过：Harness、bootstrap、原生模块、终端和 696 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换。
+- Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：285189893 字节，SHA-256 `FEF29A0DC1040BDF631587E259BBA29DE88816C2B6F576C37FD9D4D04FEF7EAD`；`latest.yml` 版本为 `0.0.4`，SHA-512 为 `E91OGZ2xQ1aGDqoopVCir7CCnVVlAqBzAe/wdYXxBNnIQsh1w1HS1pnu/SGVXEjIbZ8mts+ZZb29HyI9qh2QjQ==`；`app-update.yml` 不含 `publisherName`。
+- 打包后的 `win-unpacked\DSH Desktop.exe` 启动后进入主界面，Liquid Glass 云母模式生效，有标题的会话标题卡正常浮起。
+
+### 说明
+
+- 本次 Windows x64 安装包为未签名的社区构建，Authenticode 状态为 `NotSigned`。
+- 已安装 0.0.3 的用户无法自动更新到 0.0.4：0.0.3 自带的更新配置仍会校验前身发行者的签名，会拒绝未签名的 0.0.4。需要手动安装一次 0.0.4，之后的版本可以正常自动更新。
+- 未执行的验收：运行安装程序本身的安装和覆盖升级流程、全新机器安装、真实模型请求、macOS 构建。
+- 浅色云母模式的首页，粒子鲸鱼正好叠在“标准模式”按钮背后时，这个按钮的文字对比度约为 3.6～3.7:1。
+- 0.0.3 记录的“原生启动页导航验收返回 `UnknownVizError`”本次未重新验证。
 
 ## 0.0.3 — 2026-10-28
 
@@ -28,26 +59,21 @@
 
 #### 云母主题
 
-- **侧栏布局**：按上游 Aqua 原始层级把玻璃卡片放在侧栏列上（自动穿透 `display: contents` 插槽包装层），内部侧栏根节点负责内容填充；侧栏四周留白 12px、底部圆角完整；收起时清除滤镜与边距以避免裁剪固定定位控件；禁用侧栏的鼠标悬停倾斜（tilt）以防止 Windows 标题栏固定定位的收起按钮被 transform 重锚定发生位移/横跳。
-- **品牌与收起控制**：Windows 展开状态下将「收起侧边栏」按钮排在品牌行最左侧，避免与 DeepSeek 鲸鱼 Logo 发生视觉重叠；收起后按钮精准固定在标题行位置。新会话按钮保留官方居中结构，背景改为可透出软件主题的磨砂材质。
-- **聊天标题栏**：聊天标题与“工作区”保持完全一致的节标题视觉层级（无前置图标、弱化文字、小号操作按钮）；右侧操作按钮顺序调整为搜索、收起列表、新建会话（新建操作放于最右侧末尾）。
-- **页面背景与深度视图**：修复多次开关主题导致中间列透明标记丢失变回不透明黑色的问题，确保 `data-dsh-desktop-center` 持续透明；对话根区域、消息滚动区和输入区统一使用官方背景 token；轨迹视图（`data-dsh-desktop-trajectory`）与右侧栏（`data-sidebar-right-session`）通过作用域 token 映射为透明背景，使得全页及辅助面板均能透出流体壁纸背景。
-- **启动动画资料**：启动动画默认身份资料统一对齐为：身份名称 `NullPointer`、身份编号 `007`、权限等级 `01`，覆盖 Host 侧默认配置、运行时兜底、设置面板示例与离线预览。
-- **更新弹窗**：更新与关于弹窗改为云母玻璃卡片，使用官方面板圆角和背景 token；进度文字、无障碍数值和进度条填充统一使用同一个取整百分比。
+- **侧栏布局**：收起侧边栏按钮恢复官方默认位置，主题不再覆盖侧栏宽度、边距和折叠位移；侧栏底部圆角完整显示，不再被裁切。
+- **品牌与新建**：左上角 DeepSeek 品牌去掉多余磨砂外圈；新会话按钮保留官方居中结构，背景改为可透出软件主题的磨砂材质。
+- **聊天标题栏**：聊天标题与“工作区”保持同一层级；右侧新增常驻的搜索、新建会话、收起聊天列表三个图标按钮，新建后自动展开聊天列表。
+- **对话背景**：云母模式下对话根区域、消息滚动区和输入区统一使用官方背景 token，与侧栏和顶部保持一致。
 
 ### 验证
 
-- `node scripts/verify-target.mjs win32 x64`、`npm run typecheck`、`npm run build` 通过。
-- 主题、启动动画、更新弹窗、工作区导航、补丁 hunk 和运行时兼容相关 8 个测试文件、85 项测试通过：`test/desktop-theme.test.ts`、`test/startup-screen-plugin.test.ts`、`test/update-ui.test.ts`、`test/desktop-update-ui.test.ts`、`test/workbench-navigation.test.mjs`、`test/workbench-patch-slots.test.mjs`、`test/patch-hunk-counts.test.ts`、`test/patch-runtime-compatibility.test.mjs`。
-- 打包后 Harness、bootstrap、原生模块、终端和 696 个依赖清单检查通过；Office DOCX、PPTX、XLSX 结构及 PDF 转换检查通过。
-- Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe` 已生成：285184736 字节，SHA-256 `F4B7A53E136C7BB6568D4C1DA53596D3AF973480D87AEF43C869147C0997C4DD`；`latest.yml` 版本为 `0.0.3`，SHA-512 为 `JXecw5UjqYJ3hBtjNvupFAUwFqxZSZce6W9pk1jWnadYP/fwT0Fd91oxrv7oFDkIu8lqDTE4/+dHyoinlaewBA==`。
-- `git diff --check` 通过；文档文件仅有正常的 CRLF 提示。
+- `npm run typecheck`、`npm run build` 通过。
+- 主题、侧栏、聊天标题、补丁完整性和工作区导航相关 8 个测试文件、67 项测试通过。
+- `git diff --check` 通过；`CHANGELOG.md` 仅有正常 CRLF 提示。
 
 ### 说明
 
-- 本次 Windows x64 安装包为未签名的社区构建（本项目不做代码签名），Authenticode 状态为 `NotSigned`。
-- 已知问题：打包配置仍开启更新包签名校验，安装包的 `resources/app-update.yml` 中带有前身项目的发行者名称，未签名版本之间的自动更新预计会被拒绝，详见 `docs/README.md` 的“已知遗留问题”。
-- 原生启动页导航验收在开发环境返回 `UnknownVizError`，该限制尚未解决；尚未完成全新机器真实安装、登录、真实模型请求和所有第三方插件组合验收。
+- 本次 Windows x64 安装包为未签名本地构建，正式分发前仍需完成代码签名。
+- 安装包构建后的 Harness、原生模块、696 个依赖清单和 Office 转换检查通过；原生启动页导航验收在开发环境返回 `UnknownVizError`，该限制尚未解决。
 
 ## 0.0.2 — 2026-10-27
 
