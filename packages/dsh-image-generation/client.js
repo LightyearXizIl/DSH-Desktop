@@ -6,7 +6,9 @@ window.__ModuleLoader__.load({
     const h = React.createElement
     const NS = 'settings.imageGeneration'
     const zh = {
-      previewLoading: '正在加载图片…', previewRetry: '重新加载图片', generatedImage: '生成的图片', title: '生图工具', description: '接入生图，有生图能力的模型', provider: '服务商', bytedance: 'Seedream', openai: 'OpenAI',
+      previewLoading: '正在加载图片…', previewRetry: '重新加载图片', generatedImage: '生成的图片', title: '影像生成', description: '接入生图、生视频和文本生成模型，在对话、PPT 和文档中生成图片、短视频与文字', provider: '服务商', bytedance: 'Seedream', openai: 'OpenAI', grsai: 'GrsAI',
+      videoModel: '视频模型', textModel: '文本模型', grsaiHint: 'GrsAI 一个 Key 同时提供生图、生视频（Veo 3.1、MiniMax H3、Agnes Video 2.5）和文本生成（Gemini、GPT），保存后对话中可以直接调用。默认使用国内直连地址，海外网络可在高级设置中改为 https://grsaiapi.com。',
+      credits: '积分余额', creditsUnit: '积分', creditsLoading: '正在查询…', creditsFailed: '暂时无法查询', creditsRefresh: '刷新余额',
       apiKey: 'API Key', keyPlaceholder: '输入服务商的 API Key', savedKey: '输入新 Key 可替换',
       advanced: '高级设置', model: '模型 ID', baseUrl: 'API 地址',
       save: '保存', saving: '正在校验…', saved: '已保存，连接校验通过', loading: '正在读取配置…', reload: '重新读取配置', readOnly: '当前配置由管理员管理。',
@@ -14,18 +16,20 @@ window.__ModuleLoader__.load({
       configuredHint: '已保存 API Key。更换模型将沿用当前 Key；输入新 Key 可替换。',
       LOAD_FAILED: '暂时无法确认已保存的配置状态，请点击重新读取后再修改。',
       modelSelect: '生图模型', fetchModels: '获取模型', fetchingModels: '正在获取…', customModel: '自定义模型 / 接入点', emptyModels: '此 Key 的列表未返回工具支持的生图模型，可检查权限或填写自定义模型。',
-      builtInEnabled: '启用内置生图工具', builtInHint: '关闭后重启 Harness，内置插件将跳过加载，可以使用市场版本。', builtInRestart: '重启 Harness 使更改生效', builtInFailed: '无法更改内置插件状态，请重试。',
+      builtInEnabled: '启用内置影像生成', builtInHint: '关闭后重启 Harness，内置插件将跳过加载，可以使用市场版本。', builtInRestart: '重启 Harness 使更改生效', builtInFailed: '无法更改内置插件状态，请重试。',
       MODEL_DISCOVERY: '当前服务商使用内置模型或自定义接入点。',
       AUTH: 'API Key 无效或已过期，请检查后重新保存。', PERMISSION: '当前 Key 无权访问，请确认模型已开通及账号已完成所需认证。',
       MODEL: '无法访问所选模型，请检查模型 ID、接入点或模型开通状态。', KEY_REQUIRED: '请填写 API Key；更换服务地址后需要重新填写。',
-      QUOTA: '服务商额度不足或请求受限，请检查账户后重试。', ENDPOINT: '请填写有效的 API 基础地址，例如以 /v1 或 /api/v3 结尾的 HTTPS 地址。',
+      QUOTA: '服务商额度不足或请求受限，请检查账户后重试。', ENDPOINT: '请填写有效的 HTTPS API 地址，例如以 /v1 或 /api/v3 结尾；GrsAI 填写主机地址即可。',
       TIMEOUT: '连接超时，请检查网络后重新保存。', CONFLICT: '配置已在其他窗口更新，请重新打开此卡片后保存。',
       READ_ONLY: '当前凭据存储为只读，请联系管理员。', RESPONSE: '服务商返回了无法识别的结果，请检查 API 地址。',
       PARAMETERS: '服务商未通过连接检查，请确认 API 地址、模型 ID 及接入点配置。',
       UNAVAILABLE: '连接失败，请检查网络和 API 地址后重新保存。', CANCELLED: '校验已取消，可以重新保存。', PROVIDER_ERROR: '服务商暂时不可用，请稍后重新保存。',
     }
     const en = {
-      previewLoading: 'Loading image…', previewRetry: 'Reload image', generatedImage: 'Generated image', title: 'Image generation', description: 'Connect models with image generation capabilities.', provider: 'Provider', bytedance: 'Seedream', openai: 'OpenAI',
+      previewLoading: 'Loading image…', previewRetry: 'Reload image', generatedImage: 'Generated image', title: 'Image & video generation', description: 'Connect image, video and text generation models to create pictures, short clips and copy in chat, presentations and documents.', provider: 'Provider', bytedance: 'Seedream', openai: 'OpenAI', grsai: 'GrsAI',
+      videoModel: 'Video model', textModel: 'Text model', grsaiHint: 'One GrsAI key covers images, video (Veo 3.1, MiniMax H3, Agnes Video 2.5) and text generation (Gemini, GPT); once saved, chat can call them directly. The default is the mainland direct host; outside mainland China, switch to https://grsaiapi.com under Advanced settings.',
+      credits: 'Credit balance', creditsUnit: 'credits', creditsLoading: 'Checking…', creditsFailed: 'Unavailable right now', creditsRefresh: 'Refresh balance',
       apiKey: 'API Key', keyPlaceholder: 'Enter your provider API key', savedKey: 'Enter a new key to replace it',
       advanced: 'Advanced settings', model: 'Model ID', baseUrl: 'API URL',
       save: 'Save', saving: 'Validating…', saved: 'Saved. Connection validated.', loading: 'Loading settings…', reload: 'Reload settings', readOnly: 'These settings are managed by your administrator.',
@@ -33,11 +37,11 @@ window.__ModuleLoader__.load({
       configuredHint: 'An API key is already saved. Changing the model reuses it; enter a new key only if you want to replace it.',
       LOAD_FAILED: 'Could not confirm the saved settings. Reload before making changes.',
       modelSelect: 'Image model', fetchModels: 'Fetch models', fetchingModels: 'Fetching…', customModel: 'Custom model / endpoint', emptyModels: 'No supported image models were returned. Check access or enter a custom model.',
-      builtInEnabled: 'Enable built-in image generation', builtInHint: 'Restart Harness after turning this off to skip the built-in plugin and use the market version.', builtInRestart: 'Restart Harness to apply', builtInFailed: 'Could not change the built-in plugin state. Try again.',
+      builtInEnabled: 'Enable built-in image & video generation', builtInHint: 'Restart Harness after turning this off to skip the built-in plugin and use the market version.', builtInRestart: 'Restart Harness to apply', builtInFailed: 'Could not change the built-in plugin state. Try again.',
       MODEL_DISCOVERY: 'Use a built-in model or a custom endpoint for this provider.',
       AUTH: 'The API key is invalid or expired.', PERMISSION: 'Check model access and account verification.', MODEL: 'Check the model ID, inference endpoint and model access.',
       KEY_REQUIRED: 'Enter an API key. A new API origin requires you to enter the key again.', QUOTA: 'Check provider quota and rate limits.',
-      ENDPOINT: 'Enter an HTTPS API base URL, normally ending in /v1 or /api/v3.', TIMEOUT: 'The connection timed out. Check your network and save again.',
+      ENDPOINT: 'Enter an HTTPS API base URL, normally ending in /v1 or /api/v3; for GrsAI the host alone.', TIMEOUT: 'The connection timed out. Check your network and save again.',
       CONFLICT: 'Settings changed in another window. Reopen this card before saving.', READ_ONLY: 'The credential store is read-only.',
       RESPONSE: 'The provider returned an invalid response. Check the API URL.', UNAVAILABLE: 'Connection failed. Check your network and API URL.',
       PARAMETERS: 'The provider did not confirm the connection check. Verify the API URL and model ID.',
@@ -62,15 +66,19 @@ window.__ModuleLoader__.load({
       .dshImageCard :focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
       .dshImageHeader:focus-visible{outline-offset:-2px}.dshImageSave:focus-visible{outline-offset:1px}
       .dshImageFetch{appearance:none;align-self:flex-start;font:inherit;font-size:13px;line-height:1.5;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:5px 14px;background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}.dshImageFetch:disabled{opacity:.4;cursor:default}
+      .dshImageCredits{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:.5px solid var(--dsw-alias-border-l4);border-radius:10px;background:var(--dsw-alias-bg-layer-3);font-size:13px;line-height:1.5}
+      .dshImageCreditsLabel{color:var(--dsw-alias-label-secondary)}.dshImageCreditsValue{margin-left:auto;color:var(--dsw-alias-label-primary);font-weight:600;font-variant-numeric:tabular-nums}.dshImageCreditsValue[data-state=failed]{color:var(--dsw-alias-label-tertiary);font-weight:400}
       .dshImageHostControl{border-bottom:.5px solid var(--dsw-alias-border-l2);padding:12px 0;display:flex;flex-direction:column;gap:8px}.dshImageHostControl label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--dsw-alias-label-primary);cursor:pointer}.dshImageHostControl input{accent-color:var(--dsw-alias-brand-primary)}
     `
     const emptyDrafts = {
       bytedance: { baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', model: 'doubao-seedream-4-5-251128', configured: false, validation: null, apiKey: '' },
       openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-image-1.5', configured: false, validation: null, apiKey: '' },
+      grsai: { baseUrl: 'https://grsai.dakka.com.cn', model: 'nano-banana-fast', videoModel: 'veo3.1-fast', textModel: 'gemini-3.1-pro', configured: false, validation: null, apiKey: '' },
     }
     const emptyCatalogs = {
       openai: { source: 'builtin', canFetch: true, models: [emptyDrafts.openai.model] },
       bytedance: { source: 'builtin', canFetch: false, models: [emptyDrafts.bytedance.model] },
+      grsai: { source: 'builtin', canFetch: false, models: [emptyDrafts.grsai.model], videoModels: [emptyDrafts.grsai.videoModel], textModels: [emptyDrafts.grsai.textModel] },
     }
     function ImageSelect({ name, label, value, options, onChange, disabled }) {
       const [open, setOpen] = React.useState(false)
@@ -103,6 +111,28 @@ window.__ModuleLoader__.load({
           anchor: h('button', { ref: trigger, name, type: 'button', disabled, className: 'dshImageSelectTrigger', 'aria-labelledby': `${id}-label ${id}-value`,
             'aria-haspopup': 'menu', 'aria-expanded': open && !disabled, onClick: () => setOpen(previous => !previous) },
             h('span', { id: `${id}-value`, className: 'dshImageSelectValue' }, options.find(option => option.id === value)?.label || value), h(IconChevronDownOutlineRegular)) }))
+    }
+    /**
+     * The saved GrsAI key's balance, next to the key it belongs to. It is read
+     * when the section opens and after every save, never on a timer: each read
+     * is a request to GrsAI.
+     */
+    function GrsaiCredits({ t, callApi, revision }) {
+      const [state, setState] = React.useState({ kind: 'loading' })
+      const [attempt, setAttempt] = React.useState(0)
+      React.useEffect(() => {
+        const controller = new AbortController()
+        setState({ kind: 'loading' })
+        callApi('credits', {}, controller.signal).then(
+          result => { if (!controller.signal.aborted) setState(Number.isFinite(result.credits) ? { kind: 'ready', credits: result.credits } : { kind: 'failed' }) },
+          () => { if (!controller.signal.aborted) setState({ kind: 'failed' }) })
+        return () => controller.abort()
+      }, [callApi, revision, attempt])
+      const value = state.kind === 'ready' ? `${state.credits.toLocaleString()} ${t('creditsUnit')}` : t(state.kind === 'loading' ? 'creditsLoading' : 'creditsFailed')
+      return h('div', { className: 'dshImageCredits', 'data-testid': 'grsai-credits' },
+        h('span', { className: 'dshImageCreditsLabel' }, t('credits')),
+        h('span', { className: 'dshImageCreditsValue', 'data-state': state.kind, role: 'status', 'aria-live': 'polite' }, value),
+        h('button', { className: 'dshImageFetch', type: 'button', disabled: state.kind === 'loading', onClick: () => setAttempt(value => value + 1) }, t('creditsRefresh')))
     }
     function ImageCard({ t, callApi }) {
       const [expanded, setExpanded] = React.useState(false)
@@ -218,7 +248,8 @@ window.__ModuleLoader__.load({
         if (!nextKey && !reuseKey) { setError('KEY_REQUIRED'); return }
         inFlight.current = true; setBusy(true); setError(''); setStatus('')
         try {
-          const result = await callApi('save', { revision: saved.revision, provider, model: draft.model, baseUrl: draft.baseUrl, apiKey: nextKey }, lifetime.current.signal)
+          const result = await callApi('save', { revision: saved.revision, provider, model: draft.model, baseUrl: draft.baseUrl, apiKey: nextKey,
+            ...(provider === 'grsai' ? { videoModel: draft.videoModel, textModel: draft.textModel } : {}) }, lifetime.current.signal)
           applySettings(result)
           setStatus('saved')
         } catch (error) { if (!lifetime.current.signal.aborted) setError(error.code || 'UNAVAILABLE') }
@@ -240,13 +271,22 @@ window.__ModuleLoader__.load({
             !loadFailed && h('p', { className: 'dshImageHint' }, t(draft.configured ? 'configuredHint' : 'setupHint')),
             h('fieldset', { className: 'dshImageFields', disabled: busy || fetching || !writable },
               h(ImageSelect, { name: 'provider', label: t('provider'), value: provider, disabled: busy || fetching || !writable,
-                options: [{ id: 'bytedance', label: t('bytedance') }, { id: 'openai', label: t('openai') }],
+                options: [{ id: 'bytedance', label: t('bytedance') }, { id: 'openai', label: t('openai') }, { id: 'grsai', label: t('grsai') }],
                 onChange: value => { setProvider(value); setStatus(''); setError('') } }),
+              provider === 'grsai' && h('p', { className: 'dshImageHint' }, t('grsaiHint')),
+              provider === 'grsai' && saved?.profiles?.grsai?.configured && h(GrsaiCredits, { t, callApi, revision: saved.revision }),
               field('apiKey', 'apiKey', 'password', t(draft.configured ? 'savedKey' : 'keyPlaceholder')),
               h(ImageSelect, { name: 'model', label: t('modelSelect'), value: customModels[provider] || !catalog.models.includes(draft.model) ? '__custom__' : draft.model, disabled: busy || fetching || !writable,
                 options: [...catalog.models.map(model => ({ id: model, label: model })), { id: '__custom__', label: t('customModel') }],
                 onChange: value => { const custom = value === '__custom__'; setCustomModels(previous => ({ ...previous, [provider]: custom })); if (!custom) edit('model', value) } }),
               (customModels[provider] || !catalog.models.includes(draft.model)) && field('model', 'model'),
+              Array.isArray(catalog.videoModels) && h(ImageSelect, { name: 'videoModel', label: t('videoModel'), value: draft.videoModel, disabled: busy || fetching || !writable,
+                options: catalog.videoModels.map(model => ({ id: model, label: model })),
+                onChange: value => edit('videoModel', value) }),
+              Array.isArray(catalog.textModels) && h(ImageSelect, { name: 'textModel', label: t('textModel'), value: draft.textModel, disabled: busy || fetching || !writable,
+                // A model saved by an older list stays selectable.
+                options: [...new Set([...catalog.textModels, draft.textModel].filter(Boolean))].map(model => ({ id: model, label: model })),
+                onChange: value => edit('textModel', value) }),
               catalog.canFetch && h('button', { className: 'dshImageFetch', type: 'button', disabled: !(draft.apiKey || '').trim() && !draft.configured, onClick: fetchModels }, t(fetching ? 'fetchingModels' : 'fetchModels')),
               catalog.source === 'provider' && catalog.models.length === 0 && h('p', { className: 'dshImageHint', role: 'status' }, t('emptyModels')),
               h('details', { className: 'dshImageAdvanced' }, h('summary', null, t('advanced')), field('baseUrl', 'baseUrl'))),
@@ -322,7 +362,7 @@ window.__ModuleLoader__.load({
       inject: ['slots', 'locale', 'uiConversation'],
       apply(ctx) {
         const callApi = async (endpoint, payload, signal) => {
-          const settings = endpoint === 'settings'
+          const settings = endpoint === 'settings' || endpoint === 'credits'
           const response = await fetch(`/api/image-generation.${endpoint}`, {
             method: settings ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store', signal,
             ...(settings ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload ?? {}) }),

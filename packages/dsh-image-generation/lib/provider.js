@@ -1,6 +1,17 @@
+import { ImageError, readBounded, safeError } from './errors.js'
+import {
+  GRSAI_DEFAULT_BASE, GRSAI_DEFAULT_IMAGE_MODEL, GRSAI_DEFAULT_TEXT_MODEL, GRSAI_DEFAULT_VIDEO_MODEL,
+  GRSAI_IMAGE_MODELS, GRSAI_TEXT_MODELS, GRSAI_VIDEO_MODELS,
+  grsaiImage, grsaiValidate,
+} from './grsai.js'
+
+export { ImageError, readBounded, safeError }
+
 export const DEFAULTS = Object.freeze({
   bytedance: { baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', model: 'doubao-seedream-4-5-251128' },
   openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-image-1.5' },
+  // The mainland direct host; the overseas host is https://grsaiapi.com.
+  grsai: { baseUrl: GRSAI_DEFAULT_BASE, model: GRSAI_DEFAULT_IMAGE_MODEL, videoModel: GRSAI_DEFAULT_VIDEO_MODEL, textModel: GRSAI_DEFAULT_TEXT_MODEL },
 })
 export const MAX_IMAGE_BYTES = 20 * 1024 * 1024
 // Models documented by Images API; text, legacy DALL-E and unknown adapters
@@ -18,21 +29,25 @@ export const MODEL_CATALOG = Object.freeze({
     DEFAULTS.bytedance.model,
     'doubao-seedream-4-0-250828',
   ] },
+  // GrsAI's documented image, video and text models; one key covers all three.
+  grsai: { source: 'builtin', canFetch: false, models: [...GRSAI_IMAGE_MODELS], videoModels: [...GRSAI_VIDEO_MODELS], textModels: [...GRSAI_TEXT_MODELS] },
 })
 
-export class ImageError extends Error {
-  constructor(code, message, status = 400) { super(message); this.code = code; this.status = status }
-}
-export function safeError(error) {
-  if (error instanceof ImageError) return error
-  if (error?.name === 'TimeoutError') return new ImageError('TIMEOUT', 'The image provider timed out. Save again to retry.', 504)
-  if (error?.name === 'AbortError') return new ImageError('CANCELLED', 'Image operation cancelled.', 499)
-  return new ImageError('UNAVAILABLE', 'The image service is unavailable. Check the connection and try again.', 502)
-}
+const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$/
+
 export function profile(provider, input = {}) {
-  if (!Object.hasOwn(DEFAULTS, provider)) throw new ImageError('PROVIDER', 'Choose OpenAI or ByteDance.')
+  if (!Object.hasOwn(DEFAULTS, provider)) throw new ImageError('PROVIDER', 'Choose a supported image provider.')
   const model = String(input.model ?? DEFAULTS[provider].model).trim()
-  if (!/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$/.test(model)) throw new ImageError('MODEL', 'Enter a valid model ID.')
+  if (!MODEL_ID.test(model)) throw new ImageError('MODEL', 'Enter a valid model ID.')
+  let extra = {}
+  if (provider === 'grsai') {
+    const videoModel = String(input.videoModel ?? DEFAULTS.grsai.videoModel).trim()
+    if (!GRSAI_VIDEO_MODELS.includes(videoModel)) throw new ImageError('MODEL', 'Choose a supported video model.')
+    // Any chat model id works on the OpenAI-compatible route; the list is a menu.
+    const textModel = String(input.textModel ?? DEFAULTS.grsai.textModel).trim()
+    if (!MODEL_ID.test(textModel)) throw new ImageError('MODEL', 'Enter a valid text model ID.')
+    extra = { videoModel, textModel }
+  }
   let url
   try { url = new URL(String(input.baseUrl ?? DEFAULTS[provider].baseUrl).trim()) } catch { throw new ImageError('ENDPOINT', 'Enter a valid API base URL.') }
   const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
@@ -41,26 +56,11 @@ export function profile(provider, input = {}) {
   }
   // Provider consoles present the full REST endpoint; store one canonical base
   // for validation, model discovery and generation so the suffix appears once.
-  url.pathname = url.pathname.replace(/\/images\/generations\/?$/, '')
-  return { baseUrl: url.href.replace(/\/+$/, ''), model }
-}
-
-// Bound the stream before parsing; a Content-Length header alone is insufficient.
-export async function readBounded(response, maxBytes, signal) {
-  if (!response.body) throw new ImageError('RESPONSE', 'The provider returned an empty response.', 502)
-  const reader = response.body.getReader()
-  const chunks = []; let bytes = 0
-  try {
-    while (true) {
-      signal?.throwIfAborted()
-      const part = await reader.read()
-      if (part.done) break
-      bytes += part.value.byteLength
-      if (bytes > maxBytes) throw new ImageError('TOO_LARGE', 'The provider response exceeds the image size limit.', 502)
-      chunks.push(part.value)
-    }
-    return Buffer.concat(chunks, bytes)
-  } finally { await reader.cancel().catch(() => {}); reader.releaseLock() }
+  url.pathname = provider === 'grsai'
+    // GrsAI documents a bare host plus /v1/... routes.
+    ? url.pathname.replace(/\/v1(?:\/.*)?$/, '')
+    : url.pathname.replace(/\/images\/generations\/?$/, '')
+  return { baseUrl: url.href.replace(/\/+$/, ''), model, ...extra }
 }
 
 const IMAGE_PARAMETERS = new Set(['model', 'prompt', 'size', 'response_format', 'output_format', 'quality', 'n', 'watermark', 'stream', 'sequential_image_generation', 'sequential_image_generation_options', 'image', 'background', 'moderation'])
@@ -127,7 +127,7 @@ async function request(url, key, { signal, body, maxBytes = 2 * 1024 * 1024, fet
 
 /** Read the account's visible models without submitting image generation. */
 export async function listModels(provider, spec, key, options = {}) {
-  if (provider !== 'openai') throw new ImageError('MODEL_DISCOVERY', 'This provider requires separate management credentials for account model discovery. Choose a built-in model or enter your endpoint ID.')
+  if (provider !== 'openai') throw new ImageError('MODEL_DISCOVERY', 'This provider does not offer account model discovery here. Choose a built-in model or enter a model ID.')
   const signal = AbortSignal.any([AbortSignal.timeout(15_000), ...(options.signal ? [options.signal] : [])])
   const result = await request(`${spec.baseUrl}/models`, key, { ...options, signal })
   if (!Array.isArray(result.data)) throw new ImageError('RESPONSE', 'The provider returned an invalid model list.', 502)
@@ -135,8 +135,9 @@ export async function listModels(provider, spec, key, options = {}) {
   return { source: 'provider', canFetch: true, models: [...OPENAI_IMAGES].filter(id => ids.has(id)) }
 }
 
-/** One non-generating request: OpenAI model metadata or Ark required-prompt validation. */
+/** One non-generating request: OpenAI model metadata, Ark required-prompt validation, or the GrsAI key's balance. */
 export async function validateConnection(provider, spec, key, options = {}) {
+  if (provider === 'grsai') return grsaiValidate(spec, key, options)
   const signal = AbortSignal.any([AbortSignal.timeout(15_000), ...(options.signal ? [options.signal] : [])])
   if (provider === 'openai') {
     const result = await request(`${spec.baseUrl}/models/${encodeURIComponent(spec.model)}`, key, { ...options, signal })
@@ -148,18 +149,29 @@ export async function validateConnection(provider, spec, key, options = {}) {
   throw new ImageError('RESPONSE', 'The provider returned an unexpected validation response.', 502)
 }
 
-export function generationBody(provider, spec, args) {
+const RATIOS = new Set(['1:1', '16:9', '9:16', '4:3', '3:4'])
+
+/** The validated prompt (with art direction and framing) and target ratio shared by every provider. */
+export function composedPrompt(args) {
   const prompt = typeof args.prompt === 'string' ? args.prompt.trim() : ''
   const style = typeof args.style_context === 'string' ? args.style_context.trim() : ''
   if (!prompt || prompt.length + style.length > 8000) throw new ImageError('PROMPT', 'Enter an image description of up to 8000 characters including style context.')
   const ratio = args.aspect_ratio ?? '1:1'
+  if (!RATIOS.has(ratio)) throw new ImageError('RATIO', 'Choose a supported image aspect ratio.')
+  return {
+    ratio,
+    prompt: [prompt, style && `Art direction: ${style}`, args.purpose && `Intended use: ${args.purpose}`, `Compose for ${ratio}. Keep important subjects inside the safe central area for cropping.`].filter(Boolean).join('\n\n'),
+  }
+}
+
+export function generationBody(provider, spec, args) {
+  const { prompt, ratio } = composedPrompt(args)
   const sizes = provider === 'openai'
     ? { '1:1': '1024x1024', '16:9': '1536x1024', '9:16': '1024x1536', '4:3': '1536x1024', '3:4': '1024x1536' }
     : { '1:1': '2048x2048', '16:9': '2560x1440', '9:16': '1440x2560', '4:3': '2304x1728', '3:4': '1728x2304' }
-  if (!sizes[ratio]) throw new ImageError('RATIO', 'Choose a supported image aspect ratio.')
   return {
     model: spec.model,
-    prompt: [prompt, style && `Art direction: ${style}`, args.purpose && `Intended use: ${args.purpose}`, `Compose for ${ratio}. Keep important subjects inside the safe central area for cropping.`].filter(Boolean).join('\n\n'),
+    prompt,
     size: sizes[ratio],
     ...(provider === 'openai'
       ? { n: 1, quality: 'auto', output_format: 'png' }
@@ -171,6 +183,11 @@ export function generationBody(provider, spec, args) {
 }
 
 export async function generate(provider, spec, key, args, options = {}) {
+  if (provider === 'grsai') {
+    const { prompt, ratio } = composedPrompt(args)
+    // Returns the downloaded PNG/JPEG/WebP; the tool normalizes it to PNG.
+    return grsaiImage(spec, key, prompt, ratio, MAX_IMAGE_BYTES, options)
+  }
   const body = generationBody(provider, spec, args)
   const signal = AbortSignal.any([AbortSignal.timeout(180_000), ...(options.signal ? [options.signal] : [])])
   const result = await request(`${spec.baseUrl}/images/generations`, key, { ...options, signal, body, maxBytes: Math.ceil(MAX_IMAGE_BYTES * 4 / 3) + 1024 * 1024 })

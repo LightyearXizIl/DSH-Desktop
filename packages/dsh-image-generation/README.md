@@ -1,10 +1,10 @@
 # dsh-image-generation
 
-DSH/Cordis 公共生图插件，提供 `image_generate` 工具、`generate-image` Skill 和「设置 → 插件 → 插件配置 → 生图工具」卡片。PPT、Word 和普通对话共用同一份配置与图片资产。
+DSH/Cordis 公共影像生成插件，提供 `image_generate`、`video_generate`、`text_generate` 三个工具、`generate-image` Skill 和「设置 → 内置插件 → 影像生成」卡片。PPT、Word 和普通对话共用同一份配置与图片、视频资产。
 
 ## 使用
 
-DSH Desktop 默认关闭内置生图插件。需要使用内置版本时，在「设置 → 插件」启用「内置生图工具」并重启 Harness；启用前须先停用同名市场版本。启用后，在生图工具卡片选择 Seedream 或 OpenAI，填写该平台的 API Key 并保存。生图模型支持预设选择或自定义输入，API 地址可在高级设置中修改。
+DSH Desktop 默认关闭内置影像生成插件。需要使用内置版本时，在「设置 → 内置插件 → 影像生成」启用内置插件并重启 Harness（内置插件开启后，这个页签由影像生成自己的配置卡片接替）；启用前须先停用同名市场版本。启用后，在影像生成卡片选择 Seedream、OpenAI 或 GrsAI，填写该平台的 API Key 并保存。生图模型支持预设选择或自定义输入，API 地址可在高级设置中修改。
 
 生图模型使用下拉选择。OpenAI 的「获取模型」用当前填写或已保存的 Key 发起一次 `GET /models`，筛选 Images API 支持的 GPT Image 模型；获取过程只更新候选列表，配置在点击保存时生效。查询来源保留在接口中，界面显示候选模型、空列表和查询错误。字节的管理接口使用独立签名凭据，因此 API Key 模式提供内置选项和自定义模型/接入点 ID。
 
@@ -26,10 +26,12 @@ API 地址同时接受基础地址和控制台提供的完整 `/images/generatio
 | --- | --- | --- |
 | 字节 / 火山方舟 | `doubao-seedream-4-5-251128` | `https://ark.cn-beijing.volces.com/api/v3` |
 | OpenAI | `gpt-image-1.5` | `https://api.openai.com/v1` |
+| GrsAI | `nano-banana-fast`（视频 `veo3.1-fast`，文本 `gemini-3.1-pro`） | `https://grsai.dakka.com.cn` |
 
-保存自动发起一次非生图校验请求，界面显示校验中、保存成功或具体错误。失败保留输入及之前的有效配置。Key 更换后立即生效；两个服务商分别保存配置和 Key。更换 API 地址的域名时需要重新填写 Key。
+保存自动发起一次非生图校验请求，界面显示校验中、保存成功或具体错误。失败保留输入及之前的有效配置。Key 更换后立即生效；各服务商分别保存配置和 Key。更换 API 地址的域名时需要重新填写 Key。
 
 - OpenAI：`GET /models/{model}`，检查凭据和模型元数据访问。Key 需要允许读取该模型信息。
+- GrsAI：`POST /client/openapi/getAPIKeyCredits`，查询该 Key 的积分余额，不提交生成任务。
 - 字节：`POST /images/generations`，请求体仅含 `model`，省略必填 `prompt`。只将明确的 prompt 缺参错误识别为连接校验成功，其他错误正常报错。该请求进入参数检查，不提交生图任务。采用此方式是因为 Ark 官方运行时 SDK 没有可依赖的模型列表接口。
 
 校验结果与实际生图成功分别记录。生图权限、余额、内容审核和输出效果在真正调用时确认。本插件没有生成测试图按钮。
@@ -40,13 +42,49 @@ API 地址同时接受基础地址和控制台提供的完整 `/images/generatio
 
 字节请求采用 Seedream 4.5 / 5.0 Pro 共用的单图字段，由服务端默认单图模式执行。自定义接入点 ID 也使用这一契约。组图控制属于独立能力，5.0 Pro 的单图请求省略 `sequential_image_generation` 及其 options。模型能力和画布范围参考 [BytePlus 官方 Seedream 能力表](https://docs.byteplus.com/api/docs/ModelArk/1824121)。
 
+## GrsAI：生图、生视频与文本生成
+
+[GrsAI](https://grsai.ai/zh) 用一个 Key 聚合多家生图、生视频和文本模型，它们都是生成式接口，不作为 Agent 的对话模型接入，而是由本插件以工具形式提供。接口按 GrsAI 控制台文档和[新版 API 文档](https://qmy27nhsd9.apifox.cn/452392911e0)核对（2026-10-29）。地址只填主机：默认国内直连 `https://grsai.dakka.com.cn`，海外网络改为 `https://grsaiapi.com`；粘贴带 `/v1/...` 的完整接口地址时，保存时统一为主机地址。请求头为 `Authorization: Bearer <Key>`。
+
+| 能力 | 模型 | 接口 | 关键参数 |
+| --- | --- | --- | --- |
+| 生图 · Nano Banana | `nano-banana-fast`、`nano-banana`、`nano-banana-2`、`nano-banana-2.1`、`nano-banana-pro` | `POST /v1/api/generate` | `aspectRatio` 取 `16:9` 等比例，`imageSize: "1K"` |
+| 生图 · GPT Image | `gpt-image-2`、`gpt-image-2.5` | 同上 | `aspectRatio` 取比例 |
+| 生图 · GPT Image VIP | `gpt-image-2-vip`、`gpt-image-2.5-flare`、`gpt-image-2.5-sunburst` | 同上 | `aspectRatio` 只接受像素值，取 1K 档：方图 1024×1024，16:9 为 1280×720，9:16 为 720×1280，4:3 为 1152×864，3:4 为 864×1152 |
+| 生视频 · Veo 3.1 | `veo3.1-fast`、`veo3.1-pro` | `POST /v1/video/veo`（旧版接口，新版文档未收录） | `aspectRatio` 取 `16:9` 或 `9:16`，时长固定 |
+| 生视频 · MiniMax H3 | `minimax-h3` | `POST /v1/api/generate` | `aspectRatio` 取 `landscape` / `portrait`，`resolution: "768p"`，`duration` 1–15 秒（默认 6） |
+| 生视频 · Agnes Video 2.5 | `agnes-video-2.5` | 同上 | `aspectRatio` 取 `16:9`、`9:16`、`21:9`、`4:3`、`1:1`、`3:4`，`resolution: "720p"`，`duration` 4–12 秒（默认 5） |
+| 文本生成 | `gemini-3.1-pro`、`gpt-5.6-sol` 等 14 个（取自公开的 `GET /v1/models`） | `POST /v1/chat/completions` | OpenAI 兼容格式，`stream: false` |
+
+视频分辨率固定取各模型的较低档位，因为费用随分辨率上升；需要更高档位时再加设置项。
+
+### 任务与下载
+
+新版统一接口提交时带 `replyType: "async"`，服务端立即返回 `{ id, status }`；插件随后轮询 `GET /v1/api/result?id=<id>`，状态为 `running`、`succeeded`、`failed` 或 `violation`，失败和违规以 HTTP 400 携带任务体返回。Veo 走旧版接口：提交时带 `webHook: "-1"`，轮询 `POST /v1/draw/result`。两种轮询的间隔都从 0.5 秒逐步放宽到图片 2.5 秒、视频 5 秒；图片最长等 3 分钟，视频最长等 14 分钟；任务刚提交时暂查不到（新版 HTTP 404、旧版 `code: -22`）最多容忍 5 次。`violation` 和旧版的 `input_moderation` / `output_moderation` 报内容审核错误，其他失败报服务商错误；服务商的原始错误文本可能回显提示词，不透传给模型。
+
+GrsAI 返回的是 2 小时内有效的结果链接，因此这是唯一下载厂商返回 URL 的路径：只接受 HTTPS（本机回环开发服务允许 HTTP），不带 Key；可以跟随 CDN 重定向，但最终地址仍须是 HTTPS，下载超时 2 分钟，图片受原有体积和像素上限约束，视频最大 200 MB。
+
+### 生视频
+
+保存了 GrsAI Key 后，系统提示切换为允许调用 `video_generate`；未保存时提示模型不要调用，并引导用户到设置页。生视频始终使用 GrsAI 配置里的视频模型和 Key，与当前选用哪家生图无关，所以可以用 Seedream 生图、同时用 GrsAI 生视频。
+
+`video_generate` 参数为 `prompt`、可选 `style_context`、`aspect_ratio`（默认 `16:9`）和 `duration`（秒）。比例或时长超出所选模型的范围时，在提交任务、消耗积分之前就报错并说明该模型支持的范围。工具超时 15 分钟。下载结果必须以 ISO 媒体 `ftyp` 头开头，随后通过与图片相同的沙箱写入子进程保存到工作区 `.workbuddy/generated-videos/<sha256>.mp4`，返回路径、字节数、哈希、服务商和模型。本期为文生视频；参考图、首尾帧、参考音频和对话内的视频预览留待后续版本，视频需在工作区中打开。
+
+### 文本生成
+
+`text_generate` 把一个提示词发给 GrsAI 配置里的文本模型，返回模型回复。参数为 `prompt`、可选 `instructions`（作为 system 消息）和 `max_output_tokens`（1–32768）。被调用的模型看不到当前对话，所以提示词需要自带所需材料。它不替代 Agent 自己的模型：系统提示让 Agent 只在用户要求该模型的输出、第二个模型的草稿或批量文案时调用，普通回复仍由 Agent 自己完成。工具返回的文本前带一行 `[grsai <模型>, finish_reason=…]`；回复为空且 `finish_reason` 为 `content_filter` 时报内容审核错误。提示词和回复都不写入 Host 日志。文本模型下拉列出 GrsAI 公开模型列表中的文本模型，旧列表中保存过的模型仍保留可选。
+
+### 积分余额
+
+积分余额显示在影像生成卡片的 GrsAI 区域：Key 就在这里配置，余额与它直接对应；上游的「账号与余额」页属于 DeepSeek 账号，没有扩展插槽。余额在打开该区域和每次保存后通过 `GET /api/image-generation.credits` 读取一次，可以手动刷新，不定时轮询，因为每次读取都是一次对 GrsAI 的请求。接口只返回 `{ credits }`，不回传 Key 或服务商原文。
+
 生图失败时，工具和 Host 日志保留 HTTP 状态、服务商错误码、参数名及请求编号。错误响应最多读取 64 KB，仅提取受限格式的诊断字段；服务商原始错误文本可能回显 Key 或提示词，因此留在 Host 处理。模型根据具体原因反馈，参数错误交由插件修正。
 
 对话直接展示生成图片，点击缩略图可放大，Esc 或点击背景关闭。已有成功生图记录也能预览。预览接口通过 Host 鉴权，按会话中成功的工具结果授权读取对应 PNG，并校验目录、文件类型、体积和 SHA-256；访问留有审计日志。图片以文本资产信息返回给聊天模型，界面预览与模型视觉能力分别处理。
 
 ## 独立分发
 
-该目录是可公开分发的 MIT npm 包，包含 Host、Client、Skill 和 `dsh.bundle.patch`。本 PR 提供源码与 tarball；npm registry 发布为单独操作。
+该目录是可公开分发的 MIT npm 包，包含 Host、Client、Skill 和 `dsh.bundle.patch`。npm registry 发布为单独操作。
 
 在仓库根目录打包：
 
@@ -62,20 +100,20 @@ npm pack ./packages/dsh-image-generation --pack-destination /absolute/output/dir
 
 服务商、模型、地址和 Key 在 `ctx.credentials` 的 `dsh-image-generation/configuration` 私有记录中一次提交。凭据服务的跨进程锁和修订检查防止并发保存覆盖；失败保存保持整个旧记录。使用同一记录使一次工具调用读到一致的配置。通用 settings 仅注册卡片命名空间。Agent 参数、图片、日志和工作区均不携带 Key。
 
-生图通过标准工具执行和审计流程，使用已保存配置直接调用；部署级工具策略继续生效。请求前及落盘前读取当前会话的 sandboxPolicy，要求工作区写权限；输出目录和目标文件拒绝符号链接。实际写入由 `ctx.sandbox` 包装的 `ctx.subprocess` 子进程执行，使用工作区写权限；仅通过 stdin 接收图片字节，清除继承环境，Key 留在 Host。PNG 使用临时文件、原子创建和内容哈希校验，避免并发生图产生半个文件。HTTP 禁止重定向，只接受 HTTPS 地址（本机回环开发服务允许 HTTP），约束超时、响应大小和解码像素；不下载厂商返回的任意远程 URL。系统沙箱的跨平台执行能力以部署环境为准，本期本地验收环境为 macOS arm64。
+生图通过标准工具执行和审计流程，使用已保存配置直接调用；部署级工具策略继续生效。请求前及落盘前读取当前会话的 sandboxPolicy，要求工作区写权限；输出目录和目标文件拒绝符号链接。实际写入由 `ctx.sandbox` 包装的 `ctx.subprocess` 子进程执行，使用工作区写权限；仅通过 stdin 接收图片字节，清除继承环境，Key 留在 Host。PNG 使用临时文件、原子创建和内容哈希校验，避免并发生图产生半个文件。HTTP 禁止重定向，只接受 HTTPS 地址（本机回环开发服务允许 HTTP），约束超时、响应大小和解码像素；除 GrsAI 的结果链接（见上文）外，不下载厂商返回的远程 URL。系统沙箱的跨平台执行能力以部署环境为准，本期本地验收环境为 macOS arm64。
 
 macOS Desktop 的 Host 运行在 Electron utility process 中；写图子进程显式设置 `ELECTRON_RUN_AS_NODE=1`，使同一可执行文件执行 Node 脚本。该启动常量与 Windows 的 SystemRoot 按需保留，凭据和 NODE_OPTIONS 继续清除。回归同时覆盖普通 Node 和真实 Electron utility process。
 
 ## 验证
 
 ```sh
-npx vitest run test/image-generation.test.mjs test/desktop-plugin-closure.test.ts
+npx vitest run test/image-generation.test.mjs test/image-generation-grsai.test.mjs test/desktop-plugin-closure.test.ts
 node scripts/verify-image-generation.mjs
 node scripts/verify-image-electron.mjs
 npm run typecheck
 npm test
 ```
 
-测试使用本机模拟服务和真实 Harness 凭据存储、工具执行管线，覆盖两个厂商、单请求保存、成功/失败、修订冲突、凭据隔离、PNG 落盘、取消、体积限制和目录越界。Host smoke 启动隔离实例，验证插件启用后的 Client 入口、鉴权、Origin 及保存结果。真实付费模型与 Office 文档视觉验收在 `STATUS.md` 单独记录。
+测试使用本机模拟服务和真实 Harness 凭据存储、工具执行管线，覆盖三个服务商、单请求保存、成功/失败、修订冲突、凭据隔离、PNG 落盘、取消、体积限制和目录越界；`test/image-generation-grsai.test.mjs` 用按 GrsAI 任务契约实现的本机模拟服务，覆盖余额校验与积分接口、坏 Key、新版统一接口与 Veo 旧接口的请求体和轮询、各视频模型的比例与时长、内容审核失败、`video_generate` 落盘 MP4、`text_generate` 请求与错误分类，以及系统提示切换。Host smoke 启动隔离实例，验证插件启用后的 Client 入口、鉴权、Origin 及保存结果。真实付费模型与 Office 文档视觉验收需要单独进行。
 
-接口参考：[OpenAI Images API](https://developers.openai.com/api/reference/resources/images/methods/generate)、[OpenAI 模型列表](https://developers.openai.com/api/reference/resources/models/methods/list)、[火山方舟生图 API](https://www.volcengine.com/docs/82379/1541523)、[火山方舟官方运行时 SDK](https://github.com/volcengine/volcengine-python-sdk/tree/master/volcenginesdkarkruntime/resources/images)、[火山管理接口及签名鉴权](https://github.com/volcengine/volcengine-python-sdk/blob/master/volcenginesdkark/api/ark_api.py)。
+接口参考：[OpenAI Images API](https://developers.openai.com/api/reference/resources/images/methods/generate)、[OpenAI 模型列表](https://developers.openai.com/api/reference/resources/models/methods/list)、[火山方舟生图 API](https://www.volcengine.com/docs/82379/1541523)、[火山方舟官方运行时 SDK](https://github.com/volcengine/volcengine-python-sdk/tree/master/volcenginesdkarkruntime/resources/images)、[火山管理接口及签名鉴权](https://github.com/volcengine/volcengine-python-sdk/blob/master/volcenginesdkark/api/ark_api.py)、[GrsAI](https://grsai.ai/zh)（接口文档在登录后的控制台中）。

@@ -316,6 +316,8 @@ describe('image tool and durable Office assets', () => {
     await mountPlugin(f, routes)
     expect(routes.map(({ path, methods, requestBody }) => ({ path, methods, requestBody }))).toEqual([
       { path: '/api/image-generation.settings', methods: ['GET'], requestBody: 'buffered' },
+      // The saved GrsAI key's credit balance.
+      { path: '/api/image-generation.credits', methods: ['GET'], requestBody: 'buffered' },
       { path: '/api/image-generation.save', methods: ['POST'], requestBody: 'buffered' },
       { path: '/api/image-generation.models', methods: ['POST'], requestBody: 'buffered' },
       { path: '/api/image-generation.preview', methods: ['GET'], requestBody: 'buffered' },

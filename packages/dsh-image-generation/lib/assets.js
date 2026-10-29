@@ -1,6 +1,18 @@
 import { lstat, mkdir, realpath } from 'node:fs/promises'
 import path from 'node:path'
 import { ImageError, MAX_IMAGE_BYTES } from './provider.js'
+import { MAX_VIDEO_BYTES } from './grsai.js'
+
+/** Generated asset kinds: workspace folder, file extension and size bound. */
+export const ASSET_KINDS = Object.freeze({
+  image: Object.freeze({ folder: 'generated-images', extension: 'png', maxBytes: MAX_IMAGE_BYTES }),
+  video: Object.freeze({ folder: 'generated-videos', extension: 'mp4', maxBytes: MAX_VIDEO_BYTES }),
+})
+
+export function assetKind(kind) {
+  if (!Object.hasOwn(ASSET_KINDS, kind)) throw new ImageError('ASSET_PATH', 'Unknown generated asset kind.')
+  return ASSET_KINDS[kind]
+}
 
 async function loadSharp() {
   try {
@@ -22,9 +34,9 @@ export async function workspaceFor(ctx, exec) {
 }
 
 /** A predictable subdirectory, checked before the paid request and again before commit. */
-export async function assetDirectory(root, create = false) {
+export async function assetDirectory(root, create = false, kind = 'image') {
   let directory = root
-  for (const part of ['.workbuddy', 'generated-images']) {
+  for (const part of ['.workbuddy', assetKind(kind).folder]) {
     directory = path.join(directory, part)
     try {
       const info = await lstat(directory)

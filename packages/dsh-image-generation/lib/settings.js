@@ -1,5 +1,6 @@
 import { credentialKey } from '@deepseek-ai/dsh-credentials'
 import { DEFAULTS, MODEL_CATALOG, ImageError, listModels, profile, safeError, validateConnection } from './provider.js'
+import { grsaiCredits } from './grsai.js'
 
 const KEY = credentialKey('dsh-image-generation', 'configuration')
 const EMPTY = () => ({ revision: 0, provider: 'bytedance', profiles: {} })
@@ -50,8 +51,30 @@ export function createSettings(ctx, validate = validateConnection) {
   async function active() {
     const state = await read()
     const spec = state.profiles[state.provider]
-    if (!spec?.key) throw new ImageError('NOT_CONFIGURED', 'Configure the image tool in Settings > Plugins before generating an image.')
+    if (!spec?.key) throw new ImageError('NOT_CONFIGURED', 'Configure image generation in Settings > Built-in plugins before generating an image.')
     return { provider: state.provider, ...profile(state.provider, spec), key: spec.key }
+  }
+  /** Video and text run on the saved GrsAI profile, whichever provider draws images. */
+  async function grsaiSpec() {
+    const state = await read()
+    const spec = state.profiles.grsai
+    if (!spec?.key) throw new ImageError('NOT_CONFIGURED', 'Save a GrsAI key in Settings > Built-in plugins > Image & video generation before generating video or text.')
+    return { provider: 'grsai', ...profile('grsai', spec), key: spec.key }
+  }
+  async function isGrsaiConfigured() {
+    const state = await read()
+    return Boolean(state.profiles.grsai?.key)
+  }
+  /** The saved GrsAI key's credit balance, read on demand and never cached. */
+  async function credits(signal) {
+    try {
+      const spec = await grsaiSpec()
+      return { credits: await grsaiCredits(spec, spec.key, { signal }) }
+    } catch (error) {
+      const safe = safeError(error)
+      ctx.logger.info('image-generation: credit balance failed; code=%s http=%s', safe.code, safe.providerStatus)
+      throw safe
+    }
   }
   async function prepared(input) {
     if (!input || typeof input !== 'object' || Array.isArray(input)) throw new ImageError('CONFIGURATION', 'Enter a valid image configuration.')
@@ -93,5 +116,5 @@ export function createSettings(ctx, validate = validateConnection) {
       throw safe
     }
   }
-  return { describe, isConfigured, active, save, models }
+  return { describe, isConfigured, isGrsaiConfigured, active, grsaiSpec, credits, save, models }
 }
