@@ -168,8 +168,8 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 
 接手开发前先看这一节，再看 [CHANGELOG.md](../CHANGELOG.md) 的最新条目。
 
-- **分支**：0.0.4 的全部改动在 `feat/liquid-glass`，已推送到远端但尚未合入 `main`（`main` 是它的祖先，可以快进合并）。
-- **发布**：GitHub Release `v0.0.4` 已发布并标记为 Latest，注释标签指向 `feat/liquid-glass` 上的提交 `0353203`。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 与 CHANGELOG 记录一致。
+- **分支**：0.0.4 的全部改动在 `feat/liquid-glass` 上开发，已快进合并到 `main`；新工作从 `main` 开分支。
+- **发布**：GitHub Release `v0.0.4` 已发布并标记为 Latest，注释标签指向提交 `0353203`（现已在 `main` 上）。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 与 CHANGELOG 记录一致。
 - **未执行的验收**：安装程序本身的安装与覆盖升级、安装后启动、全新机器安装、真实模型请求、真实 GrsAI Key 的付费生成、macOS 构建。
 - **主题实测方法**：Liquid Glass 在 8 种组合下的检查方式见 [`packages/dsh-desktop-theme/README.md`](../packages/dsh-desktop-theme/README.md) 的 “Visual audit” 一节。
 

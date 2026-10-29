@@ -82,7 +82,7 @@
 - 开发版实测：边栏开合产生列宽过渡；8 种组合（浅色/深色 × 云母/兼容 × 流体/壁纸）逐一截图检查；浅色与深色云母逐页像素对比度测量（首页、工作台、插件、自动化任务、对话、轨迹、设置全部页签），浅色全部不低于 4.5:1，深色只有三级提示文字在 3.9～4.4:1（提示文字目标为 3.8:1）。
 - 打包门禁通过：Harness、bootstrap、原生模块、终端和 696 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换；从 `app.asar` 读回确认包含 `text_generate`、MiniMax / Agnes 视频、GrsAI 在线模型清单、实时玻璃与对话提亮层、壁纸层标记、弹窗遮罩、右侧停靠卡片和布局补丁的代码。
 - Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：285235386 字节，SHA-256 `96C009F9A4ECD7328A670B04FDDE80F713AD579F195DA50F75809EA79FED15E3`；`latest.yml` 版本为 `0.0.4`，SHA-512 为 `FVwTJdgO2XNG8QZz5SXaHdmyXEBwgYCs4IShyqjv0iDvyemBA8DEZHfLv29KanNEZdBO7R3scXqImVJ2zNKUgA==`；`app-update.yml` 不含 `publisherName`。
-- 已发布 GitHub Release `v0.0.4`（Latest），注释标签指向 `feat/liquid-glass` 上的 `0353203`；上传后的安装包摘要与上面的 SHA-256 一致，公开的 `releases/latest/download/latest.yml` 返回 `0.0.4`。
+- 已发布 GitHub Release `v0.0.4`（Latest），注释标签指向 `0353203`（开发分支 `feat/liquid-glass` 随后快进合并到 `main`）；上传后的安装包摘要与上面的 SHA-256 一致，公开的 `releases/latest/download/latest.yml` 返回 `0.0.4`。
 
 ### 说明
 
