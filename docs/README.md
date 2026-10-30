@@ -115,7 +115,7 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 
 | 内置包 | 作用 |
 | --- | --- |
-| `dsh-desktop-client-ui` | 占用 Harness 品牌 slot 的 Desktop 品牌组件与界面接缝 |
+| `dsh-desktop-client-ui` | 占用 Harness 品牌 slot 的 Desktop 品牌组件与界面接缝；“设置 → 关于”页（作者、版本、检查更新、赞赏，以及默认折叠的当前版本更新日志卡片） |
 | `dsh-desktop-theme` | Liquid Glass 主题（云母与兼容模式）与设置页 |
 | `dsh-startup-screen` | Harness 启动动画 |
 | `dsh-desktop-onboarding` | 首次启动提示：测试声明、项目介绍和模型设置入口 |
@@ -160,8 +160,9 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 | 问题 | 位置 | 影响 |
 | --- | --- | --- |
 | Liquid Glass 的“modal caption”用例失败 | `test/desktop-theme.test.ts` 中 “covers the caption under modals and glazes the surfaces the audit found bare” | 用例仍在找 0.0.4 样式审计前的右侧停靠区选择器 `[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-host='dock']`；全量 `npm test` 因此固定有这一项失败，需要按现行样式更新断言 |
-| 部分电脑上插件市场激活失败 | `dshmarket` 客户端 | 根因未确认（本机全新 Profile、含中文和空格的数据路径都正常）；0.0.5 起安装器会保留入口并提供“重启 Harness / 移除插件市场”，需要对方 `harness.log` 中含 `dsh-market` 的行才能继续定位 |
-| 打包审批集成测试在 Windows 上失败 | `test/generation-build-approval.integration.test.js` | Git Bash 自带的 `tar` 把 `C:` 解析为远程主机；全量 `npm test` 因此固定有这一项失败，与产品代码无关 |
+| 从旧版本升级的电脑上插件市场没有入口 | `src/main/state/market-version.ts`、`dsh-desktop-market-installer` | 已在“未发布”修复：基线原先钉在 dshmarket 1.65.1，这个版本被 Harness 0.2 拒装，而且唯一的入口被 Desktop 隐藏了；新装的电脑取最新版，所以本机复现不出来。基线已改为 1.71.1，设置分区只在侧栏入口打开时才隐藏，重启 Harness 后页面也会重新载入。修复尚未发版，那台电脑也还没有实测 |
+| 打包审批集成测试在 Git Bash 中失败 | `test/generation-build-approval.integration.test.js` | Git Bash 自带的 GNU `tar` 把 `C:` 解析为远程主机；在 Git Bash 里跑全量 `npm test` 固定有这一项失败，在 PowerShell 中（使用 Windows 自带的 `tar`）通过，与产品代码无关 |
+| 全量回归中偶发失败的用例 | `test/lan-mobile-bridge.test.ts` 的 “rejects answers that were not offered by the pending question”、`test/verify-asar-unpack.test.ts` 的 “rejects a native binary packed inside app.asar” | 只在全量并发运行时偶发（前者返回 500，后者未抛错），单独重跑均通过；疑为并发下的时序或临时文件竞争，尚未定位 |
 | 0.0.3 无法自动更新到 0.0.4 | 0.0.3 安装包自带的 `app-update.yml` | 仍校验前身发行者的签名，会拒绝未签名的 0.0.4；用户需手动安装一次，之后可正常自动更新 |
 | 轨迹“助手”角色标签对比度偏低 | 上游 Harness 样式 | 10px 紫色小标签约 2.3～2.8:1，只能靠打包生成的类名定位，主题没有覆盖 |
 | 影像生成的 GrsAI 未做真实付费请求 | `packages/dsh-image-generation/` | 接口按文档和本机模拟服务验证；对话内不预览视频，视频不支持参考图、首尾帧和参考音频 |
@@ -174,6 +175,8 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 - **发布**：GitHub Release `v0.0.5` 已发布并标记为 Latest，注释标签指向提交 `add3ecc`（现已在 `main` 上）。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 与 CHANGELOG 记录一致。
 - **打包版验收方式**：在 `dist/win-unpacked` 的副本上把数据目录改为独立名称后启动（同长度替换 `app.asar` 里的 userData 名），不运行安装程序，避免覆盖本机正式安装和 `dsh-desktop` 数据。
 - **未执行的验收**：安装程序本身的安装与覆盖升级、全新机器安装、真实模型请求、真实 GrsAI Key 的付费生成、macOS 构建。
+- **0.0.5 之后的改动（未发布）**：“设置 → 关于”常驻默认折叠的当前版本更新日志卡片，更新弹窗按同样的样式排版，两处都只显示 Release 正文的“更新内容”和“问题修复”（主进程过滤）；详见 [CHANGELOG.md](../CHANGELOG.md) 的“未发布”条目与 [运行架构](architecture.md#updates) 的 Updates 一节。
+- **插件市场修复（未发布）**：市场基线由 1.65.1 改为 1.71.1，常量统一放在 `src/main/state/market-version.ts`，安装器的 `RECOMMENDED_MARKET_VERSION` 必须与它一致，升级 Harness 时要一起检查 dshmarket 的 peer 范围；安装器只在 dsh-market 侧栏入口打开时才隐藏它的设置分区；窗口按 Harness 启动令牌判断是否需要重新载入。详见 [CHANGELOG.md](../CHANGELOG.md) 的“未发布 → 问题修复”。
 - **主题实测方法**：Liquid Glass 在 8 种组合下的检查方式见 [`packages/dsh-desktop-theme/README.md`](../packages/dsh-desktop-theme/README.md) 的 “Visual audit” 一节。
 
 ## 8. 文档维护规则

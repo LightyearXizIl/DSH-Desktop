@@ -9,6 +9,7 @@ window.__ModuleLoader__.load({
     const NS = 'settings.desktopMarketInstaller'
     const STATUS_PATH = '/dsh-desktop/market-installer/status'
     const INSTALL_PATH = '/dsh-desktop/market-installer/install'
+    const MARKET_SIDEBAR_PATH = '/dsh-market/sidebar-entry'
     const MARKET_REPOSITORY = 'https://github.com/dsh-market/dsh-market'
 
     const en = {
@@ -191,6 +192,28 @@ window.__ModuleLoader__.load({
       const payload = await response.json()
       if (!response.ok) throw new Error(payload?.error || `HTTP ${response.status}`)
       return payload
+    }
+
+    /**
+     * Whether dsh-market's own sidebar row is switched on. dsh-market 1.67+
+     * serves the user's choice at this route for its own client; an older
+     * build answers 404, and any failure reads as "off" so the market keeps
+     * its Settings section.
+     */
+    async function marketSidebarEnabled() {
+      try {
+        const response = await fetch(MARKET_SIDEBAR_PATH, {
+          method: 'GET',
+          credentials: 'same-origin',
+          cache: 'no-store'
+        })
+        if (!response.ok) return false
+        const payload = await response.json()
+        return payload?.enabled === true
+      } catch {
+        // Unreachable or not JSON: treat as off, which keeps a door open.
+        return false
+      }
     }
 
     /** How long a composed market may take to activate before the tab calls it failed. */
@@ -541,17 +564,29 @@ window.__ModuleLoader__.load({
         }
       }, 'dsh-desktop-market-installer: market tab')
       // The running dsh-market owns its management card (version, updates,
-      // removal) under Settings → Built-in plugins, and the main sidebar
-      // carries its full panel. Its own Settings section would be a third
-      // door to the same place, so ask it through its published control to
-      // hide that section while this plugin is loaded.
+      // removal) under Settings → Built-in plugins. When its sidebar row is on
+      // that row carries the full panel, and the market's own Settings section
+      // would be a third door, so ask it through its published control to hide
+      // that section. Only then: builds before 1.67 have no sidebar row and no
+      // card, and a newer build with no choice on record keeps the row off
+      // because it counts that very section as its door, so hiding it there
+      // left the market with no way in at all.
       ctx.inject(['market'], (scoped) => {
         hide()
         const market = scoped.market
         const ownsSection = typeof market?.setSettingsVisible === 'function'
-        if (ownsSection) market.setSettingsVisible(false)
+        let disposed = false
+        let hidden = false
+        if (ownsSection) {
+          void marketSidebarEnabled().then((enabled) => {
+            if (disposed || !enabled) return
+            market.setSettingsVisible(false)
+            hidden = true
+          })
+        }
         return () => {
-          if (ownsSection) market.setSettingsVisible(true)
+          disposed = true
+          if (hidden) market.setSettingsVisible(true)
           show()
         }
       })

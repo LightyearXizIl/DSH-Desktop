@@ -44,7 +44,7 @@ function loadSection({ now, status, desktop }) {
   return { component: tab.component, props: tab.inject() }
 }
 
-const INSTALLED = { phase: 'installed', dependency: '^1.73.5', installedVersion: '1.73.5', recommendedVersion: '^1.65.1', restartRequired: false }
+const INSTALLED = { phase: 'installed', dependency: '^1.73.5', installedVersion: '1.73.5', recommendedVersion: '^1.71.1', restartRequired: false }
 
 describe('market tab for a market that is installed but did not load', () => {
   let root

@@ -9,7 +9,7 @@ DeepSeek Harness 官方仓库：<https://github.com/deepseek-ai/deepseek-harness
 1. 安装目标版本，核对 npm 发布包（而不是上游 tag 或本地 checkout）作为兼容依据。
 2. 对每个补丁取三份输入：旧版原始包、旧版打补丁后、新版原始包。先合并行为，再按新版原始包重新生成补丁。
 3. 判断补丁去留的标准是“上游是否已原生提供该能力”，而不是“补丁还能不能套上去”。
-4. 同步根 manifest、锁文件、宿主插件的 peer 区间；预发布版本的 caret 只在同一 `major.minor.patch` 内匹配，跨版本时要追加区间。
+4. 同步根 manifest、锁文件、宿主插件的 peer 区间；预发布版本的 caret 只在同一 `major.minor.patch` 内匹配，跨版本时要追加区间。同时核对 dshmarket 的 `@deepseek-ai/dsh-settings` peer 区间是否覆盖新版本，不覆盖就提高 `src/main/state/market-version.ts` 的 `VERIFIED_MARKET_BASELINE`，以及安装器的 `RECOMMENDED_MARKET_VERSION`。升级到 0.2.1-rc.4 时漏了这一步，基线一直停在 1.65.1：升级上来的电脑被装回一个 Harness 拒装、又没有任何入口的市场。
 5. 完整 `npm ci`（不能加 `--ignore-scripts`：它会跳过补丁重放、品牌资源和 Electron 安装，测试仍可能全绿而应用起不来）、`npm run typecheck`、`npm run build`、完整 `npm test`、`git diff --check`。
 6. `node scripts/verify-target.mjs win32 x64` 与 `node scripts/probe-electron-node-runtime.mjs` 证明 Electron Node 模式能加载 Harness。
 7. 真实 Electron 窗口验收受影响的流程。静态检查与 probe 都不等于安装包验收。

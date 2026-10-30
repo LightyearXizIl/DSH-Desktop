@@ -1,7 +1,24 @@
 import { WINDOWS_TITLEBAR_HEIGHT } from '../shared/desktop-menu'
 
-export function shouldLoadHarnessUrl(currentUrl: string, targetUrl: string): boolean {
+/**
+ * Whether the window must navigate to the Harness rather than keep its page.
+ * @param currentUrl - the window's current URL.
+ * @param targetUrl - the running Harness endpoint.
+ * @param pageLaunch - launch token of the Harness process the page was loaded from.
+ * @param runningLaunch - launch token of the running Harness process.
+ */
+export function shouldLoadHarnessUrl(
+  currentUrl: string,
+  targetUrl: string,
+  pageLaunch?: string,
+  runningLaunch?: string
+): boolean {
   if (currentUrl === '' || currentUrl === 'about:blank') return true
+  // A restarted Harness binds its preferred port again, so the origin alone
+  // cannot tell it from the one the page came from. That page keeps the old
+  // process's client boot graph, so a plugin installed or switched on before
+  // the restart never loads until the whole app is relaunched.
+  if (runningLaunch !== undefined && pageLaunch !== runningLaunch) return true
 
   try {
     return new URL(currentUrl).origin !== new URL(targetUrl).origin

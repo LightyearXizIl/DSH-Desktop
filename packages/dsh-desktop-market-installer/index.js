@@ -25,7 +25,8 @@ import { SIDELINE_MARKER } from './pnpm-runner.mjs'
 import { removeTree } from './remove-tree.mjs'
 import { hideConsoleCmdAssignment, hideConsoleImportArguments } from './windows-hide-console.mjs'
 
-export const RECOMMENDED_MARKET_VERSION = '^1.65.1'
+// Keep in step with VERIFIED_MARKET_BASELINE in src/main/state/market-baseline.ts.
+export const RECOMMENDED_MARKET_VERSION = '^1.71.1'
 export const MARKET_PACKAGE = 'dshmarket'
 export const MARKET_PROFILE = 'web'
 export const STATUS_PATH = '/dsh-desktop/market-installer/status'

@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 const source = readFileSync(new URL('../packages/dsh-desktop-market-installer/client.js', import.meta.url), 'utf8')
 
 /** Load the installer client and apply it against a recording context. */
-function load({ marketComposed = false, desktop } = {}) {
+function load({ marketComposed = false, desktop, fetch = async () => ({ ok: false, json: async () => ({}) }) } = {}) {
   const registrations = []
   const dictionaries = []
   const injected = []
@@ -15,7 +15,8 @@ function load({ marketComposed = false, desktop } = {}) {
     window: { __ModuleLoader__: { load(entry) { client = entry.factory(createRequire(import.meta.url)) } } },
     __DSH_BOOT__: { entries: marketComposed ? [{ id: 'dshmarket' }] : [] },
     ...desktop === undefined ? {} : { dshDesktop: desktop },
-    document: { querySelector: () => ({}) }
+    document: { querySelector: () => ({}) },
+    fetch
   })
   client.apply({
     effect(callback) { return callback() },
@@ -37,6 +38,15 @@ function load({ marketComposed = false, desktop } = {}) {
   return { registrations, dictionaries, injected }
 }
 
+/** A fetch stub answering dsh-market's sidebar route with the given body. */
+const sidebarRoute = (body, ok = true) => vi.fn(async (url) => {
+  expect(url).toBe('/dsh-market/sidebar-entry')
+  return { ok, json: async () => body }
+})
+
+/** Let the installer's sidebar lookup settle. */
+const settle = () => new Promise(resolve => setTimeout(resolve, 0))
+
 const tabs = registrations => registrations
   .filter(entry => entry.name === 'settings.plugins.tab' && entry.live)
   .map(entry => entry.id)
@@ -50,8 +60,9 @@ describe('Desktop host plugin control in Plugins settings', () => {
     expect(tabs(registrations)).toContain('market')
   })
 
-  it('hands the market tab to dsh-market only once its client is running', () => {
-    const { registrations, injected } = load({ marketComposed: true })
+  it('hands the market tab to dsh-market only once its client is running', async () => {
+    const fetch = sidebarRoute({ enabled: true, chosen: true })
+    const { registrations, injected } = load({ marketComposed: true, fetch })
     // In the boot graph is not running: a declared market that fails to
     // activate registers neither its tab nor its `market` service, and hiding
     // the placeholder on the graph alone left no market entry at all.
@@ -61,19 +72,49 @@ describe('Desktop host plugin control in Plugins settings', () => {
 
     // Once the market provides its service it owns the Built-in plugins card
     // (version, updates, removal); a second "market" tab read as a duplicate,
-    // and its own Settings section is hidden as a third door.
+    // and with its sidebar row on, its own Settings section is a third door.
     const marketInject = injected.find(entry => entry.deps.includes('market'))
     expect(marketInject).toBeDefined()
     const market = { setSettingsVisible: vi.fn() }
     const dispose = marketInject.callback({ market })
     expect(tabs(registrations)).not.toContain('market')
     expect(tabs(registrations)).not.toContain('desktop-market-management')
+    await settle()
+    expect(fetch).toHaveBeenCalledTimes(1)
     expect(market.setSettingsVisible).toHaveBeenCalledWith(false)
 
     // If the market goes away again (removed, crashed on reload) the entry returns.
     dispose()
     expect(market.setSettingsVisible).toHaveBeenLastCalledWith(true)
     expect(tabs(registrations)).toContain('market')
+  })
+
+  // dsh-market 1.65.1 (the startup baseline before 0.0.6) has no sidebar row
+  // or card: its Settings section is the only door, and hiding it left the
+  // market installed, running and unreachable. A newer build with no choice
+  // on record keeps its row off for the same section, so "off" must keep it.
+  it.each([
+    ['the sidebar row is off', sidebarRoute({ enabled: false, chosen: false })],
+    ['the market predates the sidebar route', sidebarRoute({ error: 'not found' }, false)],
+    ['the lookup fails', vi.fn(async () => { throw new TypeError('fetch failed') })]
+  ])('keeps the Settings section of dsh-market when %s', async (_case, fetch) => {
+    const { injected } = load({ marketComposed: true, fetch })
+    const market = { setSettingsVisible: vi.fn() }
+    const dispose = injected.find(entry => entry.deps.includes('market')).callback({ market })
+    await settle()
+    expect(market.setSettingsVisible).not.toHaveBeenCalled()
+    // Nothing was hidden, so nothing is restored over the market's own state.
+    dispose()
+    expect(market.setSettingsVisible).not.toHaveBeenCalled()
+  })
+
+  it('does not hide the section once the market service is gone', async () => {
+    const { injected } = load({ marketComposed: true, fetch: sidebarRoute({ enabled: true, chosen: true }) })
+    const market = { setSettingsVisible: vi.fn() }
+    const dispose = injected.find(entry => entry.deps.includes('market')).callback({ market })
+    dispose()
+    await settle()
+    expect(market.setSettingsVisible).not.toHaveBeenCalled()
   })
 
   it('tells a fresh profile that the market is not composed', () => {

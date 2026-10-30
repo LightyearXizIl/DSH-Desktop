@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { ensureStoreDirPinned, inspectStoreConsistency } from '../src/main/state/profile-store'
 import { readDesired } from '../packages/dsh-desktop-market-installer/generations/registry.mjs'
+import { VERIFIED_MARKET_BASELINE } from '../src/main/state/market-version'
 import {
   INSTALL_PATH,
   MARKET_PACKAGE,
@@ -36,10 +37,13 @@ describe('desktop plugin market installer', () => {
       'web',
       'add',
       '--workspace-root',
-      'dshmarket@^1.65.1'
+      'dshmarket@^1.71.1'
     ])
     expect(MARKET_PACKAGE).toBe('dshmarket')
-    expect(RECOMMENDED_MARKET_VERSION).toBe('^1.65.1')
+    expect(RECOMMENDED_MARKET_VERSION).toBe('^1.71.1')
+    // A first install below the startup baseline is upgraded again on the
+    // next launch, so the installer and the baseline name one version.
+    expect(RECOMMENDED_MARKET_VERSION).toBe(`^${VERIFIED_MARKET_BASELINE}`)
     expect(STATUS_PATH).toBe('/dsh-desktop/market-installer/status')
     expect(INSTALL_PATH).toBe('/dsh-desktop/market-installer/install')
     expect(UNINSTALL_PATH).toBe('/dsh-desktop/market-installer/uninstall')

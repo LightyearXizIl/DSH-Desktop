@@ -817,6 +817,26 @@ describe('Harness window activation', () => {
     ).toBe(true)
   })
 
+  it('reloads a page from the previous Harness process even on the same port', () => {
+    // Restarts rebind the preferred port. Comparing origins alone kept the old
+    // page and its boot graph, so a market installed before "Restart Harness"
+    // stayed unloaded until the whole app was relaunched.
+    expect(
+      shouldLoadHarnessUrl('http://127.0.0.1:43129/', 'http://127.0.0.1:43129', 'old-token', 'new-token')
+    ).toBe(true)
+    expect(
+      shouldLoadHarnessUrl('http://127.0.0.1:43129/', 'http://127.0.0.1:43129', undefined, 'new-token')
+    ).toBe(true)
+    // Focusing the window again on the same process keeps the user's page.
+    expect(
+      shouldLoadHarnessUrl('http://127.0.0.1:43129/settings', 'http://127.0.0.1:43129', 'same', 'same')
+    ).toBe(false)
+    // A Harness that announces no launch token falls back to the origin.
+    expect(
+      shouldLoadHarnessUrl('http://127.0.0.1:43129/settings', 'http://127.0.0.1:43129', 'old', undefined)
+    ).toBe(false)
+  })
+
   it('recognizes Electron navigation cancellation without hiding other load failures', () => {
     expect(isAbortedNavigationError({ code: 'ERR_ABORTED', errno: -3 })).toBe(true)
     expect(

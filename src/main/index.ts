@@ -288,6 +288,9 @@ let safeModeSuspectedPlugins: string[] = []
 // page instead of hammering the GPU.
 let mainWindowRecoveryReloadAt = 0
 let mainWindowRecoveryReloadCount = 0
+// Launch token of the Harness process the main window's page came from; see
+// shouldLoadHarnessUrl for why the origin alone is not enough.
+let mainWindowHarnessLaunch: string | undefined
 const startInSafeMode = shouldStartInSafeMode(process.argv)
 // The GPU process can die before the harness is ever on screen, which is the
 // whole reason the fallback exists; tracking the first harness render is what
@@ -1064,8 +1067,9 @@ async function openHarness(
 ): Promise<void> {
   if (quitting || gpuFallbackRelaunching) return
   const window = mainWindow && !mainWindow.isDestroyed() ? mainWindow : createWindow()
-  const rendererUrl = desktopHarnessUrl(url, process.platform, runtime.snapshot().authToken)
-  if (shouldLoadHarnessUrl(window.webContents.getURL(), url)) {
+  const launch = runtime.snapshot().authToken
+  const rendererUrl = desktopHarnessUrl(url, process.platform, launch)
+  if (shouldLoadHarnessUrl(window.webContents.getURL(), url, mainWindowHarnessLaunch, launch)) {
     // Taken before the first await: the Recovery page's fallback below runs
     // as soon as the Safe Mode launch resolves, and must see it gone.
     const repairPrompt = safeModeVisible ? takePendingRepairPrompt() : undefined
@@ -1101,6 +1105,7 @@ async function openHarness(
       const loaded = await navigateDesktopWindow(window, rendererUrl,
         () => quitting || gpuFallbackRelaunching || navigationVersion !== mainWindowNavigationVersion)
       if (!loaded) return
+      mainWindowHarnessLaunch = launch
     } catch (error) {
       if (navigationVersion !== mainWindowNavigationVersion) return
       if (isAbortedNavigationError(error)) return

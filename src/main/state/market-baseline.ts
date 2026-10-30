@@ -7,7 +7,9 @@ import { profilePackageJsonPath } from './plugin-recovery'
 import { clearProfileInstallMarker } from './profile-install-marker'
 import { hasPendingMarketInstall, upgradeMarketInSharedTree, type MarketSharedTreeUpgradeOptions } from './plugin-upgrade'
 
-export const VERIFIED_MARKET_BASELINE = '1.65.1'
+import { VERIFIED_MARKET_BASELINE } from './market-version'
+
+export { VERIFIED_MARKET_BASELINE }
 
 const MARKET_PACKAGE = 'dshmarket'
 
