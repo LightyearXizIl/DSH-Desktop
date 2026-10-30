@@ -159,18 +159,21 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 
 | 问题 | 位置 | 影响 |
 | --- | --- | --- |
+| Liquid Glass 的“modal caption”用例失败 | `test/desktop-theme.test.ts` 中 “covers the caption under modals and glazes the surfaces the audit found bare” | 用例仍在找 0.0.4 样式审计前的右侧停靠区选择器 `[data-dsh-desktop-float] [data-sidebar-right-panel] [data-dockkit-host='dock']`；全量 `npm test` 因此固定有这一项失败，需要按现行样式更新断言 |
+| 部分电脑上插件市场激活失败 | `dshmarket` 客户端 | 根因未确认（本机全新 Profile、含中文和空格的数据路径都正常）；0.0.5 起安装器会保留入口并提供“重启 Harness / 移除插件市场”，需要对方 `harness.log` 中含 `dsh-market` 的行才能继续定位 |
 | 打包审批集成测试在 Windows 上失败 | `test/generation-build-approval.integration.test.js` | Git Bash 自带的 `tar` 把 `C:` 解析为远程主机；全量 `npm test` 因此固定有这一项失败，与产品代码无关 |
 | 0.0.3 无法自动更新到 0.0.4 | 0.0.3 安装包自带的 `app-update.yml` | 仍校验前身发行者的签名，会拒绝未签名的 0.0.4；用户需手动安装一次，之后可正常自动更新 |
 | 轨迹“助手”角色标签对比度偏低 | 上游 Harness 样式 | 10px 紫色小标签约 2.3～2.8:1，只能靠打包生成的类名定位，主题没有覆盖 |
 | 影像生成的 GrsAI 未做真实付费请求 | `packages/dsh-image-generation/` | 接口按文档和本机模拟服务验证；对话内不预览视频，视频不支持参考图、首尾帧和参考音频 |
 
-## 7. 当前进展（2026-10-29）
+## 7. 当前进展（2026-10-30）
 
 接手开发前先看这一节，再看 [CHANGELOG.md](../CHANGELOG.md) 的最新条目。
 
-- **分支**：0.0.4 的全部改动在 `feat/liquid-glass` 上开发，已快进合并到 `main`；新工作从 `main` 开分支。
-- **发布**：GitHub Release `v0.0.4` 已发布并标记为 Latest，注释标签指向提交 `0353203`（现已在 `main` 上）。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 与 CHANGELOG 记录一致。
-- **未执行的验收**：安装程序本身的安装与覆盖升级、安装后启动、全新机器安装、真实模型请求、真实 GrsAI Key 的付费生成、macOS 构建。
+- **分支**：0.0.4 与 0.0.5 的改动都在 `feat/liquid-glass` 上开发，已快进合并到 `main`；新工作从 `main` 开分支。
+- **发布**：GitHub Release `v0.0.5` 已发布并标记为 Latest，注释标签指向提交 `add3ecc`（现已在 `main` 上）。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 与 CHANGELOG 记录一致。
+- **打包版验收方式**：在 `dist/win-unpacked` 的副本上把数据目录改为独立名称后启动（同长度替换 `app.asar` 里的 userData 名），不运行安装程序，避免覆盖本机正式安装和 `dsh-desktop` 数据。
+- **未执行的验收**：安装程序本身的安装与覆盖升级、全新机器安装、真实模型请求、真实 GrsAI Key 的付费生成、macOS 构建。
 - **主题实测方法**：Liquid Glass 在 8 种组合下的检查方式见 [`packages/dsh-desktop-theme/README.md`](../packages/dsh-desktop-theme/README.md) 的 “Visual audit” 一节。
 
 ## 8. 文档维护规则

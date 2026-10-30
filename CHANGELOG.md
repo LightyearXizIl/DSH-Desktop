@@ -35,6 +35,7 @@
 - 打包前 `node scripts/verify-target.mjs win32 x64` 通过，本地 Electron 与锁定版本同为 43.0.0。打包门禁通过：Harness、bootstrap、原生模块、终端和 696 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换。
 - 打包版验收在 `win-unpacked` 的副本上进行，数据目录改为独立目录，不覆盖本机正式安装：首次启动出现“发现网页版数据”，导入成功并进入主界面（2 个会话）；“关于”信息为 Desktop `0.0.5`、Harness `0.2.1-rc.4`；Liquid Glass 生效，空壁纸图片不渲染，窗口左右边缘无白线；“内置插件 → 插件市场”显示安装按钮；Liquid Glass 页有“播放动效”与“推理等级滑条”两组设置；选中 DeepSeek-V4.1-Flash 后模型菜单里出现推理等级滑条。
 - Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：285322102 字节，SHA-256 `1FBE7FCFB03590DC5D533068D77F7B9D00AE19281CE6BD443B9AF8F897E4BFD1`；`latest.yml` 版本为 `0.0.5`，SHA-512 为 `equzY7vcDsnVga4iLOrb0kVLTMTFMwmQR9phsfEJBNZX6j5dsI7LDC18A62gd0O0b36QaQfMXvd5NOz8drdB6g==`；安装包与主程序均未签名，`app-update.yml` 不含 `publisherName`。
+- 已发布 GitHub Release `v0.0.5`（Latest），注释标签指向 `add3ecc`（`feat/liquid-glass` 同时快进合并到 `main`）；上传后的安装包摘要与上面的 SHA-256 一致，公开的 `releases/latest/download/latest.yml` 返回 `0.0.5`。
 - 在全新开发 Profile 上实测：首次启动出现“发现网页版数据”，点“导入并继续”后进入工作区，会话和密钥已导入；窗口左右边缘像素与相邻像素一致，不再有白线；把市场客户端改成激活时抛错后，“插件市场”页签显示加载失败与修复按钮，恢复后由 dsh-market 自己的页签接管；用 CDP 模拟“减少动态效果”时，跟随系统下背景静止并显示提示，改为“始终播放”后背景流动。
 
 ### 文档
