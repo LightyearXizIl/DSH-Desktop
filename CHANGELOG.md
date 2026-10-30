@@ -28,7 +28,10 @@
 
 - 插件市场：`test/market-baseline.test.ts` 新增已装 1.65.1 和 1.71.0 时都会升级到基线的用例，“高于基线不重装、不降级”等用例的版本移到 1.72.0；`test/plugin-upgrade.test.ts` 中“部分安装的较新版本”同样移到 1.72.0；`test/market-installer.test.js` 钉住推荐版本 `^1.71.1`，并要求它与 `VERIFIED_MARKET_BASELINE` 一致；`test/desktop-host-plugin-settings.test.js` 把“市场服务出现就隐藏设置分区”的旧契约改为“侧栏入口打开时才隐藏”，并新增三种保留设置分区的情况（侧栏入口关闭、旧版市场返回 404、读取失败），以及“市场服务消失后不再隐藏”；`test/runtime.test.ts` 新增“同一端口、不同启动令牌必须重新载入，令牌相同则保留页面”。
 - 插件市场开发版实测（独立开发 Profile）：在 Profile 中声明 dshmarket 1.65.1，原代码复现了那台电脑日志中的全部现象，包括第一次安装被拒（`installation rejected`）、重试后装上 1.65.1、后端加载，以及设置和侧栏都没有市场入口；另外还看到，应用内重启 Harness 后页面的模块图里没有 `dshmarket`。修复后重启开发版：基线第一次就从 1.65.1 升到 1.71.1，兼容性警告消失；侧栏入口未选择时，设置左栏出现“插件市场”，打开后是 v1.71.1 的完整浏览界面；点“在侧栏显示”后在应用里重启 Harness，页面自动重新载入（日志有清理旧认证 Cookie 一行），主侧栏出现“插件市场”，设置里的重复入口随之隐藏。
-- 插件市场修复后：`npm run typecheck`、`npm run build`、`git diff --check` 通过；在 PowerShell 中运行完整 `npm test` 共 2349 项，只有 2 项已登记的已知失败（`test/desktop-theme.test.ts` 的“modal caption”、`test/release.test.ts` 的下载链接）。未做安装包验收，也没有在出问题的那台电脑上验证。
+- 插件市场修复后：`npm run typecheck`、`npm run build`、`git diff --check` 通过；在 PowerShell 中运行完整 `npm test` 共 2349 项，只有 2 项已登记的已知失败（`test/desktop-theme.test.ts` 的“modal caption”、`test/release.test.ts` 的下载链接）。
+- 打包前 `node scripts/verify-target.mjs win32 x64` 与 `node scripts/probe-electron-node-runtime.mjs` 通过，本地 Electron 与锁定版本同为 43.0.0；打包门禁通过：Harness、bootstrap、原生模块、终端和 696 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换。
+- 打包版验收在 `win-unpacked` 的副本上进行，数据目录改为独立目录，不覆盖本机正式安装：首次启动导入网页版数据后进入主界面；在 Profile 中声明 dshmarket 1.65.1 后重启，基线直接装上 1.71.1（`verified active dshmarket 1.71.1`），没有出现安装被拒；设置左栏出现“插件市场”，打开是 v1.71.1 的浏览界面；“关于”显示 Desktop `0.0.6`、Harness `0.2.1-rc.4`，并有默认折叠的“v0.0.6 更新日志”卡片；应用内重启 Harness 后页面自动重新载入。
+- Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：285337981 字节，SHA-256 `6DA40B4D25AD44C6F4607503935E15B96B1DD2C9042348CEB31B0E21251E7092`；`latest.yml` 版本为 `0.0.6`，SHA-512 为 `1ja++LWDvnriSyh7d7hmjiTQ+ndomFVeSrwZ5NeGQpz7oyeTM8P9AZkvOFX2hZNhNyZHO5oo9qEhnJHlyPTDXQ==`；安装包与主程序均未签名，`app-update.yml` 不含 `publisherName`。
 
 ### 说明
 
