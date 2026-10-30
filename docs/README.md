@@ -9,7 +9,7 @@
 | 定位 | 面向 Windows 的 DeepSeek Harness 社区桌面客户端；Electron 外壳，复用 Harness 的 Agent 运行时与 Web UI，不另建运行时或业务前端 |
 | 作者 | NullPointer（GitHub [@LightyearXizIl](https://github.com/LightyearXizIl)） |
 | 仓库 | [LightyearXizIl/DSH-Desktop](https://github.com/LightyearXizIl/DSH-Desktop) |
-| 当前版本 | Desktop `0.0.4`（2026-10-29 发布）；Harness `@deepseek-ai/dsh@0.2.1-rc.4`；Electron `43.0.0` |
+| 当前版本 | Desktop `0.0.5`（2026-10-30 发布）；Harness `@deepseek-ai/dsh@0.2.1-rc.4`；Electron `43.0.0` |
 | 发布平台 | Windows x64，未签名 NSIS 安装包，发布在 GitHub Releases |
 | 许可证 | MIT（见根目录 `LICENSE`） |
 
