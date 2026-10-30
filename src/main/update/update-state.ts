@@ -1,4 +1,5 @@
 import type { UpdateStatus } from '../../shared/contracts'
+import { releaseNotesForDisplay } from '../../shared/release-notes'
 
 export type UpdateStateEvent =
   | { type: 'check'; manual: boolean; source?: UpdateStatus['source'] }
@@ -36,7 +37,8 @@ export function reduceUpdateStatus(
         ...base,
         phase: 'available',
         availableVersion: event.version,
-        releaseNotes: event.releaseNotes,
+        // Renderers only ever receive what the app shows of a release.
+        releaseNotes: releaseNotesForDisplay(event.releaseNotes),
         releaseUrl: event.releaseUrl
       }
     case 'progress':
@@ -46,7 +48,7 @@ export function reduceUpdateStatus(
         ...base,
         phase: 'downloaded',
         availableVersion: event.version,
-        releaseNotes: event.releaseNotes ?? current.releaseNotes,
+        releaseNotes: releaseNotesForDisplay(event.releaseNotes) ?? current.releaseNotes,
         releaseUrl: event.releaseUrl ?? current.releaseUrl
       }
     case 'not-available':

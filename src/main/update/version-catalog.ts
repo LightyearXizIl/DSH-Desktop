@@ -17,6 +17,36 @@ export function archiveFeedUrl(version: string): string {
   return `https://github.com/${UPDATE_REPOSITORY}/releases/download/v${version}/`
 }
 
+/** The GitHub Release page of one version. */
+export function releasePageUrl(version: string): string {
+  return `https://github.com/${UPDATE_REPOSITORY}/releases/tag/v${encodeURIComponent(version)}`
+}
+
+/**
+ * Read the published notes (the GitHub Release body) of one version.
+ * @returns the raw body, or undefined when the version has no Release.
+ */
+export async function fetchReleaseBody(
+  version: string,
+  fetchImpl: typeof fetch = globalThis.fetch
+): Promise<unknown> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), INDEX_TIMEOUT_MS)
+  try {
+    const response = await fetchImpl(
+      `https://api.github.com/repos/${UPDATE_REPOSITORY}/releases/tags/v${encodeURIComponent(version)}`,
+      { signal: controller.signal, headers: { accept: 'application/vnd.github+json' } }
+    )
+    // A development or unpublished build has no Release; that is not a failure.
+    if (response.status === 404) return undefined
+    if (!response.ok) throw new Error(`Release notes request failed: ${response.status}`)
+    const record: unknown = await response.json()
+    return typeof record === 'object' && record !== null ? (record as { body?: unknown }).body : undefined
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 /** Split "1.2.3-rc.1" into ([1,2,3], "rc.1"). Non-numeric segments read as 0. */
 function splitVersion(value: string): { nums: number[]; pre: string } {
   const [core = '', ...preParts] = value.trim().split('-')

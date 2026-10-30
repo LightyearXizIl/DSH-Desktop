@@ -45,6 +45,9 @@ Electron userData/
 │   ├── settings.yaml            Harness-backed settings
 │   └── plugins and package data
 ├── bin/                         Cached desktop helper binaries
+├── desktop-service/             Crash-report outbox, and release-notes.json:
+│                                the About page's offline copy of the running
+│                                version's notes (updates and fixes only)
 └── update-skip.json             Remembered update choice, when present
 
 Electron logs/
@@ -104,7 +107,11 @@ The public tunnel is optional and forwards only the paired mobile surface; it do
 
 Installed builds use `electron-updater`. The app checks shortly after startup, every six hours, and after a long system resume. A newly available version is offered before download. Download begins only after user consent, and installation begins only when the user chooses to restart and install. Users can skip one version without suppressing later releases.
 
-The update source is the public GitHub Releases API of `LightyearXizIl/DSH-Desktop` (`src/main/update/version-catalog.ts`). The client picks the newest non-draft release whose assets include the platform metadata (`latest.yml` on Windows), points the feed at that release's download directory, and shows the release body as the changelog. A stable installation ignores prereleases. Installing an older version from the history list temporarily enables downgrade for that one check and download.
+The update source is the public GitHub Releases API of `LightyearXizIl/DSH-Desktop` (`src/main/update/version-catalog.ts`). The client picks the newest non-draft release whose assets include the platform metadata (`latest.yml` on Windows), points the feed at that release's download directory, and offers that release's notes with the update. A stable installation ignores prereleases. Installing an older version from the history list temporarily enables downgrade for that one check and download.
+
+Release notes reach the app filtered. `src/shared/release-notes.ts` keeps a release body's title line and its `## 更新内容` / `## 问题修复` sections (English equivalents too) and drops the rest — upgrade notes, known limitations, verification records, diagnostic paths — which stay on the GitHub Release page. The main process applies it before any renderer sees the text: in `reduceUpdateStatus` for every offered or downloaded update, and in `src/main/update/current-release-notes.ts` for the running version. The latter serves `desktop:release-notes` (preload `getReleaseNotes`) for Settings → About: it reads the GitHub Release by tag at most once per session, keeps a filtered copy in `<userData>/desktop-service/release-notes.json` and falls back to that copy offline; an unpublished development version has no notes rather than an error.
+
+Two renderers lay the notes out. The preload update window parses the Markdown subset release notes use (headings, nested lists, paragraphs, bold, inline code) with the same shared module and builds the result from text nodes only; the compact notification shows the release's theme from the title line. The About section in `dsh-desktop-client-ui` shows a persistent, collapsed-by-default card for the running version — plus one for a newer version found by "Check for updates" — rendered with the upstream `MarkdownText` primitive. The release-notes section titles are therefore a contract with `RELEASE_NOTES.md`.
 
 Windows installers are unsigned personal builds. `package.json` sets `win.verifyUpdateCodeSignature: false` and declares no `signtoolOptions.publisherName`, so packaged builds write no publisher into `resources/app-update.yml` and electron-updater skips the Authenticode check. Update integrity relies on the `sha512` in `latest.yml` and the HTTPS GitHub download.
 

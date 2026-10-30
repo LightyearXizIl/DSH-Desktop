@@ -11,6 +11,14 @@ import {
   rollbackEmptyMessage,
   type UpdateLocale
 } from './update-view'
+import {
+  parseReleaseNotes,
+  releaseNotesSummary,
+  splitReleaseHeading,
+  type ReleaseBlock,
+  type ReleaseInline,
+  type ReleaseListItem
+} from '../shared/release-notes'
 import brandMark from '../../build/brand-mark.svg?raw'
 const ROOT_ID = 'dsh-desktop-update-root'
 let locale: UpdateLocale = 'en'
@@ -125,7 +133,9 @@ function render(): void {
   host.style.right = centered ? 'auto' : '20px'
   host.style.bottom = centered ? 'auto' : '20px'
   host.style.transform = centered ? 'translate(-50%, -50%)' : 'none'
-  host.style.width = centered ? 'min(340px,calc(100vw - 40px))' : 'min(520px,calc(100vw - 40px))'
+  // One width for every centered phase, so the dialog does not jump when the
+  // laid-out release notes give way to download progress.
+  host.style.width = centered ? 'min(380px,calc(100vw - 40px))' : 'min(520px,calc(100vw - 40px))'
   const card = element('aside', centered ? 'card centered' : 'card notification')
   card.setAttribute('role', centered ? 'dialog' : 'status')
   if (centered) card.setAttribute('aria-modal', 'false')
@@ -148,15 +158,22 @@ function render(): void {
   // The failure's own words beat ours, when it has any.
   const description = element('p', 'description')
   description.textContent =
-    status.phase === 'error' && status.message ? status.message : status.phase === 'up-to-date' ? (locale === 'zh' ? '当前已是最新版本' : 'You’re on the latest version') : !centered && status.phase === 'available' ? (status.releaseNotes?.split('\n').find(line => line.trim()) || headline.description) : headline.description
+    status.phase === 'error' && status.message ? status.message : status.phase === 'up-to-date' ? (locale === 'zh' ? '当前已是最新版本' : 'You’re on the latest version') : !centered && status.phase === 'available' ? (releaseNotesSummary(status.releaseNotes) || headline.description) : headline.description
   if (description.textContent) body.appendChild(description)
 
   if (centered && status.phase === 'available') {
     const label = element('p', 'notes-label')
     label.textContent = locale === 'zh' ? '更新日志' : 'What’s new'
-    const notes = element('p', 'release-notes')
-    notes.textContent = status.releaseNotes || (locale === 'zh' ? '此版本暂无更新日志。' : 'No release notes for this version.')
-    body.append(label, notes)
+    body.appendChild(label)
+    // The title line repeats the version the dialog already names; its theme
+    // reads as the notes' lead, and the sections follow as laid-out text.
+    const { theme, body: notesBody } = splitReleaseHeading(status.releaseNotes)
+    if (theme) {
+      const lead = element('p', 'notes-theme')
+      lead.textContent = theme
+      body.appendChild(lead)
+    }
+    body.appendChild(releaseNotesElement(notesBody))
   }
   if (!centered && status.phase === 'available') {
     const details = button(locale === 'zh' ? '查看详情' : 'View details', 'details')
@@ -494,6 +511,56 @@ function showActionError(error: unknown): void {
   applyStatus({ ...currentStatus, phase: 'error', message: error instanceof Error ? error.message : (locale === 'zh' ? '操作失败，请重试。' : 'The update action failed. Please try again.') })
 }
 
+/** Inline release text: bold and code become elements, everything is text content. */
+function appendInline(parent: HTMLElement, content: ReleaseInline[]): void {
+  for (const entry of content) {
+    if (entry.kind === 'text') {
+      parent.appendChild(document.createTextNode(entry.text))
+      continue
+    }
+    const node = document.createElement(entry.kind === 'strong' ? 'strong' : 'code')
+    node.textContent = entry.text
+    parent.appendChild(node)
+  }
+}
+
+function releaseList(items: ReleaseListItem[]): HTMLUListElement {
+  const list = document.createElement('ul')
+  for (const item of items) {
+    const entry = document.createElement('li')
+    appendInline(entry, item.content)
+    if (item.children.length > 0) entry.appendChild(releaseList(item.children))
+    list.appendChild(entry)
+  }
+  return list
+}
+
+function releaseBlock(block: ReleaseBlock): HTMLElement {
+  if (block.kind === 'list') return releaseList(block.items)
+  const node = block.kind === 'heading'
+    ? element(block.level === 2 ? 'h3' : 'h4', block.level === 2 ? 'notes-section' : 'notes-subsection')
+    : document.createElement('p')
+  appendInline(node, block.content)
+  return node
+}
+
+/**
+ * Release notes laid out from the Markdown subset they use. Built from text
+ * nodes only — release text is never assigned as HTML.
+ */
+function releaseNotesElement(markdown: string): HTMLDivElement {
+  const box = element('div', 'release-notes')
+  const blocks = parseReleaseNotes(markdown)
+  if (blocks.length === 0) {
+    const empty = document.createElement('p')
+    empty.textContent = locale === 'zh' ? '此版本暂无更新日志。' : 'No release notes for this version.'
+    box.appendChild(empty)
+    return box
+  }
+  for (const block of blocks) box.appendChild(releaseBlock(block))
+  return box
+}
+
 function element<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   className: string
@@ -558,8 +625,23 @@ const styles = `
   .title,.about-title { margin:16px 0 8px; font-size:18px; line-height:26px; font-weight:600; }
   .notification .title { margin:0; font-size:14px; line-height:20px; }
   .description,.about-line,.release-notes,.notes-label,.current-version { margin:8px 0; font-size:13px; line-height:20px; color:var(--dsw-alias-label-secondary,#666b73); }
-  .release-notes { white-space:pre-wrap; max-height:180px; overflow:auto; }
   .notes-label { margin-top:24px; }
+  /* Release notes match Settings → About: sections with an accent bar, each
+     item leading with its bold name in the primary label colour, prose a step
+     quieter, list nesting indented. */
+  .notes-theme { margin:4px 0 0; font-size:13px; font-weight:500; line-height:20px; color:var(--dsw-alias-label-primary,#202124); }
+  .release-notes { max-height:260px; overflow:auto; margin:6px 0 0; padding-right:6px; font-size:12.5px; line-height:20px; scrollbar-width:thin; scrollbar-color:var(--dsw-alias-border-l3,rgba(0,0,0,.22)) transparent; }
+  .release-notes .notes-section { display:flex; align-items:center; gap:7px; margin:12px 0 6px; font-size:13px; font-weight:600; line-height:20px; color:var(--dsw-alias-label-primary,#202124); }
+  .release-notes .notes-section:first-child { margin-top:6px; }
+  .release-notes .notes-section::before { content:''; flex:none; width:3px; height:12px; border-radius:2px; background:var(--dsw-alias-state-business-primary,#3d7eff); }
+  .release-notes .notes-subsection { margin:10px 0 4px; font-size:12px; font-weight:600; line-height:18px; }
+  .release-notes ul { margin:0; padding-left:16px; }
+  .release-notes li { margin:5px 0; }
+  .release-notes li::marker { color:var(--dsw-alias-label-tertiary,#9aa0a6); }
+  .release-notes li ul { margin-top:3px; }
+  .release-notes p { margin:6px 0; }
+  .release-notes strong { font-weight:600; color:var(--dsw-alias-label-primary,#202124); }
+  .release-notes code { padding:0 4px; border-radius:4px; background:var(--dsw-alias-bg-layer-2,#f0f2f5); font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:11.5px; }
   .current-version { text-align:center; font-size:12px; margin:14px 0 0; }
   button { appearance:none; border:0; font:inherit; cursor:pointer; border-radius:6px; min-height:32px; }
   button:focus-visible { outline:2px solid var(--dsw-alias-label-primary,#202124); outline-offset:3px; }
@@ -600,6 +682,8 @@ const styles = `
     .card,.about-card,.version-picker-container { color:var(--dsw-alias-label-primary,#f3f4f6); }
     .description,.about-line,.release-notes,.notes-label,.current-version,.secondary,.version-switch,.version-group-title,.version-status-text { color:var(--dsw-alias-label-secondary,#a9adb5); }
     .tooltip { background:var(--dsw-alias-bg-layer-2,#34363b); color:var(--dsw-alias-label-primary,#f3f4f6); }
+    .notes-theme,.release-notes .notes-section,.release-notes strong { color:var(--dsw-alias-label-primary,#f3f4f6); }
+    .release-notes code { background:var(--dsw-alias-bg-layer-2,#34363b); }
     .primary { background:var(--dsw-alias-button-primary-fill,#f9fafb); color:var(--dsw-alias-label-primary-inverted,#191b1f); }
     .primary:hover:not(:disabled) { background:var(--dsw-alias-button-primary-hover,#e6e8eb); }
     button:focus-visible { outline-color:var(--dsw-alias-label-primary,#f3f4f6); }

@@ -162,7 +162,8 @@ import {
   startUpdateManager,
   stopUpdateManager
 } from './update/update-manager'
-import type { RuntimeSnapshot } from '../shared/contracts'
+import { createCurrentReleaseNotes } from './update/current-release-notes'
+import type { CurrentReleaseNotes, RuntimeSnapshot } from '../shared/contracts'
 import { resolveHarnessLocale } from './application-locale'
 import { installContextMenu } from './context-menu'
 import {
@@ -1823,7 +1824,20 @@ function registerHarnessHandlers(): void {
       locale
     }
   })
+
+  ipcMain.removeHandler('desktop:release-notes')
+  ipcMain.handle('desktop:release-notes', (event) => {
+    assertTrustedMainWindowEvent(event)
+    readCurrentReleaseNotes ??= createCurrentReleaseNotes({
+      version: app.getVersion(),
+      cacheFile: join(app.getPath('userData'), 'desktop-service', 'release-notes.json')
+    })
+    return readCurrentReleaseNotes()
+  })
 }
+
+/** Notes of the running version for the About page, read lazily on first request. */
+let readCurrentReleaseNotes: (() => Promise<CurrentReleaseNotes>) | undefined
 
 function assertTrustedMainWindowEvent(event: IpcMainInvokeEvent): void {
   if (

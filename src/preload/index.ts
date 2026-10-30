@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { UpdateLocale } from './update-view'
-import type { UpdateStatus } from '../shared/contracts'
+import type { CurrentReleaseNotes, UpdateStatus } from '../shared/contracts'
 import { setupDesktopStoragePersistence } from './desktop-storage'
 import { setupDesktopNotificationBridge } from './desktop-notification'
 import { mountDesktopUpdateUi } from './desktop-update-ui'
@@ -550,6 +550,7 @@ contextBridge.exposeInMainWorld(
     openExternal: (url: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('harness:open-external', url),
     getAboutInfo: (): Promise<{ desktopVersion: string; harnessVersion: string; locale: 'en' | 'zh' }> =>
       ipcRenderer.invoke('desktop:about-info'),
+    getReleaseNotes: (): Promise<CurrentReleaseNotes> => ipcRenderer.invoke('desktop:release-notes'),
     checkForUpdates: (): Promise<UpdateStatus> => ipcRenderer.invoke('updates:check')
   })
 )

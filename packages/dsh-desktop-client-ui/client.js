@@ -9,6 +9,8 @@ window.__ModuleLoader__.load({
     const {
       BrandWordmark,
       FishLogo,
+      MarkdownDelegateProvider,
+      MarkdownText,
       MenuItemButton,
       Modal
     } = require('@deepseek-ai/dsh-client-ui-primitives')
@@ -43,6 +45,14 @@ window.__ModuleLoader__.load({
       updateLogTitle: 'v{version} 更新日志',
       viewRelease: '查看 GitHub Release',
       noReleaseNotes: '这个版本没有填写更新说明。',
+      currentTag: '当前版本',
+      newTag: '新版本',
+      notesLoading: '正在读取更新日志…',
+      notesFailed: '读取更新日志失败：{message}',
+      notesRetry: '重试',
+      copyCode: '复制',
+      copiedCode: '已复制',
+      footnotes: '脚注',
       appreciate: '赞赏',
       appreciateTitle: '支持 DSH Desktop',
       appreciateIntro: '如果这个项目对你有帮助，可以扫码赞赏。',
@@ -76,6 +86,14 @@ window.__ModuleLoader__.load({
       updateLogTitle: 'What’s new in v{version}',
       viewRelease: 'View GitHub Release',
       noReleaseNotes: 'This release has no notes.',
+      currentTag: 'Current',
+      newTag: 'New',
+      notesLoading: 'Loading release notes…',
+      notesFailed: 'Could not load release notes: {message}',
+      notesRetry: 'Try again',
+      copyCode: 'Copy',
+      copiedCode: 'Copied',
+      footnotes: 'Footnotes',
       appreciate: 'Support',
       appreciateTitle: 'Support DSH Desktop',
       appreciateIntro: 'If this project helps you, you can support it by scanning a code.',
@@ -184,10 +202,174 @@ window.__ModuleLoader__.load({
       }, unread ? (chinese ? '标为已读' : 'Mark as read') : (chinese ? '标为未读' : 'Mark as unread'))
     }
 
+    /**
+     * Split the leading "# DSH Desktop v0.0.5 — Theme" heading off release
+     * notes: the card title already names the version, so the heading's theme
+     * becomes the card's subtitle and the body starts at the first section.
+     */
+    function splitReleaseHeading(notes) {
+      const text = typeof notes === 'string' ? notes.trim() : ''
+      const match = /^#[ \t]+([^\n]+)\n?/.exec(text)
+      if (!match) return { theme: '', body: text }
+      const heading = match[1].trim()
+      const dash = heading.search(/\s[\u2014\u2013-]\s/)
+      return {
+        theme: dash >= 0 ? heading.slice(dash + 3).trim() : heading,
+        body: text.slice(match[0].length).trim()
+      }
+    }
+
+    /** Release sections the About page shows; the rest stays on the GitHub Release. */
+    const DISPLAY_SECTIONS = /^(?:更新内容|新增功能|新功能|问题修复|修复|what[\u2019']?s new|new features?|fixes|bug fixes)$/i
+
+    /**
+     * What the About page shows of a release: only its "what's new" and
+     * "fixes" sections. Upgrade notes, known limitations, verification details
+     * and diagnostic paths are for the GitHub Release page, not the app. Notes
+     * written without sections have nothing to tell apart and show whole.
+     */
+    function releaseNotesForDisplay(notes) {
+      const { theme, body } = splitReleaseHeading(notes)
+      const lines = body.split('\n')
+      if (!lines.some((line) => /^##[ \t]+/.test(line))) return { theme, body }
+      const kept = []
+      let keep = false
+      for (const line of lines) {
+        const heading = /^##[ \t]+(.+?)[ \t]*$/.exec(line)
+        if (heading) keep = DISPLAY_SECTIONS.test(heading[1].replace(/[*_`#]/g, '').trim())
+        if (keep) kept.push(line)
+      }
+      return { theme, body: kept.join('\n').trim() }
+    }
+
+    function NotesChevron() {
+      return React.createElement(
+        'svg',
+        { className: 'dshDesktopNotesChevron', viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
+        React.createElement('path', {
+          d: 'M6 3.5 10.5 8 6 12.5',
+          stroke: 'currentColor',
+          strokeWidth: 1.6,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round'
+        })
+      )
+    }
+
+    /**
+     * One version's release notes as a collapsible card, collapsed by default.
+     * Notes come either inline (`notes`, from an update check) or from `load`,
+     * which runs once when the card mounts so the collapsed header can show
+     * the release's theme; a failed read only surfaces once the card is open.
+     */
+    function ReleaseNotesCard({ t, version, tag, tone, notes, url, load, openExternal }) {
+      const [open, setOpen] = React.useState(false)
+      const [state, setState] = React.useState(
+        load ? { phase: 'loading' } : { phase: 'ready', notes: notes || '', url: url || '' }
+      )
+      const alive = React.useRef(true)
+
+      const read = () => {
+        if (!load) return
+        setState({ phase: 'loading' })
+        void Promise.resolve()
+          .then(() => load())
+          .then((value) => {
+            if (alive.current) setState({ phase: 'ready', notes: value?.notes || '', url: value?.url || '' })
+          })
+          .catch((error) => {
+            if (!alive.current) return
+            // Read the message without instanceof: an IPC rejection can carry an
+            // Error from another realm.
+            const message = error && typeof error.message === 'string' ? error.message : ''
+            setState({ phase: 'error', message: message || t('checkFailedUnknown') })
+          })
+      }
+
+      React.useEffect(() => {
+        alive.current = true
+        read()
+        return () => {
+          alive.current = false
+        }
+      }, [])
+
+      const { theme, body } = releaseNotesForDisplay(state.notes)
+      const releaseUrl = state.url || url || ''
+      const bodyId = `dsh-desktop-notes-${String(tone || 'release').replace(/[^\w-]/g, '')}-${String(version).replace(/[^\w-]/g, '-')}`
+      const labels = { code: { copyLabel: t('copyCode'), copiedLabel: t('copiedCode') }, footnotes: t('footnotes') }
+      const openLink = (href) => {
+        void openExternal(href).catch((error) => {
+          console.error('[about] unable to open link', error)
+        })
+      }
+
+      let content
+      if (state.phase === 'loading') {
+        content = React.createElement('p', { className: 'dshDesktopNotesStatus' }, t('notesLoading'))
+      } else if (state.phase === 'error') {
+        content = React.createElement(
+          'div',
+          { className: 'dshDesktopNotesStatus', role: 'alert' },
+          React.createElement('span', { className: 'dshDesktopNotesError' }, t('notesFailed', { message: state.message })),
+          React.createElement('button', { type: 'button', className: 'dshDesktopAboutLink', onClick: read }, t('notesRetry'))
+        )
+      } else if (!body) {
+        content = React.createElement('p', { className: 'dshDesktopNotesStatus' }, t('noReleaseNotes'))
+      } else if (MarkdownText && MarkdownDelegateProvider) {
+        content = React.createElement(
+          MarkdownDelegateProvider,
+          { openExternalLink: openLink },
+          React.createElement(MarkdownText, { text: body, variant: 'compact', labels })
+        )
+      } else {
+        // Older primitives without the Markdown renderer: plain text, never HTML.
+        content = React.createElement('pre', { className: 'dshDesktopAboutReleaseNotes' }, body)
+      }
+
+      return React.createElement(
+        'section',
+        { className: 'dshDesktopNotes', 'data-open': open ? 'true' : 'false' },
+        React.createElement(
+          'div',
+          { className: 'dshDesktopNotesHead' },
+          React.createElement(
+            'button',
+            {
+              type: 'button',
+              className: 'dshDesktopNotesToggle',
+              'aria-expanded': open,
+              'aria-controls': bodyId,
+              onClick: () => setOpen(!open)
+            },
+            React.createElement(NotesChevron),
+            React.createElement('span', { className: 'dshDesktopNotesTitle' }, t('updateLogTitle', { version })),
+            tag ? React.createElement('span', { className: 'dshDesktopNotesTag', 'data-tone': tone || 'current' }, tag) : null,
+            theme ? React.createElement('span', { className: 'dshDesktopNotesTheme' }, theme) : null
+          ),
+          releaseUrl
+            ? React.createElement('button', {
+                type: 'button',
+                className: 'dshDesktopAboutLink',
+                onClick: () => openLink(releaseUrl)
+              }, t('viewRelease'))
+            : null
+        ),
+        open
+          ? React.createElement(
+              'div',
+              { id: bodyId, className: 'dshDesktopNotesBody', 'aria-busy': state.phase === 'loading' },
+              content
+            )
+          : null
+      )
+    }
+
     function AboutSection(props) {
       const {
         t,
         readInfo,
+        readReleaseNotes,
         checkUpdates,
         openExternal,
         assetUrl
@@ -356,46 +538,37 @@ window.__ModuleLoader__.load({
             type: 'button',
             className: 'dshDesktopAboutButton',
             onClick: () => setSupportOpen(true)
-          }, t('appreciate'))
+          }, t('appreciate')),
+          // Beside the buttons rather than on its own line: an empty status row
+          // left a gap twice the page's card spacing above the release notes.
+          React.createElement('p', {
+            className: 'dshDesktopAboutNotice',
+            role: 'status',
+            'aria-live': 'polite'
+          }, notice)
         ),
-        React.createElement('p', {
-          className: 'dshDesktopAboutNotice',
-          role: 'status',
-          'aria-live': 'polite'
-        }, notice),
         updateResult
-          ? React.createElement(
-              'section',
-              { className: 'dshDesktopAboutUpdate', 'aria-live': 'polite' },
-              React.createElement(
-                'div',
-                { className: 'dshDesktopAboutUpdateHead' },
-                React.createElement(
-                  'strong',
-                  null,
-                  t('updateLogTitle', { version: updateResult.version })
-                ),
-                updateResult.url
-                  ? React.createElement('button', {
-                      type: 'button',
-                      className: 'dshDesktopAboutLink',
-                      onClick: () => {
-                        void openExternal(updateResult.url).catch((error) => {
-                          console.error('[about] unable to open release page', error)
-                        })
-                      }
-                    }, t('viewRelease'))
-                  : null
-              ),
-              React.createElement(
-                'pre',
-                {
-                  className: 'dshDesktopAboutReleaseNotes',
-                  'aria-busy': updateResult.notesLoading
-                },
-                updateResult.notes || t('noReleaseNotes')
-              )
-            )
+          ? React.createElement(ReleaseNotesCard, {
+              key: `available-${updateResult.version}`,
+              t,
+              version: updateResult.version,
+              tag: t('newTag'),
+              tone: 'new',
+              notes: updateResult.notes,
+              url: updateResult.url,
+              openExternal
+            })
+          : null,
+        info && typeof readReleaseNotes === 'function'
+          ? React.createElement(ReleaseNotesCard, {
+              key: `current-${info.desktopVersion}`,
+              t,
+              version: info.desktopVersion,
+              tag: t('currentTag'),
+              tone: 'current',
+              load: readReleaseNotes,
+              openExternal
+            })
           : null,
         React.createElement(
           Modal,
@@ -507,21 +680,56 @@ window.__ModuleLoader__.load({
           .dshDesktopAboutCode { max-width:60%; padding:1px 6px; border-radius:5px; background:var(--dsw-alias-bg-layer-2); color:var(--dsw-alias-label-secondary); font-family:var(--ds-font-family-code,monospace); font-size:12px; overflow-wrap:anywhere; }
           .dshDesktopAboutMuted { color:var(--dsw-alias-label-tertiary); }
           .dshDesktopAboutError { margin:8px 0 0; color:var(--dsw-alias-state-error-primary); font-size:12px; line-height:18px; }
-          .dshDesktopAboutActions { display:flex; flex-wrap:wrap; gap:10px; }
+          .dshDesktopAboutActions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
           .dshDesktopAboutButton { box-sizing:border-box; height:36px; padding:0 16px; border:1px solid var(--dsw-alias-border-l3); border-radius:18px; background:transparent; color:var(--dsw-alias-label-primary); font:inherit; font-size:13px; font-weight:500; cursor:pointer; }
           .dshDesktopAboutButton:hover:not(:disabled) { background:var(--dsw-alias-interactive-bg-hover); }
           .dshDesktopAboutButton:disabled { cursor:default; opacity:.55; }
           .dshDesktopAboutButton:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:2px; }
           .dshDesktopAboutPrimary { border-color:transparent; background:var(--dsw-alias-button-primary-fill); color:var(--dsw-alias-label-primary-foreground); }
           .dshDesktopAboutPrimary:hover:not(:disabled) { background:var(--dsw-alias-button-primary-hover); }
-          .dshDesktopAboutNotice { min-height:18px; margin:0; color:var(--dsw-alias-label-tertiary); font-size:12px; line-height:18px; }
-          .dshDesktopAboutUpdate { box-sizing:border-box; padding:14px 16px; border:1px solid var(--dsw-alias-border-l2); border-radius:14px; background:var(--dsw-alias-bg-layer-1); }
-          .dshDesktopAboutUpdateHead { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:8px; }
-          .dshDesktopAboutUpdateHead strong { font-size:13px; line-height:20px; }
+          .dshDesktopAboutNotice { flex:1 1 180px; min-width:0; margin:0 0 0 4px; color:var(--dsw-alias-label-tertiary); font-size:12px; line-height:18px; }
           .dshDesktopAboutLink { padding:0; border:0; background:transparent; color:var(--dsw-alias-state-business-primary); font:inherit; font-size:12px; cursor:pointer; }
           .dshDesktopAboutLink:hover { text-decoration:underline; text-underline-offset:3px; }
           .dshDesktopAboutLink:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:2px; }
           .dshDesktopAboutReleaseNotes { box-sizing:border-box; max-height:260px; margin:0; padding:12px; overflow:auto; border-radius:10px; background:var(--dsw-alias-bg-layer-2); color:var(--dsw-alias-label-secondary); font-family:inherit; font-size:12px; line-height:19px; white-space:pre-wrap; overflow-wrap:anywhere; }
+          .dshDesktopNotes { box-sizing:border-box; border:1px solid var(--dsw-alias-border-l2); border-radius:14px; background:var(--dsw-alias-bg-layer-1); overflow:hidden; }
+          .dshDesktopNotesHead { display:flex; align-items:center; gap:12px; min-height:46px; padding:0 16px 0 6px; }
+          .dshDesktopNotesToggle { display:flex; flex:1; align-items:center; gap:8px; min-width:0; height:46px; padding:0 8px; border:0; border-radius:10px; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+          .dshDesktopNotesToggle:focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:-4px; }
+          .dshDesktopNotesChevron { flex:none; width:14px; height:14px; color:var(--dsw-alias-label-tertiary); transition:transform .18s ease, color .18s ease; }
+          .dshDesktopNotesToggle:hover .dshDesktopNotesChevron { color:var(--dsw-alias-label-secondary); }
+          .dshDesktopNotes[data-open='true'] .dshDesktopNotesChevron { transform:rotate(90deg); }
+          .dshDesktopNotesTitle { flex:none; font-size:13px; font-weight:600; line-height:20px; }
+          .dshDesktopNotesTag { flex:none; padding:0 7px; border-radius:999px; background:var(--dsw-alias-bg-layer-2); color:var(--dsw-alias-label-secondary); font-size:11px; font-weight:500; line-height:18px; }
+          .dshDesktopNotesTag[data-tone='new'] { background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 14%,transparent); color:var(--dsw-alias-state-business-primary); }
+          .dshDesktopNotesTheme { min-width:0; overflow:hidden; color:var(--dsw-alias-label-tertiary); font-size:12px; line-height:18px; text-overflow:ellipsis; white-space:nowrap; }
+          .dshDesktopNotesBody { box-sizing:border-box; max-height:380px; padding:2px 22px 18px; overflow:auto; border-top:1px solid var(--dsw-alias-border-l2); animation:dshDesktopNotesIn .18s ease; }
+          @keyframes dshDesktopNotesIn { from { opacity:0; transform:translateY(-4px); } }
+          .dshDesktopNotesStatus { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:14px 0 0; color:var(--dsw-alias-label-tertiary); font-size:12px; line-height:18px; }
+          .dshDesktopNotesError { color:var(--dsw-alias-state-error-primary); }
+          /* Release notes typography: sections get an accent bar, each item leads
+             with its bold name in the primary label colour, and the prose sits a
+             step quieter with roomy line height. Scoped under the About section so
+             conversation Markdown keeps its own look. */
+          .dshDesktopAbout .dshDesktopNotesBody h1,
+          .dshDesktopAbout .dshDesktopNotesBody h2 { display:flex; align-items:center; gap:8px; margin:18px 0 8px; color:var(--dsw-alias-label-primary); font-size:13px; font-weight:600; line-height:20px; }
+          .dshDesktopAbout .dshDesktopNotesBody h1::before,
+          .dshDesktopAbout .dshDesktopNotesBody h2::before { content:''; flex:none; width:3px; height:13px; border-radius:2px; background:var(--dsw-alias-state-business-primary); }
+          .dshDesktopAbout .dshDesktopNotesBody h3 { margin:14px 0 6px; color:var(--dsw-alias-label-secondary); font-size:12px; font-weight:600; line-height:18px; }
+          .dshDesktopAbout .dshDesktopNotesBody ul,
+          .dshDesktopAbout .dshDesktopNotesBody ol { margin:0; padding-left:18px; }
+          .dshDesktopAbout .dshDesktopNotesBody li { margin:7px 0; color:var(--dsw-alias-label-secondary); font-size:12.5px; line-height:21px; }
+          .dshDesktopAbout .dshDesktopNotesBody li::marker { color:var(--dsw-alias-label-tertiary); }
+          .dshDesktopAbout .dshDesktopNotesBody li li { margin:4px 0; }
+          .dshDesktopAbout .dshDesktopNotesBody li > ul { margin-top:4px; }
+          .dshDesktopAbout .dshDesktopNotesBody strong { color:var(--dsw-alias-label-primary); font-weight:600; }
+          .dshDesktopAbout .dshDesktopNotesBody p { margin:8px 0; color:var(--dsw-alias-label-secondary); font-size:12.5px; line-height:21px; }
+          .dshDesktopAbout .dshDesktopNotesBody li > p { margin:0; }
+          .dshDesktopAbout .dshDesktopNotesBody code { padding:1px 5px; border-radius:5px; background:var(--dsw-alias-bg-layer-2); color:var(--dsw-alias-label-primary); font-family:var(--ds-font-family-code,monospace); font-size:11.5px; }
+          @media (prefers-reduced-motion: reduce) {
+            .dshDesktopNotesChevron { transition:none; }
+            .dshDesktopNotesBody { animation:none; }
+          }
           .dshDesktopSupportIntro { margin:0 0 14px; color:var(--dsw-alias-label-secondary); font-size:13px; line-height:20px; }
           .dshDesktopSupportGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
           .dshDesktopSupportCode { display:flex; flex-direction:column; align-items:center; gap:8px; margin:0; padding:12px; border:1px solid var(--dsw-alias-border-l2); border-radius:14px; background:var(--dsw-alias-bg-layer-1); }
@@ -603,6 +811,9 @@ window.__ModuleLoader__.load({
           inject: () => ({
             t: aboutT,
             readInfo: () => window.dshDesktop.getAboutInfo(),
+            readReleaseNotes: typeof window.dshDesktop?.getReleaseNotes === 'function'
+              ? () => window.dshDesktop.getReleaseNotes()
+              : undefined,
             checkUpdates: () => window.dshDesktop.checkForUpdates(),
             openExternal: (url) => window.dshDesktop.openExternal(url),
             assetUrl: ABOUT_ASSET

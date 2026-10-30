@@ -244,3 +244,29 @@ describe('desktop update presentation at the IPC boundary', () => {
     expect(document.activeElement?.id).toBe('origin')
   })
 })
+
+describe('release notes in the update window', () => {
+  const notes = '# DSH Desktop v1.1.0 — 更顺的滑条\n\n## 更新内容\n\n- **滑条**：两种风格：\n  - **Codex**：胶囊\n\n## 问题修复\n\n- **导入**：报 `ENOENT` 时<b>不再</b>失败'
+
+  it('lays the notes out as sections and lists built from text, never HTML', async () => {
+    const ui = await mount(Promise.resolve(status('idle')))
+    ui.emit(status('available', { presentationId: 8, availableVersion: '1.1.0', releaseNotes: notes }))
+    const box = required(ui.shadow.querySelector('.release-notes'))
+    expect(required(ui.shadow.querySelector('.notes-theme')).textContent).toBe('更顺的滑条')
+    expect([...box.querySelectorAll('.notes-section')].map((node) => node.textContent)).toEqual(['更新内容', '问题修复'])
+    expect([...box.querySelectorAll(':scope > ul > li > strong')].map((node) => node.textContent)).toEqual(['滑条', '导入'])
+    expect(required(box.querySelector('li li strong')).textContent).toBe('Codex')
+    expect(required(box.querySelector('code')).textContent).toBe('ENOENT')
+    // No Markdown markers left over, the title line is not repeated, and markup stays text.
+    expect(box.textContent).not.toMatch(/\*\*|^#|##/u)
+    expect(box.textContent).not.toContain('DSH Desktop v1.1.0')
+    expect(box.querySelector('b')).toBeNull()
+    expect(box.textContent).toContain('<b>不再</b>')
+  })
+
+  it('summarises the release in the compact notification instead of its raw first line', async () => {
+    const ui = await mount(Promise.resolve(status('idle')))
+    ui.emit(status('available', { manual: false, source: 'runtime', availableVersion: '1.1.0', releaseNotes: notes }))
+    expect(required(ui.shadow.querySelector('.notification .description')).textContent).toBe('更顺的滑条')
+  })
+})

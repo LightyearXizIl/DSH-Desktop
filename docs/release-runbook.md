@@ -11,7 +11,7 @@
 
 ## 2. 更新日志
 
-每次发布都要在根 [`CHANGELOG.md`](../CHANGELOG.md) 新增对应版本条目，写清实际的功能、修复、验证和已知限制，不用占位文字。GitHub Release 正文与 CHANGELOG 条目保持一致，风格参考根目录的 [`RELEASE_NOTES.md`](../RELEASE_NOTES.md)。客户端会把 Release 正文原样展示在更新弹窗和“关于”页中。
+每次发布都要在根 [`CHANGELOG.md`](../CHANGELOG.md) 新增对应版本条目，写清实际的功能、修复、验证和已知限制，不用占位文字。GitHub Release 正文与 CHANGELOG 条目保持一致，风格参考根目录的 [`RELEASE_NOTES.md`](../RELEASE_NOTES.md)。客户端只显示 Release 正文的标题行和“更新内容”“问题修复”两节：主进程在更新状态和当前版本日志进入渲染进程之前就按 `src/shared/release-notes.ts` 过滤，更新弹窗和“设置 → 关于”（常驻的当前版本卡片，默认折叠）都按排版渲染；“升级说明”“说明”等其余小节只留在 GitHub Release 页面。因此这两节的二级标题要按原样书写，诊断路径、验收记录等内部信息只能放进其余小节。
 
 ## 3. 打包（仅在明确要求时执行）
 

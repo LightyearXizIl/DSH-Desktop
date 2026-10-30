@@ -56,3 +56,12 @@ export interface AvailableRelease {
   archiveUrl: string
   prerelease?: boolean
 }
+
+/** Published notes of the running Desktop version, for the About page. */
+export interface CurrentReleaseNotes {
+  version: string
+  /** Markdown body of the GitHub Release; absent when the version has none or was never published. */
+  notes?: string
+  /** The GitHub Release page for this version. */
+  url: string
+}

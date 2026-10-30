@@ -79,3 +79,15 @@ it('normalizes only supported release notes and bounds external text', () => {
   expect(normalizeReleaseNotes({ html: '<script>' })).toBeUndefined()
   expect(normalizeReleaseNotes('x'.repeat(30_000))?.length).toBe(20_000)
 })
+
+it('hands renderers only the updates and fixes sections of a release', () => {
+  const notes = '# DSH Desktop v1.1.0 — Theme\n\n## 更新内容\n\n- a\n\n## 问题修复\n\n- b\n\n## 说明\n\n- see harness.log'
+  let status = reduceUpdateStatus(initialUpdateStatus('1.0.0'), { type: 'available', version: '1.1.0', releaseNotes: notes })
+  expect(status.releaseNotes).toBe('# DSH Desktop v1.1.0 — Theme\n\n## 更新内容\n\n- a\n\n## 问题修复\n\n- b')
+  status = reduceUpdateStatus(status, { type: 'progress', percent: 50 })
+  status = reduceUpdateStatus(status, { type: 'downloaded', version: '1.1.0', releaseNotes: notes })
+  expect(status.releaseNotes).not.toContain('harness.log')
+  // Notes made only of internal sections leave nothing, and the earlier notes stay.
+  status = reduceUpdateStatus(status, { type: 'downloaded', version: '1.1.0', releaseNotes: '## 说明\n\n- internal' })
+  expect(status.releaseNotes).toContain('## 更新内容')
+})
