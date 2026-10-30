@@ -31,6 +31,10 @@
 
 - 新增 `test/desktop-theme-motion.test.ts`（系统请求与“始终播放”的判定、设置或系统开关变化时动画层重新挂载且看到新判定、减少动态的 CSS 全部受开关约束）、`test/market-installer-stalled.test.js`（已安装未加载时先显示加载中、8 秒后给出失败说明和“重启 / 移除”、移除失败的提示、本次刚安装时仍提示重启）；`test/web-home-import.test.ts` 新增没有网页版 Profile 的导入用例（修复前报 `ENOENT`）；`test/desktop-theme-legibility-layer.test.ts` 新增无来源壁纸媒体不渲染的用例（修复前空图片计算为 `inline`）；`test/desktop-host-plugin-settings.test.js` 把“启动图里有市场就不注册占位页签”的旧契约改为“市场服务出现才让位、服务消失再恢复”；`test/desktop-theme.test.ts`、`test/desktop-theme-effort-slider.test.ts` 补充 `motion` 设置与带开关的减少动态规则，滑条测试另外钉住 Claude Code 风格旋钮不缩小、与轨道共用圆角并带同色描边。
 - 放大 8 倍比对最高档时旋钮右端的两个圆角：修改前圆角外有 10 个带紫色的像素，修改后为 0。
+- `npm run typecheck`、`npm run build`、`git diff --check` 通过；完整 `npm test` 共 2326 项，3 项失败，均与本版改动无关：`test/release.test.ts` 的下载链接用例和 `test/generation-build-approval.integration.test.js`（Git Bash 的 `tar` 把 `C:` 当作远程主机，在 PowerShell 下单独运行通过）是已登记的已知失败，`test/desktop-theme.test.ts` 的“modal caption”用例在本版改动之前就失败。
+- 打包前 `node scripts/verify-target.mjs win32 x64` 通过，本地 Electron 与锁定版本同为 43.0.0。打包门禁通过：Harness、bootstrap、原生模块、终端和 696 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换。
+- 打包版验收在 `win-unpacked` 的副本上进行，数据目录改为独立目录，不覆盖本机正式安装：首次启动出现“发现网页版数据”，导入成功并进入主界面（2 个会话）；“关于”信息为 Desktop `0.0.5`、Harness `0.2.1-rc.4`；Liquid Glass 生效，空壁纸图片不渲染，窗口左右边缘无白线；“内置插件 → 插件市场”显示安装按钮；Liquid Glass 页有“播放动效”与“推理等级滑条”两组设置；选中 DeepSeek-V4.1-Flash 后模型菜单里出现推理等级滑条。
+- Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：285322102 字节，SHA-256 `1FBE7FCFB03590DC5D533068D77F7B9D00AE19281CE6BD443B9AF8F897E4BFD1`；`latest.yml` 版本为 `0.0.5`，SHA-512 为 `equzY7vcDsnVga4iLOrb0kVLTMTFMwmQR9phsfEJBNZX6j5dsI7LDC18A62gd0O0b36QaQfMXvd5NOz8drdB6g==`；安装包与主程序均未签名，`app-update.yml` 不含 `publisherName`。
 - 在全新开发 Profile 上实测：首次启动出现“发现网页版数据”，点“导入并继续”后进入工作区，会话和密钥已导入；窗口左右边缘像素与相邻像素一致，不再有白线；把市场客户端改成激活时抛错后，“插件市场”页签显示加载失败与修复按钮，恢复后由 dsh-market 自己的页签接管；用 CDP 模拟“减少动态效果”时，跟随系统下背景静止并显示提示，改为“始终播放”后背景流动。
 
 ### 文档
@@ -42,6 +46,7 @@
 - “动效”默认仍是“跟随系统”：系统关闭“动画效果”时背景照样静止，需要在设置里改为“始终播放”或打开系统的动画效果。
 - 插件市场在部分电脑上激活失败的根因尚未确认（本机的全新 Profile、含中文和空格的数据路径都能正常安装和加载）；本版只保证这种情况下仍有入口和修复办法。遇到时请提供 `%APPDATA%\dsh-desktop\harness.log` 中含 `dsh-market` 的行。
 - 本版 Windows x64 安装包为未签名的社区构建，首次运行时 SmartScreen 可能提示。
+- 未执行的验收：安装程序本身的安装与覆盖升级、全新机器安装、真实模型请求、macOS 构建。
 
 ## 0.0.4 — 2026-10-29
 
