@@ -10,6 +10,7 @@ const outputFile = path.join(output, 'client.js')
 
 const externals = [
   'react',
+  'react-dom',
   'react/jsx-runtime',
   '@deepseek-ai/cordis',
   '@deepseek-ai/dsh-client-locale/client',
@@ -52,6 +53,7 @@ if (/\brequire\(["']\.\//u.test(source)) {
 }
 for (const dependency of [
   'react',
+  'react-dom',
   '@deepseek-ai/dsh-client-ui-primitives',
 ]) {
   if (!source.includes(`__require("${dependency}")`)) {

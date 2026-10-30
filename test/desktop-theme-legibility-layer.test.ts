@@ -85,3 +85,32 @@ it('keeps the wallpaper veil off the fluid and fits floor and reading wash to wh
   expect(root.style.getPropertyValue('--dsh-desktop-glass-floor-live')).toBe('')
   expect(root.style.getPropertyValue('--dsh-desktop-text-wash-white')).toBe('')
 })
+
+it('keeps wallpaper media without a source from painting edge strips over the fluid', async () => {
+  // Chromium frames an empty <img> with a 1px silver border; over the fluid it
+  // showed as light strips down both window edges.
+  const { THEME_RUNTIME_STYLES } = (await import(source('theme-css.ts'))) as { THEME_RUNTIME_STYLES: string }
+  const style = document.createElement('style')
+  style.textContent = THEME_RUNTIME_STYLES
+  document.head.appendChild(style)
+  document.documentElement.setAttribute('data-dsh-desktop-theme', '')
+  const layer = document.createElement('div')
+  layer.setAttribute('data-dsh-desktop-wallpaper-layer', '')
+  layer.dataset.background = 'fluid'
+  layer.innerHTML = '<img data-dsh-desktop-wallpaper-img alt=""><video data-dsh-desktop-wallpaper-video></video>'
+  document.body.appendChild(layer)
+  const image = layer.querySelector('img')
+  const video = layer.querySelector('video')
+  if (image === null || video === null) throw new Error('No wallpaper media')
+  try {
+    expect(getComputedStyle(image).display).toBe('none')
+    expect(getComputedStyle(video).display).toBe('none')
+    // A chosen wallpaper still shows.
+    image.setAttribute('src', 'data:image/png;base64,iVBORw0KGgo=')
+    video.setAttribute('src', '/api/desktop-theme/wallpaper?id=demo.mp4')
+    expect(getComputedStyle(image).display).not.toBe('none')
+    expect(getComputedStyle(video).display).not.toBe('none')
+  } finally {
+    style.remove()
+  }
+})

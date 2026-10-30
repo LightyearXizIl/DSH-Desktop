@@ -216,6 +216,36 @@ describe('web home import', () => {
     expect(existsSync(join(webHome, 'profiles', 'web', 'node_modules', 'demo-plugin', 'index.js'))).toBe(true)
   })
 
+  it('imports a home that has sessions and settings but no web profile', async () => {
+    // A home left by another client: its profile lives under another name, so
+    // there is no profiles/web to copy. The import used to write
+    // pnpm-workspace.yaml into that missing directory and fail with ENOENT.
+    const webHome = await createRoot('dsh-web-home-no-profile-')
+    await mkdir(join(webHome, 'sessions', 'session-one'), { recursive: true })
+    await mkdir(join(webHome, 'storages'), { recursive: true })
+    await mkdir(join(webHome, 'profiles', 'desktop'), { recursive: true })
+    await writeFile(join(webHome, '.credentials.yaml'), 'deepseek: sk-test\n')
+    await writeFile(
+      join(webHome, 'storages', 'workspace.json'),
+      JSON.stringify({ items: [{ workspaceId: 'w1', path: '/tmp/a' }] })
+    )
+    await writeFile(join(webHome, 'profiles', 'desktop', 'package.json'), '{}')
+    const dest = join(await createRoot('dsh-desktop-no-profile-'), 'harness')
+
+    expect(await shouldOfferWebHomeImport(dest, webHome)).toBe(true)
+    expect((await previewWebHome(webHome)).plugins).toEqual([])
+    await importWebHome({ source: webHome, dest })
+
+    expect(existsSync(join(dest, '.credentials.yaml'))).toBe(true)
+    expect(existsSync(join(dest, 'sessions', 'session-one'))).toBe(true)
+    expect(existsSync(join(dest, 'storages', 'workspace.json'))).toBe(true)
+    // No half profile: Harness creates the default one on first start.
+    expect(existsSync(join(dest, 'profiles'))).toBe(false)
+    expect(existsSync(join(dest, 'profiles', 'desktop'))).toBe(false)
+    expect(existsSync(importTmpPath(dest))).toBe(false)
+    expect((await readImportDecision(dest))?.decision).toBe('imported')
+  })
+
   it('does not leave a half-written harness directory when import fails', async () => {
     const webHome = await createWebHome()
     const parent = await createRoot('dsh-desktop-fail-')

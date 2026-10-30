@@ -11,6 +11,7 @@ import { ThemeLayer, type ThemeState } from './theme.ts'
 import { DEFAULT_SETTINGS, type ThemeSettings } from './settings-model.ts'
 import { createEffects } from './effects.ts'
 import { THEME_RUNTIME_STYLES } from './theme-css.ts'
+import { createEffortSliderController } from './effort-slider.ts'
 
 export const inject = ['theme', 'slots', 'locale']
 const SETTINGS_STYLE_ID = 'dsh-desktop-theme-settings-style'
@@ -59,12 +60,16 @@ export function apply(ctx: Context): void {
   })
   const darkStore = createSnapshotStore(false)
   const errorStore = createSnapshotStore('')
+  // The slider belongs to the theme: it follows the theme switch and its own.
+  const effortSlider = createEffortSliderController(ctx)
+  ctx.effect(() => effortSlider.dispose, 'dsh-desktop-theme: effort slider')
 
   const layer = new ThemeLayer({
     ctx,
     createEffects,
     styles: THEME_RUNTIME_STYLES,
     onChange(state, dark, error) {
+      effortSlider.sync(state.settings)
       themeStore.set(state)
       darkStore.set(dark)
       if (error !== undefined) errorStore.set(error)

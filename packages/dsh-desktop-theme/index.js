@@ -41,6 +41,11 @@ export function normalizeThemeSettings(value) {
     mesh: boolean(source.mesh, true),
     spotlight: boolean(source.spotlight, true),
     press: boolean(source.press, true),
+    motion: oneOf(source.motion, ['system', 'always']),
+    effortSlider: boolean(source.effortSlider, true),
+    effortStyle: oneOf(source.effortStyle, ['codex', 'claude']),
+    effortMotion: oneOf(source.effortMotion, ['full', 'fast', 'quick']),
+    effortTicks: oneOf(source.effortTicks, ['highlight', 'dim', 'hidden']),
     wallpaperBlur: number(source.wallpaperBlur, 0, 0, 40),
     wallpaperFrost: number(source.wallpaperFrost, 0, 0, 100),
     videoBlur: number(source.videoBlur, 6, 0, 40),
@@ -231,6 +236,11 @@ function number(value, fallback, min, max) {
 
 function boolean(value, fallback) {
   return typeof value === 'boolean' ? value : fallback
+}
+
+/** The first choice is the fallback for anything outside the list. */
+function oneOf(value, choices) {
+  return choices.includes(value) ? value : choices[0]
 }
 
 function isRecord(value) {

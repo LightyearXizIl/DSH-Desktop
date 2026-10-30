@@ -20,6 +20,11 @@ interface HostSettings {
   mesh: boolean
   spotlight: boolean
   press: boolean
+  motion: 'system' | 'always'
+  effortSlider: boolean
+  effortStyle: 'codex' | 'claude'
+  effortMotion: 'fast' | 'quick' | 'full'
+  effortTicks: 'highlight' | 'dim' | 'hidden'
   wallpaperBlur: number
   wallpaperFrost: number
   videoBlur: number
@@ -136,6 +141,11 @@ describe('desktop theme host', () => {
       mesh: true,
       spotlight: false,
       press: 1,
+      motion: 'always',
+      effortSlider: false,
+      effortStyle: 'claude',
+      effortMotion: 'warp',
+      effortTicks: 'dim',
       wallpaperBlur: 60,
       wallpaperFrost: 101,
       videoBlur: -1,
@@ -156,11 +166,24 @@ describe('desktop theme host', () => {
       mesh: true,
       spotlight: false,
       press: true,
+      motion: 'always',
+      effortSlider: false,
+      effortStyle: 'claude',
+      effortMotion: 'full',
+      effortTicks: 'dim',
       wallpaperBlur: 40,
       wallpaperFrost: 100,
       videoBlur: 0,
       videoBrightness: 44,
     })
+    expect(normalizeThemeSettings({})).toMatchObject({
+      motion: 'system',
+      effortSlider: true,
+      effortStyle: 'codex',
+      effortMotion: 'full',
+      effortTicks: 'highlight',
+    })
+    expect(normalizeThemeSettings({ motion: 'reduce' }).motion).toBe('system')
     expect(normalizeThemeSettings({ wallpaper: 'javascript:alert(1)' }).wallpaper).toBe('')
     expect(normalizeThemeSettings({
       wallpaper: 'host:00000000-0000-4000-8000-000000000000.mp4',
@@ -294,6 +317,8 @@ async function loadClient(globals: Record<string, unknown>) {
   }
   return registration.factory((id) => {
     if (id === 'react') return React
+    // The effort slider portals into the official menu row.
+    if (id === 'react-dom') return { createPortal: () => null }
     if (id === '@deepseek-ai/dsh-client-ui-primitives') return primitives
     throw new Error(`Unexpected client dependency: ${id}`)
   })
@@ -557,7 +582,14 @@ describe('desktop theme client', () => {
     const registrations: Array<{ config: Record<string, unknown>; component: unknown }> = []
     const localeRegister = vi.fn()
     const effects: Array<() => void> = []
+    const sliderFibers: Array<{ deps: string[]; dispose: ReturnType<typeof vi.fn> }> = []
     const ctx = {
+      // The built-in effort slider loads as a child fiber with its own services.
+      inject: (deps: string[]) => {
+        const fiber = { deps, dispose: vi.fn(async () => undefined) }
+        sliderFibers.push(fiber)
+        return fiber
+      },
       effect: (setup: () => (() => void) | undefined) => {
         const dispose = setup()
         if (dispose) effects.push(dispose)
@@ -590,7 +622,10 @@ describe('desktop theme client', () => {
       locale: 'settings.desktopTheme',
     })
     expect(typeof registrations[0]?.config.inject).toBe('function')
+    expect(sliderFibers).toHaveLength(1)
+    expect(sliderFibers[0]?.deps).toContain('modelDirectories')
     for (const dispose of effects.reverse()) dispose()
+    expect(sliderFibers[0]?.dispose).toHaveBeenCalledTimes(1)
     expect(document.documentElement.removeAttribute).toHaveBeenCalledWith('data-dsh-desktop-theme')
     // Turning the appearance off also drops the material variables it wrote
     // onto <html>, so nothing of the theme lingers in the page.

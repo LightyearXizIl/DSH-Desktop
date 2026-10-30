@@ -21,7 +21,70 @@ The generated file is not a second source tree.
 - `whale.ts`: particle whale
 - `mesh.ts`: interactive dot mesh
 - `spotlight.ts` / `spot-core.ts`: cursor glow and hover tilt
+- `motion.ts`: the one reduced-motion answer every animated layer and the reduced-motion CSS share
+- `effort-slider.ts`: runs the reasoning-effort slider as a child fiber of the theme
+- `effort-slider/slider.js`: the slider itself, adapted from a third-party MIT plugin
+- `effort-slider/pixel-field.ts`: the Claude Code style's top-level pixel field
 - `index.ts`: client plugin entry
+
+## Reasoning effort slider
+
+The theme replaces the Effort row of the official model menu with a draggable
+slider, adapted from `Microqian2th/dsh-codex-effort-slider` (see
+`THIRD_PARTY_NOTICES.md`). It has two styles:
+
+- **Codex** (default): a pill track, a round white knob slightly taller than
+  the track, solid blue below the top level, and a violet nebula with stars
+  drifting right to left only at the top level. The Effort value and the
+  collapsed model seat follow the same two colours.
+- **Claude Code**: an unfilled rounded-rectangle track (darker than the menu
+  in dark mode) with grey level dots and a light grey rounded-square knob. At
+  the top level a fixed lattice of purple cells, running under the knob to the
+  end of the track, fills in leftward from the knob. Its timing and shape were
+  measured from a reference recording, frame by frame:
+  - cells light one by one, the front a sparse scatter, reaching ~60% of the
+    track in about a second; brightness is flat by the knob and fades out by
+    70%, and the field charges up over ~1.4 s;
+  - one soft wave, measured at 60 fps, rolls leftward over every row together:
+    a bright band about six columns at its peak and a wider dark band, every
+    ~0.41 track widths, at about 0.28 → 0.38 track widths per second (about one
+    pass per second at any one place), swinging brightness by about ±28%;
+  - a quick purple flicker dims cells now and then, faster over time;
+  - separately, star-like white halos are added on top of the purple (additive,
+    with a soft blur), each swelling, shimmering and fading over about a second;
+    they start next to the knob after ~0.6 s and the region spreads leftward.
+
+  Rates are integrated over time, so everything stays continuous while it
+  speeds up. Only the top-level value is coloured. With reduced motion the
+  field is drawn once, fully grown and still.
+
+The Off level keeps the official grey in both styles. Harness draws every
+radius as `corner-shape: superellipse(1.5)`, so the slider opts back into
+`corner-shape: round`; without it the round knob renders as a squircle.
+
+- It runs while both the theme and its own switch are on, in a child fiber that
+  injects `sessions`, `modelDirectories`, `remote` and `remote.session`. A
+  profile without those services leaves only the slider pending.
+- Style, motion and reached-dot settings live in the theme settings document and reach
+  the slider through the `dsh-desktop-theme:effort-slider-settings` window
+  event. The upstream right-click panel and its document listeners are removed.
+- `slider.js` stays plain JS so it can be compared with upstream; its header
+  lists every change. Its fill and nebula colours are a fixed effect palette
+  like the fluid backdrop; text uses `--dsw-alias-state-business-primary`, and
+  the top-level violet `#8b5cf6` was chosen for contrast in both schemes.
+- While mounted, the slider sets `data-dsh-desktop-model-menu-stack` on
+  `<html>`. The `@deepseek-ai/dsh-client-ui-model-selection` patch then opens
+  the model and effort lists inside the same menu surface above the root rows,
+  so the surface grows upward and the slider stays in view (the effort list
+  covers the model row). A second click on the open row folds it back, and the
+  open row's chevron turns up. The slider's stylesheet grows the list in from
+  the covered row's height (to a height the patch measures on mount, since
+  animations do not interpolate to `auto` here) and draws a divider above the
+  rows. Without the marker the official menu switches panes in place as
+  upstream does.
+- If the market copy of the plugin is also installed, the two share the
+  upstream single-owner guard (`window.__cesActiveSliderOwner`), so only one
+  slider renders. Uninstall the market copy to keep the theme's styling.
 
 The host half persists settings in the authenticated credential store and
 keeps video wallpapers under the Profile's `desktop-theme` directory. Every
@@ -104,6 +167,26 @@ full-bleed glass, and frosts the composer so the transcript scrolling behind it
 stays blurred. Center pages, settings sections,
 sub-tab panels and modal dialogs share an opacity-only enter animation that
 `prefers-reduced-motion` disables.
+
+## Motion
+
+The Motion setting (`motion`) defaults to `system`: the fluid, whale, mesh,
+hover tilt, page animations and the effort slider follow the system's
+`prefers-reduced-motion` request and hold still frames while it is on. Windows
+raises that request whenever "Animation effects" is off, which many machines set
+for performance, so on those machines the backdrop looked frozen. `always`
+overrules the request on purpose: the theme sets
+`data-dsh-desktop-motion-always` on the root, `prefersReducedMotion()` in
+`motion.ts` then answers false, and every reduced-motion CSS rule is scoped with
+`:not([data-dsh-desktop-motion-always])`. Changing the setting, or the system
+request while the app is open, remounts the animated layers, since each decides
+between still and animated frames when it mounts. While the system request is
+on and the setting follows it, the settings row says so and points at the
+Windows switch.
+
+Wallpaper media without a source do not render: Chromium frames an empty
+`<img>` with a 1px silver border, which over the fluid showed as light strips
+down both window edges.
 The layout patch adds the `data-dsh-desktop-center` marker used to remove the
 center divider and shadow, and makes a sidebar toggle's first commit carry
 `data-animating` so the column change always transitions; it does not override

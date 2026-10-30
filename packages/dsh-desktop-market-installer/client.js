@@ -31,6 +31,12 @@ window.__ModuleLoader__.load({
       repository: 'View dsh-market on GitHub',
       repositoryButton: 'View on GitHub',
       futureUpdates: 'After installation, dsh-market will notify you when its own updates are available.',
+      loading: 'Loading plugin market…',
+      loadFailed: 'Plugin market is installed but did not load.',
+      loadFailedHint: 'Restart Harness to try again. If it still does not appear, remove it and install it again.',
+      remove: 'Remove plugin market',
+      removing: 'Removing…',
+      removeFailed: 'Plugin market could not be removed.',
       imageTab: 'Image & video generation', builtInImageTitle: 'Built-in image & video generation', builtInImageEnabled: 'The built-in plugin is on.', builtInImageDisabled: 'The built-in plugin is off. You can use the market version.', builtInImageEnable: 'Enable built-in plugin', builtInImageConflict: 'Disable the market version of image & video generation before enabling the built-in plugin.', builtInImageFailed: 'Could not read or change the built-in plugin state.', builtInImageRetry: 'Try again', builtInImageRestart: 'Restart Harness to apply', builtInImagePending: 'The built-in plugin will load after Harness restarts.'
     }
 
@@ -54,6 +60,12 @@ window.__ModuleLoader__.load({
       repository: '在 GitHub 查看 dsh-market',
       repositoryButton: '在 GitHub 查看',
       futureUpdates: '安装后，dsh-market 会在有新版本时提示并提供升级。',
+      loading: '正在加载插件市场…',
+      loadFailed: '插件市场已安装，但没有加载成功。',
+      loadFailedHint: '可以重启 Harness 再试；仍未出现时，移除后重新安装。',
+      remove: '移除插件市场',
+      removing: '正在移除…',
+      removeFailed: '插件市场移除失败。',
       imageTab: '影像生成', builtInImageTitle: '内置影像生成', builtInImageEnabled: '内置插件已启用。', builtInImageDisabled: '内置插件已关闭，可以使用市场版本。', builtInImageEnable: '启用内置插件', builtInImageConflict: '请先停用市场版本的影像生成，再启用内置插件。', builtInImageFailed: '无法读取或更改内置插件状态。', builtInImageRetry: '重试', builtInImageRestart: '重启 Harness 使更改生效', builtInImagePending: '重启 Harness 后将加载内置插件。'
     }
 
@@ -181,10 +193,26 @@ window.__ModuleLoader__.load({
       return payload
     }
 
-    function MarketInstallerSection({ t }) {
+    /** How long a composed market may take to activate before the tab calls it failed. */
+    const MARKET_LOAD_GRACE_MS = 8_000
+
+    function MarketInstallerSection({ t, composed }) {
       const [status, setStatus] = React.useState()
       const [error, setError] = React.useState()
       const [restarting, setRestarting] = React.useState(false)
+      const [removing, setRemoving] = React.useState(false)
+      const [settled, setSettled] = React.useState(
+        () => !composed || performance.now() >= MARKET_LOAD_GRACE_MS
+      )
+
+      React.useEffect(() => {
+        if (settled) return
+        const timer = setTimeout(
+          () => setSettled(true),
+          Math.max(0, MARKET_LOAD_GRACE_MS - performance.now())
+        )
+        return () => clearTimeout(timer)
+      }, [settled])
 
       React.useEffect(() => {
         let disposed = false
@@ -267,11 +295,32 @@ window.__ModuleLoader__.load({
         }
       }
 
+      const remove = async () => {
+        setRemoving(true)
+        setError(undefined)
+        try {
+          // The desktop stops Harness, removes the market and relaunches, so
+          // a successful call reloads this page into the install state.
+          const result = await globalThis.dshDesktop.uninstallMarket()
+          if (!result?.ok) {
+            setRemoving(false)
+            setError(t('removeFailed'))
+          }
+        } catch (failure) {
+          setRemoving(false)
+          setError(failure instanceof Error ? failure.message : String(failure))
+        }
+      }
+
       const phase = status?.phase
       const busy = phase === 'installing'
       const installed = phase === 'installed'
+      // In the boot graph and on disk, yet this tab is showing: the market's
+      // client never came up (this tab hides as soon as it does).
+      const stalled = Boolean(composed) && installed && !status?.restartRequired
       const failed = phase === 'error' || phase === 'incomplete' || Boolean(error)
       const version = status?.recommendedVersion || 'latest'
+      const canRemove = typeof globalThis.dshDesktop?.uninstallMarket === 'function'
 
       return React.createElement(
         'section',
@@ -326,6 +375,34 @@ window.__ModuleLoader__.load({
                   status?.detail || t('installingHint')
                 )
               )
+            : stalled
+              ? React.createElement(
+                  'div',
+                  { className: 'dshDesktopMarketStatus', role: 'status', 'aria-live': 'polite' },
+                  React.createElement(
+                    'span',
+                    {
+                      className: settled
+                        ? 'dshDesktopMarketStatusTitle dshDesktopMarketError'
+                        : 'dshDesktopMarketStatusTitle'
+                    },
+                    settled ? t('loadFailed') : t('loading')
+                  ),
+                  settled
+                    ? React.createElement(
+                        'p',
+                        { className: 'dshDesktopMarketStatusDetail' },
+                        t('loadFailedHint')
+                      )
+                    : null,
+                  error
+                    ? React.createElement(
+                        'p',
+                        { className: 'dshDesktopMarketStatusDetail dshDesktopMarketError' },
+                        error
+                      )
+                    : null
+                )
             : installed
               ? React.createElement(
                   'div',
@@ -368,7 +445,7 @@ window.__ModuleLoader__.load({
                   {
                     type: 'button',
                     className: 'dshDesktopMarketButton dshDesktopMarketPrimary',
-                    disabled: restarting,
+                    disabled: restarting || removing,
                     onClick: () => void restart()
                   },
                   restarting ? t('restarting') : t('restart')
@@ -383,6 +460,18 @@ window.__ModuleLoader__.load({
                   },
                   failed ? t('retry') : t('install')
                 ),
+            stalled && settled && canRemove
+              ? React.createElement(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'dshDesktopMarketButton dshDesktopMarketSecondary',
+                    disabled: restarting || removing,
+                    onClick: () => void remove()
+                  },
+                  removing ? t('removing') : t('remove')
+                )
+              : null,
             React.createElement(
               'a',
               {
@@ -410,32 +499,62 @@ window.__ModuleLoader__.load({
       )
       const t = ctx.locale.bind(NS)
       registerBuiltInImageTab(ctx, t)
-      if (marketAlreadyComposed()) {
-        // The composed dsh-market owns its management card (version, updates,
-        // removal) under Settings → Built-in plugins, and the main sidebar
-        // carries its full panel. Its own Settings section would be a third
-        // door to the same place, so ask it through its published control to
-        // hide that section while this plugin is loaded.
-        ctx.inject(['market'], (scoped) => {
-          const market = scoped.market
-          if (typeof market?.setSettingsVisible !== 'function') return
-          market.setSettingsVisible(false)
-          return () => market.setSettingsVisible(true)
-        })
-        return
-      }
-      ctx.slots.inject('settings.plugins.tab', () =>
-        ctx.slots.register(
-          {
-            name: 'settings.plugins.tab',
-            id: 'market',
-            order: 60,
-            label: () => t('nav'),
-            inject: () => ({ t })
-          },
-          MarketInstallerSection
+      registerMarketTab(ctx, t)
+    }
+
+    /**
+     * The placeholder "Plugin market" tab stays until dsh-market's client is
+     * really running, which is when it provides its `market` service and
+     * registers its own tab in the same step. Being in the boot graph is not
+     * enough: a market that is declared but fails to activate registers
+     * neither, and hiding the placeholder on the graph alone left no market
+     * entry at all, not even a way to repair it.
+     */
+    function registerMarketTab(ctx, t) {
+      const composed = marketAlreadyComposed()
+      let active = true
+      let dispose
+      const show = () => {
+        if (!active || dispose !== undefined) return
+        dispose = ctx.slots.inject('settings.plugins.tab', () =>
+          ctx.slots.register(
+            {
+              name: 'settings.plugins.tab',
+              id: 'market',
+              order: 60,
+              label: () => t('nav'),
+              inject: () => ({ t, composed })
+            },
+            MarketInstallerSection
+          )
         )
-      )
+      }
+      const hide = () => {
+        dispose?.()
+        dispose = undefined
+      }
+      ctx.effect(() => {
+        show()
+        return () => {
+          active = false
+          hide()
+        }
+      }, 'dsh-desktop-market-installer: market tab')
+      // The running dsh-market owns its management card (version, updates,
+      // removal) under Settings → Built-in plugins, and the main sidebar
+      // carries its full panel. Its own Settings section would be a third
+      // door to the same place, so ask it through its published control to
+      // hide that section while this plugin is loaded.
+      ctx.inject(['market'], (scoped) => {
+        hide()
+        const market = scoped.market
+        const ownsSection = typeof market?.setSettingsVisible === 'function'
+        if (ownsSection) market.setSettingsVisible(false)
+        return () => {
+          if (ownsSection) market.setSettingsVisible(true)
+          show()
+        }
+      })
     }
 
     /**

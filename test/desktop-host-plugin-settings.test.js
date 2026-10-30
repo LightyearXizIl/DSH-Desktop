@@ -22,14 +22,24 @@ function load({ marketComposed = false, desktop } = {}) {
     inject(deps, callback) { injected.push({ deps, callback }) },
     locale: { register(_ns, copy) { dictionaries.push(copy) }, bind: () => key => key },
     slots: {
-      inject(_name, callback) { callback(); return () => {} },
-      register(options) { registrations.push(options); return () => {} }
+      inject(_name, callback) {
+        const before = registrations.length
+        callback()
+        const added = registrations.slice(before)
+        return () => { for (const entry of added) entry.live = false }
+      },
+      register(options, component) {
+        registrations.push({ ...options, component, live: true })
+        return () => {}
+      }
     }
   })
   return { registrations, dictionaries, injected }
 }
 
-const tabs = registrations => registrations.filter(entry => entry.name === 'settings.plugins.tab').map(entry => entry.id)
+const tabs = registrations => registrations
+  .filter(entry => entry.name === 'settings.plugins.tab' && entry.live)
+  .map(entry => entry.id)
 
 describe('Desktop host plugin control in Plugins settings', () => {
   it('keeps the market installer inside Built-in plugins instead of a Settings section', () => {
@@ -40,19 +50,35 @@ describe('Desktop host plugin control in Plugins settings', () => {
     expect(tabs(registrations)).toContain('market')
   })
 
-  it('leaves market management to the composed dsh-market and hides its Settings section', () => {
+  it('hands the market tab to dsh-market only once its client is running', () => {
     const { registrations, injected } = load({ marketComposed: true })
-    // dsh-market's own Built-in plugins card handles version, updates and
-    // removal; a second "market" tab from the installer read as a duplicate.
-    expect(tabs(registrations)).not.toContain('market')
-    expect(tabs(registrations)).not.toContain('desktop-market-management')
+    // In the boot graph is not running: a declared market that fails to
+    // activate registers neither its tab nor its `market` service, and hiding
+    // the placeholder on the graph alone left no market entry at all.
+    expect(tabs(registrations)).toContain('market')
+    const placeholder = registrations.find(entry => entry.id === 'market')
+    expect(placeholder.inject()).toMatchObject({ composed: true })
+
+    // Once the market provides its service it owns the Built-in plugins card
+    // (version, updates, removal); a second "market" tab read as a duplicate,
+    // and its own Settings section is hidden as a third door.
     const marketInject = injected.find(entry => entry.deps.includes('market'))
     expect(marketInject).toBeDefined()
     const market = { setSettingsVisible: vi.fn() }
     const dispose = marketInject.callback({ market })
+    expect(tabs(registrations)).not.toContain('market')
+    expect(tabs(registrations)).not.toContain('desktop-market-management')
     expect(market.setSettingsVisible).toHaveBeenCalledWith(false)
+
+    // If the market goes away again (removed, crashed on reload) the entry returns.
     dispose()
     expect(market.setSettingsVisible).toHaveBeenLastCalledWith(true)
+    expect(tabs(registrations)).toContain('market')
+  })
+
+  it('tells a fresh profile that the market is not composed', () => {
+    const { registrations } = load()
+    expect(registrations.find(entry => entry.id === 'market')?.inject()).toMatchObject({ composed: false })
   })
 
   it('shows one image generation tab: the built-in plugin\'s own while it is on', async () => {

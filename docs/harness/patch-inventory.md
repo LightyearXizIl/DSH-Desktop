@@ -1,9 +1,9 @@
 # 补丁清单
 
-本文是 [文档总览](../README.md) 的 Harness 子文档，列出 `patches/` 目录下全部 34 个 `patch-package` 补丁的职责、回归入口和移除条件。补丁的选型与维护规则见 [Patch 与 Plugin 规范](../engineering/patch-plugin-contract.md) 和 `patches/AGENTS.md`；升级历史见 [Harness 升级记录](upgrade-history.md)。
+本文是 [文档总览](../README.md) 的 Harness 子文档，列出 `patches/` 目录下全部 35 个 `patch-package` 补丁的职责、回归入口和移除条件。补丁的选型与维护规则见 [Patch 与 Plugin 规范](../engineering/patch-plugin-contract.md) 和 `patches/AGENTS.md`；升级历史见 [Harness 升级记录](upgrade-history.md)。
 
 - 基线：`@deepseek-ai/dsh@0.2.1-rc.4`（219 个直接 Harness 依赖、锁文件中 304 个 `@deepseek-ai/dsh*` 包版本一致），Electron `43.0.0`。
-- 组成：29 个 Harness 补丁 + 5 个非 Harness 补丁。
+- 组成：30 个 Harness 补丁 + 5 个非 Harness 补丁。
 - 补丁随 `npm ci` 的 `postinstall`（`patch-package`）重放。每次升级 Harness 都必须对照“旧版原始包 / 旧版打补丁后 / 新版原始包”三份输入重新生成，不能只改文件名。
 - 一个补丁文件可以同时包含上游缺陷修复和 Desktop 扩展接缝；移除其中一个 hunk 不代表整个文件可以删除。
 - 测试通过 `test/patch-path.ts` 按包名定位补丁，要求每个包恰好一个补丁文件。
@@ -24,6 +24,7 @@
 | `dsh-client-ui-chat` | 上传附件打开、PPT footer（首个人类消息只挂载一次）、额度/权限错误文案、解码速度显示 | `file-preview`、`local-path-links`、`ppt-integration`、`provider-error-patch` | 上游提供附件动作、消息 footer 及相同文件路由 |
 | `dsh-client-ui-conversation` | `conversation.hero.modeActions`、`conversation.hero.dock`、输入附件接缝、`desktop.workbench.frame`，同时保留上游的 `hero.options`、`input.accessory` 与 More 菜单；首页工作区选择“不在工作区”时把草稿带到新的聊天会话，聊天会话的工作区标签显示“不在工作区” | `workbench-patch-slots`、`ppt-integration`、`conversation-input-css`、`patch-runtime-compatibility`、`no-workspace-picker-patch` | 上游提供这些独立 slot，布局及生命周期等价；上游首页支持无工作区会话 |
 | `dsh-client-ui-deliverables` | 识别回答中的本地路径/文件夹并提供打开入口，排除包名、邮箱等误识别 | `local-path-links`、`file-preview` | 上游原生识别相同路径并保留打开语义 |
+| `dsh-client-ui-model-selection` | 根元素带 `data-dsh-desktop-model-menu-stack`（Liquid Glass 的推理等级滑条挂载时设置）时，模型菜单的二级页面在同一个弹层里向上展开：模型列表接在两行之上，等级列表盖住"模型"行、接在"推理等级"行之上，根页面和其中的滑条保持可见；再点已展开的那一行收起（带 `aria-expanded`），列表放进按页面重建的容器，挂载时量出自然高度供滑条样式做向上生长动画；没有标记时保持上游的原地切换 | `model-selection-stack-patch`、`desktop-theme-effort-slider` | 上游提供保留根页面的二级展开方式，或滑条有了不依赖根页面的挂载位置 |
 | `dsh-client-ui-layout` | 在 `CenterColumn` 上渲染 `data-dsh-desktop-center` 标记，供 Liquid Glass 主题去掉中间列分隔线与阴影、挂载页面玻璃面板；边栏开合的第一次渲染就带上 `data-animating`，避免中间的布局读取让列宽跳过过渡 | `desktop-theme` | 上游提供稳定的中间列标记或主题变量，并在同一次提交里设置动画标记 |
 | `dsh-client-ui-primitives` | Markdown mention 支持 `folder` 类型及文件夹图标 | `local-path-links` | 上游支持目录 mention 契约 |
 | `dsh-client-ui-settings-account` | 桌面端账号登录在系统浏览器打开授权页，不在 Harness 内跳转 `dsh://` | `settings-account-launcher` | 上游的桌面登录流程不再依赖协议回跳 |

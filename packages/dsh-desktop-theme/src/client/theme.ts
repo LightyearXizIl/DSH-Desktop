@@ -5,6 +5,7 @@ import { ensureAmbient, startSeamStamper } from './ambient.ts'
 import { liveGlassFloor, liveTextWash } from './glass-floor.ts'
 import { FALLBACK_VEIL, sampleWallpaper, wallpaperFloor, wallpaperVeil } from './wallpaper-legibility.ts'
 import type { EffectsController } from './effects.ts'
+import { MOTION_ALWAYS_ATTRIBUTE } from './motion.ts'
 
 export const THEME_ATTRIBUTE = 'data-dsh-desktop-theme'
 export const FLOAT_ATTRIBUTE = 'data-dsh-desktop-float'
@@ -230,6 +231,7 @@ export class ThemeLayer {
     root.removeAttribute('data-dsh-desktop-media')
     root.removeAttribute('data-dsh-desktop-spotlight')
     root.removeAttribute('data-dsh-desktop-press')
+    root.removeAttribute(MOTION_ALWAYS_ATTRIBUTE)
     for (const name of [
       '--dsh-desktop-blur', '--dsh-desktop-frost', '--dsh-desktop-surface-frost', '--dsh-desktop-frost-ratio',
       '--dsh-desktop-wallpaper-blur', '--dsh-desktop-wallpaper-frost', '--dsh-desktop-video-blur',
@@ -258,6 +260,9 @@ export class ThemeLayer {
     root.toggleAttribute(COMPAT_ATTRIBUTE, compat)
     root.toggleAttribute('data-dsh-desktop-spotlight', !compat && settings.spotlight)
     root.toggleAttribute('data-dsh-desktop-press', !compat && settings.press)
+    // Read by prefersReducedMotion() and the reduced-motion CSS; set before the
+    // effects below mount or remount.
+    root.toggleAttribute(MOTION_ALWAYS_ATTRIBUTE, settings.motion === 'always')
     style.setProperty('--dsh-desktop-blur', `${settings.blur}px`)
     style.setProperty('--dsh-desktop-frost', String(Math.min(settings.frost / 50, 1.4)))
     style.setProperty('--dsh-desktop-surface-frost', String(Math.min((settings.frost + 20) / 50, 1.4)))

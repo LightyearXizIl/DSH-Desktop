@@ -33,7 +33,8 @@
 
 - 安装包不做代码签名，首次运行时 SmartScreen 可能提示。
 - 更新元数据 `latest.yml` 与 blockmap 由 electron-builder 生成，必须作为 GitHub Release 资产上传。
-- 当前配置仍要求校验更新包签名并写入了上游的发行者名称，详见 [已知遗留问题](../README.md#已知遗留问题)。
+- 自动更新不校验代码签名：`package.json` 中 `win.verifyUpdateCodeSignature` 为 `false`，且不声明 `signtoolOptions.publisherName`，打包后的 `resources/app-update.yml` 不含 `publisherName`。更新包完整性依赖 `latest.yml` 中的 `sha512` 与 GitHub 的 HTTPS 下载；`test/release.test.ts` 锁定这两项配置。
+- 0.0.3 安装包自带的 `app-update.yml` 仍会校验前身的签名，因此 0.0.3 需要手动安装一次 0.0.4，见 [已知遗留问题](../README.md#已知遗留问题)。
 
 ## 平台验收清单
 

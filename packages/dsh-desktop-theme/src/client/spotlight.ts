@@ -44,6 +44,7 @@ import {
   closestSpot, ensureGlow, glassLocalRect, GLOW_ATTR, inside, ON_ATTR, spotElements,
   startOverlayKeeper, visualRect,
 } from './spot-core.ts'
+import { prefersReducedMotion } from './motion.ts'
 
 /** html attribute the layer uses to switch the glow effect (its toggle). */
 export const SPOTLIGHT_ATTRIBUTE = 'data-dsh-desktop-spotlight'
@@ -118,7 +119,7 @@ function hostsFixedOverlay(target: HTMLElement): boolean {
 
 /** Whether the tilt may run on this pane right now (DOM queries only). */
 function tiltable(spot: HTMLElement): boolean {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
+  if (prefersReducedMotion()) return false
   const target = tiltTarget(spot)
   if (hostsFixedOverlay(target)) return false
   if (!isSidebarSpot(spot)) return true

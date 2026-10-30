@@ -11,6 +11,8 @@
  */
 
 /** Site-default parameters (the join-section look). */
+import { prefersReducedMotion } from './motion.ts'
+
 export interface FluidParams {
   mouseRadius: number
   mouseStrength: number
@@ -471,7 +473,7 @@ export function attachFluidShader(canvas: HTMLCanvasElement, params: FluidParams
     },
   }
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (prefersReducedMotion()) {
     frame(performance.now())
     cancelAnimationFrame(raf)
     return handle

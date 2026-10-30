@@ -6,6 +6,8 @@
  * the ambient scene behind the app content; pointer-events pass through.
  */
 
+import { prefersReducedMotion } from './motion.ts'
+
 const SPACING = 90
 const REPEL_RADIUS = 140
 const REPEL_FORCE = 30
@@ -43,7 +45,7 @@ export function mountMesh(host: HTMLElement): MeshHandle {
     return { dispose: () => {} }
   }
 
-  const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+  const reduced = prefersReducedMotion()
   const coarse = typeof matchMedia !== 'undefined' && matchMedia('(hover: none), (pointer: coarse)').matches
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
   let dots: Dot[] = []

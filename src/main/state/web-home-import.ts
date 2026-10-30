@@ -221,6 +221,11 @@ async function copyHomePayload(
 
   const sourceProfile = join(source, 'profiles', 'web')
   const destProfile = join(dest, 'profiles', 'web')
+  // A home can hold sessions and settings without a web profile (another
+  // client's profile, or none). Harness then creates the default profile on
+  // first start exactly as on a fresh install; a lone pnpm-workspace.yaml has
+  // no directory to land in and no manifest to describe.
+  if (!(await isFile(join(sourceProfile, 'package.json')))) return
   for (const name of PROFILE_FILES) {
     await copyIfPresent(join(sourceProfile, name), join(destProfile, name), dest, note)
   }

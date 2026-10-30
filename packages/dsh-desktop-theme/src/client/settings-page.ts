@@ -1,4 +1,4 @@
-import { createElement as h, useId, useRef, type ChangeEvent, type ReactElement, type ReactNode } from 'react'
+import { createElement as h, useId, useRef, useSyncExternalStore, type ChangeEvent, type ReactElement, type ReactNode } from 'react'
 import {
   Button,
   SegmentedControl,
@@ -9,6 +9,7 @@ import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-store'
 import type { ThemeState } from './theme.ts'
 import { imageFileToDataUrl } from './image-file.ts'
 import type { ThemeSettings } from './settings-model.ts'
+import { onSystemMotionChange, systemPrefersReducedMotion } from './motion.ts'
 
 export interface ThemeSettingsPageInjected {
   update: (patch: Partial<ThemeSettings>) => Promise<boolean>
@@ -35,6 +36,9 @@ export function ThemeSettingsPage(props: ThemeSettingsPageProps): ReactElement {
   const bgMin = dark ? 0 : 50
   const bgMax = dark ? 50 : 100
   const bgValue = Math.min(bgMax, Math.max(bgMin, settings.bgBrightness))
+  // Live, so turning Windows animation effects on or off updates the hint.
+  const systemReduced = useSyncExternalStore(onSystemMotionChange, systemPrefersReducedMotion, () => false)
+  const motionPaused = systemReduced && settings.motion === 'system'
 
   /** Delete one uploaded video file (the host prunes replaced ones itself). */
   const deleteHostWallpaper = (id: string): void => {
@@ -306,6 +310,23 @@ export function ThemeSettingsPage(props: ThemeSettingsPageProps): ReactElement {
         last: true,
       }),
     ),
+    h(Group, { title: t('theme.motionGroup') },
+      h(Row, {
+        title: t('theme.motion'),
+        description: t(motionPaused ? 'theme.motionPausedHint' : 'theme.motionHint'),
+        control: h(SegmentedControl<ThemeSettings['motion']>, {
+          id: `${id}-motion`,
+          label: t('theme.motion'),
+          value: settings.motion,
+          options: [
+            { value: 'system', label: t('theme.motionSystem') },
+            { value: 'always', label: t('theme.motionAlways') },
+          ] as const,
+          onChange: (motion) => { void update({ motion }) },
+        }),
+        last: true,
+      }),
+    ),
     h(Group, { title: t('theme.decorAmbient') },
       h(Row, {
         title: t('theme.whale'),
@@ -356,6 +377,69 @@ export function ThemeSettingsPage(props: ThemeSettingsPageProps): ReactElement {
         }),
         last: true,
       }),
+    ),
+    h(Group, { title: t('effortSlider.group'), description: t('effortSlider.groupHint') },
+      h(Row, {
+        title: t('effortSlider.enable'),
+        description: t('effortSlider.enableHint'),
+        control: h(Switch, {
+          checked: settings.effortSlider,
+          label: t('effortSlider.enable'),
+          onChange: (effortSlider) => { void update({ effortSlider }) },
+        }),
+        last: !settings.effortSlider,
+      }),
+      settings.effortSlider
+        ? h(Row, {
+            title: t('effortSlider.style'),
+            description: t('effortSlider.styleHint'),
+            control: h(SegmentedControl<ThemeSettings['effortStyle']>, {
+              id: `${id}-effort-style`,
+              label: t('effortSlider.style'),
+              value: settings.effortStyle,
+              options: [
+                { value: 'codex', label: t('effortSlider.styleCodex') },
+                { value: 'claude', label: t('effortSlider.styleClaude') },
+              ] as const,
+              onChange: (effortStyle) => { void update({ effortStyle }) },
+            }),
+          })
+        : null,
+      settings.effortSlider
+        ? h(Row, {
+            title: t('effortSlider.motion'),
+            description: t('effortSlider.motionHint'),
+            control: h(SegmentedControl<ThemeSettings['effortMotion']>, {
+              id: `${id}-effort-motion`,
+              label: t('effortSlider.motion'),
+              value: settings.effortMotion,
+              options: [
+                { value: 'fast', label: t('effortSlider.motionFast') },
+                { value: 'quick', label: t('effortSlider.motionQuick') },
+                { value: 'full', label: t('effortSlider.motionFull') },
+              ] as const,
+              onChange: (effortMotion) => { void update({ effortMotion }) },
+            }),
+          })
+        : null,
+      settings.effortSlider
+        ? h(Row, {
+            title: t('effortSlider.ticks'),
+            description: t(settings.effortStyle === 'claude' ? 'effortSlider.ticksHintClaude' : 'effortSlider.ticksHint'),
+            control: h(SegmentedControl<ThemeSettings['effortTicks']>, {
+              id: `${id}-effort-ticks`,
+              label: t('effortSlider.ticks'),
+              value: settings.effortTicks,
+              options: [
+                { value: 'highlight', label: t('effortSlider.ticksHighlight') },
+                { value: 'dim', label: t('effortSlider.ticksDim') },
+                { value: 'hidden', label: t('effortSlider.ticksHidden') },
+              ] as const,
+              onChange: (effortTicks) => { void update({ effortTicks }) },
+            }),
+            last: true,
+          })
+        : null,
     ),
   )
 }

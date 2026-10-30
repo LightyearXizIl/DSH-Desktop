@@ -5,6 +5,7 @@ import { startSpotlight } from './spotlight.ts'
 import { attachFluidShader, SITE_FLUID_PARAMS, type FluidShaderHandle } from './fluid.ts'
 import { attachFluidInteractions } from './fluid-interactions.ts'
 import { fluidToneColors } from './fluid-tones.ts'
+import { onSystemMotionChange } from './motion.ts'
 
 export interface EffectsController {
   mount: (settings: ThemeSettings, dark: boolean) => void
@@ -20,6 +21,8 @@ export function createEffects(): EffectsController {
   let spotlight: (() => void) | undefined
   let active = false
   let settings: ThemeSettings | undefined
+  let dark = false
+  let stopMotionWatch: (() => void) | undefined
 
   const syncWhale = (dark: boolean): void => {
     if (settings?.whale === true && whale === undefined) {
@@ -65,18 +68,41 @@ export function createEffects(): EffectsController {
     }
   }
 
+  // The whale, mesh and fluid decide between still frames and animation when
+  // they mount, so a change of the motion setting or of the system request
+  // remounts them instead of leaving them on the old answer.
+  const remountAnimated = (): void => {
+    if (!active) return
+    whale?.dispose()
+    whale = undefined
+    mesh?.dispose()
+    mesh = undefined
+    fluidInteractions?.()
+    fluidInteractions = undefined
+    fluid?.dispose()
+    fluid = undefined
+    syncWhale(dark)
+    syncMesh()
+    syncFluid(dark)
+  }
+
   return {
-    mount(next, dark) {
+    mount(next, nextDark) {
       settings = next
+      dark = nextDark
       active = true
+      stopMotionWatch ??= onSystemMotionChange(remountAnimated)
       syncWhale(dark)
       syncMesh()
       syncFluid(dark)
       if (spotlight === undefined && (next.spotlight || next.press)) spotlight = startSpotlight()
     },
-    update(next, dark) {
+    update(next, nextDark) {
+      const motionChanged = settings !== undefined && settings.motion !== next.motion
       settings = next
+      dark = nextDark
       if (!active) return
+      if (motionChanged) remountAnimated()
       syncWhale(dark)
       syncMesh()
       syncFluid(dark)
@@ -88,6 +114,8 @@ export function createEffects(): EffectsController {
     },
     dispose() {
       active = false
+      stopMotionWatch?.()
+      stopMotionWatch = undefined
       whale?.dispose()
       whale = undefined
       mesh?.dispose()

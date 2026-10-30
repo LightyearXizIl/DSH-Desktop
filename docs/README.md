@@ -57,7 +57,7 @@ docs/
 
 | 文档 | 内容 |
 | --- | --- |
-| [补丁清单](harness/patch-inventory.md) | 34 个补丁的职责、回归入口、移除条件 |
+| [补丁清单](harness/patch-inventory.md) | 35 个补丁的职责、回归入口、移除条件 |
 | [Harness 升级记录](harness/upgrade-history.md) | 升级固定流程、各版本破坏性变化、稳定性修复 F01–F08 |
 
 ### 功能 `features/`
@@ -72,7 +72,7 @@ docs/
 | [工作台](features/workbenches.md) | 身份、状态、模式与会话归属、市场安装边界、规范文档 |
 | [Preset 包格式](preset-packages.md) | `.dshpreset` 结构、导入导出流程、在线 Skill 接口 |
 | [本地模型自动启动](features/local-model.md) | `local-model.json` 配置与 Strata 启动行为 |
-| Liquid Glass 主题 | 见 [`packages/dsh-desktop-theme/README.md`](../packages/dsh-desktop-theme/README.md) |
+| Liquid Glass 主题（含推理等级滑条） | 见 [`packages/dsh-desktop-theme/README.md`](../packages/dsh-desktop-theme/README.md) |
 | 启动动画 | 见 [`packages/dsh-startup-screen/README.md`](../packages/dsh-startup-screen/README.md) |
 | 影像生成（生图，以及 GrsAI 生视频与文本生成） | 见 [`packages/dsh-image-generation/README.md`](../packages/dsh-image-generation/README.md) |
 | PPT 运行时包 | 见 [`packages/ppt-runtime/README.md`](../packages/ppt-runtime/README.md) |
@@ -108,7 +108,7 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 | `src/preload/` | 窄 IPC 桥、Windows 标题栏与菜单、更新与关于弹窗 |
 | `src/shared/` | 跨进程数据契约与纯逻辑 |
 | `packages/` | 12 个内置包与 1 个遗留目录（见下表） |
-| `patches/` | 34 个可重放补丁（见 [补丁清单](harness/patch-inventory.md)） |
+| `patches/` | 35 个可重放补丁（见 [补丁清单](harness/patch-inventory.md)） |
 | `build/` | Profile 组合层 `*.patch.yml`、Harness 入口、恢复页 / 安全模式页 / 启动页 HTML、图标、NSIS 脚本 |
 | `scripts/` | 构建、打包门禁、PPT / Office / 主题生成器、验证脚本 |
 | `test/` | 约 230 个测试文件（行为、契约与真实子进程回归） |

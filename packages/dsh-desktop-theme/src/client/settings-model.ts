@@ -15,6 +15,12 @@ export interface ThemeSettings {
   mesh: boolean
   spotlight: boolean
   press: boolean
+  /** 'system' follows the OS reduced-motion request; 'always' plays regardless. */
+  motion: 'system' | 'always'
+  effortSlider: boolean
+  effortStyle: 'codex' | 'claude'
+  effortMotion: 'fast' | 'quick' | 'full'
+  effortTicks: 'highlight' | 'dim' | 'hidden'
   wallpaperBlur: number
   wallpaperFrost: number
   videoBlur: number
@@ -36,6 +42,11 @@ export const DEFAULT_SETTINGS: ThemeSettings = {
   mesh: true,
   spotlight: true,
   press: true,
+  motion: 'system',
+  effortSlider: true,
+  effortStyle: 'codex',
+  effortMotion: 'full',
+  effortTicks: 'highlight',
   wallpaperBlur: 0,
   wallpaperFrost: 0,
   videoBlur: 6,
@@ -69,6 +80,11 @@ export function normalizeSettings(value: unknown): ThemeSettings {
     mesh: readBoolean(source.mesh, DEFAULT_SETTINGS.mesh),
     spotlight: readBoolean(source.spotlight, DEFAULT_SETTINGS.spotlight),
     press: readBoolean(source.press, DEFAULT_SETTINGS.press),
+    motion: source.motion === 'always' ? 'always' : 'system',
+    effortSlider: readBoolean(source.effortSlider, DEFAULT_SETTINGS.effortSlider),
+    effortStyle: source.effortStyle === 'claude' ? 'claude' : 'codex',
+    effortMotion: source.effortMotion === 'fast' || source.effortMotion === 'quick' ? source.effortMotion : 'full',
+    effortTicks: source.effortTicks === 'dim' || source.effortTicks === 'hidden' ? source.effortTicks : 'highlight',
   }
   for (const key of Object.keys(NUMBER_LIMITS) as NumericKey[]) {
     settings[key] = clampSetting(key, source[key])

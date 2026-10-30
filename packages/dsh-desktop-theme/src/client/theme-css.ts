@@ -201,6 +201,13 @@ export const THEME_RUNTIME_STYLES = String.raw`
   height: 100%;
   object-fit: cover;
 }
+/* Without a source the media must not paint: Chromium frames an empty <img>
+   with a 1px silver border, which showed as light strips down both window
+   edges over the fluid (the title bar and edge fades hid the top and bottom). */
+[data-dsh-desktop-theme] [data-dsh-desktop-wallpaper-img]:not([src]),
+[data-dsh-desktop-theme] [data-dsh-desktop-wallpaper-video]:not([src]) {
+  display: none;
+}
 [data-dsh-desktop-theme] [data-dsh-desktop-wallpaper-img] {
   filter: blur(var(--dsh-desktop-wallpaper-blur, 0));
 }
@@ -607,18 +614,19 @@ export const THEME_RUNTIME_STYLES = String.raw`
 @keyframes dsh-desktop-page-in { from { opacity: 0; } }
 @keyframes dsh-desktop-dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.985); } }
 [data-dsh-desktop-compat] [role='tooltip'] { backdrop-filter: blur(12px); }
+/* The system's reduced-motion request, unless the user chose "Always play" (motion.ts). */
 @media (prefers-reduced-motion: reduce) {
-  [data-dsh-desktop-theme] [data-phase='hero'],
-  [data-dsh-desktop-theme] [data-phase='active'],
-  [data-dsh-desktop-theme] [data-dsh-desktop-center] > [data-slot='main'] > *,
-  [data-dsh-desktop-theme] [role='dialog'][aria-modal='true'],
-  [data-dsh-desktop-theme] [role='dialog'][aria-modal='true'] [data-slot='settings.section'] > *,
-  [data-dsh-desktop-theme] [role='dialog'][aria-modal='true'] [role='tabpanel'],
-  [data-dsh-desktop-theme] [data-dsh-desktop-ambient],
-  [data-dsh-desktop-theme] [data-desktop-theme-critter] { animation: none; }
-  [data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-spot],
-  [data-dsh-desktop-float][data-dsh-desktop-press] [data-dsh-desktop-sidebar],
-  [data-dsh-desktop-theme] [data-dsh-desktop-ambient]::after { transition: none; }
-  [data-dsh-desktop-theme] [data-desktop-theme-critter='bubble'] { opacity: 0; }
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [data-phase='hero'],
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [data-phase='active'],
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [data-dsh-desktop-center] > [data-slot='main'] > *,
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [role='dialog'][aria-modal='true'],
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [role='dialog'][aria-modal='true'] [data-slot='settings.section'] > *,
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [role='dialog'][aria-modal='true'] [role='tabpanel'],
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [data-dsh-desktop-ambient],
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [data-desktop-theme-critter] { animation: none; }
+  [data-dsh-desktop-float][data-dsh-desktop-press]:not([data-dsh-desktop-motion-always]) [data-dsh-desktop-spot],
+  [data-dsh-desktop-float][data-dsh-desktop-press]:not([data-dsh-desktop-motion-always]) [data-dsh-desktop-sidebar],
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [data-dsh-desktop-ambient]::after { transition: none; }
+  [data-dsh-desktop-theme]:not([data-dsh-desktop-motion-always]) [data-desktop-theme-critter='bubble'] { opacity: 0; }
 }
 `

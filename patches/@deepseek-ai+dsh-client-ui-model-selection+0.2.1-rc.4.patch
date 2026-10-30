@@ -1,0 +1,265 @@
+diff --git a/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js
+index c38bfbb..80959a8 100644
+--- a/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js
++++ b/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js
+@@ -1163,6 +1163,15 @@ window.__ModuleLoader__.load({
+ 			const triggerRef = (0, react.useRef)(null);
+ 			const searchRef = (0, react.useRef)(null);
+ 			const menuRef = (0, react.useRef)(null);
++			/* DSH Desktop: while the Desktop effort slider is mounted it marks <html>.
++			 * A drilled pane then opens inside the same surface above the root rows, so
++			 * the surface grows upward and the root (with the slider) stays in view:
++			 * the model list sits above the model row, and the effort list covers the
++			 * model row and sits right above the effort row. */
++			const stacked = typeof document !== "undefined" && document.documentElement.hasAttribute("data-dsh-desktop-model-menu-stack");
++			const drilled = stacked && pane !== "root";
++			/* Height of the model row the effort list covers: its grow animation starts there. */
++			const coverRef = (0, react.useRef)(0);
+ 			const groupsRef = (0, react.useRef)(null);
+ 			const [menuPos, setMenuPos] = (0, react.useState)(null);
+ 			const itemRefs = (0, react.useRef)([]);
+@@ -1479,99 +1488,8 @@ window.__ModuleLoader__.load({
+ 					itemRefs.current[at] = node;
+ 				};
+ 			};
+-			return (0, react_jsx_runtime.jsxs)("div", {
+-				ref: rootRef,
+-				className: ModelSelect_module_css_default.root,
+-				onKeyDown: onRootKeyDown,
+-				onBlur,
+-				onMouseDown: (event) => {
+-					if (event.target instanceof Element && event.target.closest("button") !== null) event.preventDefault();
+-				},
+-				children: [
+-					(0, react_jsx_runtime.jsxs)("button", {
+-						ref: triggerRef,
+-						type: "button",
+-						className: ModelSelect_module_css_default.trigger,
+-						"aria-label": triggerAria,
+-						"aria-haspopup": "menu",
+-						"aria-expanded": open,
+-						"aria-controls": open ? `${id}-menu` : void 0,
+-						title: triggerLabel,
+-						"aria-busy": busy,
+-						"data-selection-focus": selectionFocus ? "" : void 0,
+-						onBlur: () => {
+-							setSelectionFocus(false);
+-						},
+-						disabled: locked,
+-						onClick: () => {
+-							if (open) close(true);
+-							else show();
+-						},
+-						children: [
+-							(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconDataOutlineRegular, {
+-								className: ModelSelect_module_css_default.triggerIcon,
+-								size: 16
+-							}),
+-							(0, react_jsx_runtime.jsx)("span", {
+-								className: ModelSelect_module_css_default.triggerLabel,
+-								children: currentChoice === void 0 ? modelLabel : renderModelLabel(currentChoice.group.provider, currentChoice.model, "trigger", true)
+-							}),
+-							effortLabel !== void 0 && (0, react_jsx_runtime.jsx)("span", {
+-								className: ModelSelect_module_css_default.triggerEffort,
+-								children: effortLabel
+-							}),
+-							busy ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }) : (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutlineRegular, { className: clsx(ModelSelect_module_css_default.chevron, open && ModelSelect_module_css_default.chevronOpen) })
+-						]
+-					}),
+-					open && (0, react_dom.createPortal)((0, react_jsx_runtime.jsxs)(_deepseek_ai_dsh_client_ui_primitives.MenuSurface, {
+-						ref: menuRef,
+-						id: `${id}-menu`,
+-						className: ModelSelect_module_css_default.menu,
+-						style: menuPos ?? MEASURE_STYLE,
+-						role: pane === "model" ? "group" : "menu",
+-						"aria-label": t("menu.aria"),
+-						"aria-busy": state.status === "loading" || busy,
+-						children: [
+-							pane === "root" && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [(0, react_jsx_runtime.jsxs)("button", {
+-								ref: itemRef(),
+-								type: "button",
+-								role: "menuitem",
+-								className: ModelSelect_module_css_default.cell,
+-								onClick: () => {
+-									drill("model");
+-								},
+-								children: [
+-									(0, react_jsx_runtime.jsx)("span", {
+-										className: ModelSelect_module_css_default.cellLabel,
+-										children: t("menu.model")
+-									}),
+-									(0, react_jsx_runtime.jsx)("span", {
+-										className: ModelSelect_module_css_default.cellValue,
+-										children: currentChoice === void 0 ? modelLabel : renderModelLabel(currentChoice.group.provider, currentChoice.model, "menu", true)
+-									}),
+-									(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { className: ModelSelect_module_css_default.cellChevron })
+-								]
+-							}), reasoning !== void 0 && (0, react_jsx_runtime.jsxs)("button", {
+-								ref: itemRef(),
+-								type: "button",
+-								role: "menuitem",
+-								className: ModelSelect_module_css_default.cell,
+-								onClick: () => {
+-									drill("effort");
+-								},
+-								children: [
+-									(0, react_jsx_runtime.jsx)("span", {
+-										className: ModelSelect_module_css_default.cellLabel,
+-										children: t("menu.effort")
+-									}),
+-									(0, react_jsx_runtime.jsx)("span", {
+-										className: ModelSelect_module_css_default.cellValue,
+-										children: effortLabel
+-									}),
+-									(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { className: ModelSelect_module_css_default.cellChevron })
+-								]
+-							})] }),
+-							pane === "model" && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
++			/* The drilled panes, rendered after the root rows upstream or, stacked, before them. */
++			const modelPane = () => pane === "model" && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
+ 								showSearch && (0, react_jsx_runtime.jsxs)("div", {
+ 									className: ModelSelect_module_css_default.searchRow,
+ 									children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
+@@ -1682,8 +1600,8 @@ window.__ModuleLoader__.load({
+ 									role: "status",
+ 									children: t(choices.length === 0 ? "empty.models" : "search.empty")
+ 								})
+-							] }),
+-							pane === "effort" && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [state.error !== null && lastActionRef.current === "load" && (0, react_jsx_runtime.jsxs)("div", {
++							] });
++			const effortPane = () => pane === "effort" && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [state.error !== null && lastActionRef.current === "load" && (0, react_jsx_runtime.jsxs)("div", {
+ 								className: ModelSelect_module_css_default.error,
+ 								children: [(0, react_jsx_runtime.jsx)("span", { children: t("error.action", { message: state.error }) }), (0, react_jsx_runtime.jsx)("button", {
+ 									type: "button",
+@@ -1714,7 +1632,130 @@ window.__ModuleLoader__.load({
+ 									className: ModelSelect_module_css_default.check,
+ 									children: pending !== null && pending.provider === state.current?.provider && pending.model === state.current.model && pending.reasoningEffort === level.effort ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }) : effectiveEffort === level.effort ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, {}) : null
+ 								})]
+-							}, level.key))] })
++							}, level.key))] });
++			return (0, react_jsx_runtime.jsxs)("div", {
++				ref: rootRef,
++				className: ModelSelect_module_css_default.root,
++				onKeyDown: onRootKeyDown,
++				onBlur,
++				onMouseDown: (event) => {
++					if (event.target instanceof Element && event.target.closest("button") !== null) event.preventDefault();
++				},
++				children: [
++					(0, react_jsx_runtime.jsxs)("button", {
++						ref: triggerRef,
++						type: "button",
++						className: ModelSelect_module_css_default.trigger,
++						"aria-label": triggerAria,
++						"aria-haspopup": "menu",
++						"aria-expanded": open,
++						"aria-controls": open ? `${id}-menu` : void 0,
++						title: triggerLabel,
++						"aria-busy": busy,
++						"data-selection-focus": selectionFocus ? "" : void 0,
++						onBlur: () => {
++							setSelectionFocus(false);
++						},
++						disabled: locked,
++						onClick: () => {
++							if (open) close(true);
++							else show();
++						},
++						children: [
++							(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconDataOutlineRegular, {
++								className: ModelSelect_module_css_default.triggerIcon,
++								size: 16
++							}),
++							(0, react_jsx_runtime.jsx)("span", {
++								className: ModelSelect_module_css_default.triggerLabel,
++								children: currentChoice === void 0 ? modelLabel : renderModelLabel(currentChoice.group.provider, currentChoice.model, "trigger", true)
++							}),
++							effortLabel !== void 0 && (0, react_jsx_runtime.jsx)("span", {
++								className: ModelSelect_module_css_default.triggerEffort,
++								children: effortLabel
++							}),
++							busy ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }) : (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutlineRegular, { className: clsx(ModelSelect_module_css_default.chevron, open && ModelSelect_module_css_default.chevronOpen) })
++						]
++					}),
++					open && (0, react_dom.createPortal)((0, react_jsx_runtime.jsxs)(_deepseek_ai_dsh_client_ui_primitives.MenuSurface, {
++						ref: menuRef,
++						id: `${id}-menu`,
++						className: ModelSelect_module_css_default.menu,
++						style: menuPos ?? MEASURE_STYLE,
++						role: !drilled && pane === "model" ? "group" : "menu",
++						"aria-label": t("menu.aria"),
++						"aria-busy": state.status === "loading" || busy,
++						children: [
++							drilled && (0, react_jsx_runtime.jsxs)("div", {
++								"data-dsh-desktop-stack-pane": pane,
++								style: { "--dsh-stack-from": `${pane === "effort" ? coverRef.current : 0}px` },
++								/* Animations do not interpolate to height:auto here, so measure the pane's
++								 * natural height once when it mounts and hand it to the animation. */
++								ref: (node) => {
++									if (node === null || node.dataset.dshMeasured !== void 0) return;
++									node.dataset.dshMeasured = "";
++									node.style.animation = "none";
++									node.style.setProperty("--dsh-stack-to", `${node.offsetHeight}px`);
++									node.style.animation = "";
++								},
++								children: [modelPane(), effortPane()]
++							}, pane),
++							(pane === "root" || stacked) && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [(0, react_jsx_runtime.jsxs)("button", {
++								/* The effort list covers the model row; it stays in the DOM (the slider
++								 * finds the root by its two rows) but out of view and out of the keyboard order. */
++								/* The row's own CSS sets display, which beats the UA style for [hidden]. */
++								hidden: drilled && pane === "effort",
++								style: drilled && pane === "effort" ? { display: "none" } : void 0,
++								ref: drilled && pane === "effort" ? void 0 : itemRef(),
++								type: "button",
++								role: "menuitem",
++								"aria-expanded": stacked ? pane === "model" : void 0,
++								"data-dsh-desktop-open": stacked ? String(pane === "model") : void 0,
++								className: ModelSelect_module_css_default.cell,
++								onClick: () => {
++									if (drilled && pane === "model") back("model");
++									else drill("model");
++								},
++								children: [
++									(0, react_jsx_runtime.jsx)("span", {
++										className: ModelSelect_module_css_default.cellLabel,
++										children: t("menu.model")
++									}),
++									(0, react_jsx_runtime.jsx)("span", {
++										className: ModelSelect_module_css_default.cellValue,
++										children: currentChoice === void 0 ? modelLabel : renderModelLabel(currentChoice.group.provider, currentChoice.model, "menu", true)
++									}),
++									(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { className: ModelSelect_module_css_default.cellChevron })
++								]
++							}), reasoning !== void 0 && (0, react_jsx_runtime.jsxs)("button", {
++								ref: itemRef(),
++								type: "button",
++								role: "menuitem",
++								"aria-expanded": stacked ? pane === "effort" : void 0,
++								"data-dsh-desktop-open": stacked ? String(pane === "effort") : void 0,
++								className: ModelSelect_module_css_default.cell,
++								onClick: () => {
++									if (drilled && pane === "effort") {
++										back("effort");
++										return;
++									}
++									if (stacked) coverRef.current = menuRef.current?.querySelector("button[role=\"menuitem\"]")?.offsetHeight ?? 0;
++									drill("effort");
++								},
++								children: [
++									(0, react_jsx_runtime.jsx)("span", {
++										className: ModelSelect_module_css_default.cellLabel,
++										children: t("menu.effort")
++									}),
++									(0, react_jsx_runtime.jsx)("span", {
++										className: ModelSelect_module_css_default.cellValue,
++										children: effortLabel
++									}),
++									(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { className: ModelSelect_module_css_default.cellChevron })
++								]
++							})] }),
++							!drilled && modelPane(),
++							!drilled && effortPane()
+ 						]
+ 					}), document.body),
+ 					toast !== null && (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Toast, {
