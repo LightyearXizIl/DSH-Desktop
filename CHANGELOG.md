@@ -32,6 +32,7 @@
 - 打包前 `node scripts/verify-target.mjs win32 x64` 与 `node scripts/probe-electron-node-runtime.mjs` 通过，本地 Electron 与锁定版本同为 43.0.0；打包门禁通过：Harness、bootstrap、原生模块、终端和 696 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换。
 - 打包版验收在 `win-unpacked` 的副本上进行，数据目录改为独立目录，不覆盖本机正式安装：首次启动导入网页版数据后进入主界面；在 Profile 中声明 dshmarket 1.65.1 后重启，基线直接装上 1.71.1（`verified active dshmarket 1.71.1`），没有出现安装被拒；设置左栏出现“插件市场”，打开是 v1.71.1 的浏览界面；“关于”显示 Desktop `0.0.6`、Harness `0.2.1-rc.4`，并有默认折叠的“v0.0.6 更新日志”卡片；应用内重启 Harness 后页面自动重新载入。
 - Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：285337981 字节，SHA-256 `6DA40B4D25AD44C6F4607503935E15B96B1DD2C9042348CEB31B0E21251E7092`；`latest.yml` 版本为 `0.0.6`，SHA-512 为 `1ja++LWDvnriSyh7d7hmjiTQ+ndomFVeSrwZ5NeGQpz7oyeTM8P9AZkvOFX2hZNhNyZHO5oo9qEhnJHlyPTDXQ==`；安装包与主程序均未签名，`app-update.yml` 不含 `publisherName`。
+- 已发布 GitHub Release `v0.0.6`（Latest），注释标签指向 `8dc45ef`（`feat/liquid-glass` 同时快进合并到 `main`）；上传后的安装包摘要与上面的 SHA-256 一致，公开的 `releases/latest/download/latest.yml` 返回 `0.0.6`。
 
 ### 说明
 
