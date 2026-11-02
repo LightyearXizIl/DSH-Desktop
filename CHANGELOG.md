@@ -2,7 +2,7 @@
 
 本文件记录 DSH Desktop 自身版本的实质改动。Desktop 与上游 Harness 的版本号独立维护，Harness 升级不自动改变 Desktop 版本号。
 
-## 未发布
+## 0.0.7 — 2026-11-02
 
 ### 更新内容
 
@@ -49,6 +49,13 @@
 - `npm run typecheck`、`npm run build`、`git diff --check` 通过；在 PowerShell 中运行完整 `npm test` 共 2359 项，3 项失败：`test/desktop-theme.test.ts` 的“modal caption”和 `test/release.test.ts` 的下载链接是已登记的已知失败；`test/image-generation.test.mjs` 的“ep-custom 全部比例”只在全量并发时失败一次，单独连跑 3 次均通过。未打包，未在安装版上验证。
 - 影像生成：新增 `test/image-generation-providers.test.mjs`（Agnes AI 的 Key 校验、模型列表、生图请求体与 URL 回退、视频创建与 `/agnesapi` 轮询落盘；OpenAI 兼容的地址必填、`GET /models` 校验与「未校验」、请求体画布与质量、base64/URL 两种响应；options 路由；视频服务商选择）。`test/image-generation-grsai.test.mjs` 把积分接口的旧返回 `{ credits }` 改为 `{ key, account }`，并新增不限额 Key 的 0 额度加账户 Token 余额、`credits` 为 `null` 时报 `RESPONSE` 而非 0（恢复旧解析会让该用例失败）、GrsAI 原因透传与回显 Key 时屏蔽、Token 的保存/保留/清除/校验失败、各 GrsAI 模型的分辨率与质量字段、MiniMax 1080p 限 10 秒和视频默认比例；内置视频列表断言加入 `wan-3.0`。`test/image-generation.test.mjs` 路由列表加入 `/api/image-generation.options`，Seedream 用例改为在文档像素范围内遍历每个模型提供的比例和分辨率。`test/image-generation-settings-ui.test.mjs` 新增 0 额度说明与账户余额行、失败原因、参数菜单与保存内容、OpenAI 兼容的地址字段。相关 7 个测试文件 115 项通过，`npm run typecheck`、`npm run build` 通过。
 - 影像生成开发版实测（独立开发 Profile `dsh-desktop-dev-imagegen`）：启用内置插件并重启 Harness 后，五个服务商的设置区都能正常显示，参数菜单随模型变化；GrsAI 在线拉取到最新模型；用无效 Key 对真实 GrsAI 查询余额显示「Key 无效或不存在 · GrsAI：apikey不存在」，对真实 Agnes 中国站保存显示「API Key 无效」；Host 日志只记录错误码。没有真实 Key，GrsAI 有效 Key/Token 的余额读取、Agnes AI 和 OpenAI 兼容的真实生成只按文档和本机模拟服务验证。`scripts/verify-image-generation.mjs` 在加载 `scripts/image-preview-fixture.mjs` 时因 `@deepseek-ai/dsh-session-persistence-jsonl` 没有默认导出而失败，与本次改动无关，未修复。未打包。
+
+### 说明
+
+- 影像生成的 Agnes AI、OpenAI 兼容服务商和有效 GrsAI Key/账户 Token 的余额读取没有真实 Key，只按文档和本机模拟服务验证。
+- `scripts/verify-image-generation.mjs` 冒烟脚本的修复在单独的分支上，未包含在本版。
+- 本版 Windows x64 安装包为未签名的社区构建，首次运行时 SmartScreen 可能提示。
+- 未执行的验收：安装程序本身的安装与覆盖升级、全新机器安装、真实模型请求、真实影像生成付费请求、用实体鼠标验证卡片离开窗口后复位、macOS 构建。
 
 ## 0.0.6 — 2026-10-30
 
