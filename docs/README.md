@@ -172,7 +172,7 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 接手开发前先看这一节，再看 [CHANGELOG.md](../CHANGELOG.md) 的最新条目。
 
 - **分支**：0.0.4 到 0.0.7 的改动都在 `feat/liquid-glass` 上开发，已快进合并到 `main`；新工作从 `main` 开分支。
-- **发布**：GitHub Release `v0.0.6` 已发布并标记为 Latest，注释标签指向提交 `8dc45ef`（现已在 `main` 上）。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 与 CHANGELOG 记录一致。
+- **发布**：GitHub Release `v0.0.7` 已发布并标记为 Latest，注释标签指向提交 `35e999c`（现已在 `main` 上）。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 与 CHANGELOG 记录一致。
 - **打包版验收方式**：在 `dist/win-unpacked` 的副本上把数据目录改为独立名称后启动（同长度替换 `app.asar` 里的 userData 名），不运行安装程序，避免覆盖本机正式安装和 `dsh-desktop` 数据。
 - **未执行的验收**：安装程序本身的安装与覆盖升级、全新机器安装、在出问题的那台电脑上验证 0.0.6 的市场修复、真实模型请求、真实 GrsAI Key 的付费生成、macOS 构建。
 - **0.0.6 的关于页与更新弹窗**：“设置 → 关于”常驻默认折叠的当前版本更新日志卡片，更新弹窗按同样的样式排版，两处都只显示 Release 正文的“更新内容”和“问题修复”（主进程过滤）；详见 [CHANGELOG.md](../CHANGELOG.md) 的 0.0.6 条目与 [运行架构](architecture.md#updates) 的 Updates 一节。

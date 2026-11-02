@@ -53,6 +53,8 @@
 - 打包前 `node scripts/verify-target.mjs win32 x64` 与 `node scripts/probe-electron-node-runtime.mjs` 通过，本地 Electron 与锁定版本同为 43.0.0；打包门禁通过：Harness、bootstrap、原生模块、终端和 696 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换。
 - 打包版验收在 `win-unpacked` 的副本上进行，沿用 0.0.6 验收时的独立数据目录（已装 dshmarket 1.71.1、有导入的会话），不覆盖本机正式安装：Harness 正常启动、dsh-market 加载；“关于”显示 Desktop `0.0.7`、Harness `0.2.1-rc.4`；聊天标题为新的标题行，按钮右边缘与工作区同为 223 / 255；收起侧栏时菜单全程停在 48px、收完后滑到 84px，动画期间帧间隔平均 5.1ms，收起后新会话为纯图标。
 - Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：285353133 字节，SHA-256 `E90FA15C56E5122867209406CC6BF3818E79FACE2B089A4120B109EA9FE04D37`；`latest.yml` 版本为 `0.0.7`，SHA-512 为 `HSmSvMonndqhkIEZxs/6M+B7dYUPGliSKGFyg1qktO3NDzh2WpyJ8xZDw6dgYtXIObTx0i8pL3q2IwEv7FCSww==`；安装包与主程序均未签名，`app-update.yml` 不含 `publisherName`。
+- 已发布 GitHub Release `v0.0.7`（Latest），注释标签指向 `35e999c`（`feat/liquid-glass` 同时快进合并到 `main`）；上传后的安装包摘要与上面的 SHA-256 一致，公开的 `releases/latest/download/latest.yml` 返回 `0.0.7`。
+
 ### 说明
 
 - 影像生成的 Agnes AI、OpenAI 兼容服务商和有效 GrsAI Key/账户 Token 的余额读取没有真实 Key，只按文档和本机模拟服务验证。
