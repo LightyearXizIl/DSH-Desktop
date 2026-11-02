@@ -2,6 +2,28 @@
 
 本文件记录 DSH Desktop 自身版本的实质改动。Desktop 与上游 Harness 的版本号独立维护，Harness 升级不自动改变 Desktop 版本号。
 
+## 未发布
+
+### 更新内容
+
+#### 影像生成
+
+- **新增服务商 Agnes AI**：在「设置 → 内置插件 → 影像生成」可选 Agnes AI，一个 Key 同时用于生图和生视频。默认中国站 `https://api.agnes-ai.cn/v1`，国际站可在高级设置改为 `https://apihub.agnes-ai.com/v1`。生图走 `/v1/images/generations`（1K/2K/3K/4K 档位 + 8 种比例，返回 base64），生视频走 `/v1/videos` 并轮询 `/agnesapi`；预设 `agnes-image-2.5/2.1/2.0-flash` 和 `agnes-video-2.5`、`agnes-video-2.5-flash`，「获取模型」按 Key 读取实际可用模型。
+- **新增「OpenAI 兼容」服务商**：填 API 地址、API Key 和模型名即可接入任何实现 OpenAI Images API 的服务。保存时用 `GET /models` 校验 Key，服务没有模型列表接口时照常保存并提示「未校验」；生图请求不发送 `response_format`，返回 base64 或 URL 都能处理。
+- **生成参数设置**：卡片新增「图片参数」（默认比例、分辨率、质量）和「视频参数」（默认比例、分辨率），只列出当前模型实际支持的取值（例如 GPT Image 2 的 1K/2K/4K 与 `auto/low/medium/high`、Nano Banana 的 1K/2K/4K、GrsAI Sunburst 的 `xhigh/max`、MiniMax 的 480p/768p/1080p），选择会传入真实请求。对话、PPT 或文档调用时指定了比例仍以调用为准。保存时拒绝模型不支持的取值；换模型后不再适用的取值回退为该模型的默认值。
+- **生视频不再只限 GrsAI**：当前生图服务商能生视频（GrsAI 或 Agnes AI）时用它，否则依次用已保存的 GrsAI、Agnes AI。GrsAI 内置视频列表加入 `wan-3.0`（2–30 秒，480p/720p/1080p）。
+
+### 问题修复
+
+#### 影像生成
+
+- **GrsAI 积分余额始终显示 0**：GrsAI 的余额接口 `getAPIKeyCredits` 返回的是这个 Key 自己的额度，默认创建的「不限额」Key 这里就是 0，账户真实余额要用另一个接口 `getCredits` 加控制台「用户信息」里的账户 Token 查询（两个接口都按 GrsAI 控制台文档核对）。旧代码还把 `null` 等非数字也解析成 0。现在卡片分别显示「Key 额度」和（填写可选的账户 Token 后）「账户余额」；额度为 0 时说明原因；读取失败时显示原因，例如「Key 无效或不存在 · GrsAI：apikey不存在」或 HTTP 状态，不再显示 0。账户 Token 与 Key 一样只存在本机凭据记录里，不回传，可清除。
+
+### 验证
+
+- 影像生成：新增 `test/image-generation-providers.test.mjs`（Agnes AI 的 Key 校验、模型列表、生图请求体与 URL 回退、视频创建与 `/agnesapi` 轮询落盘；OpenAI 兼容的地址必填、`GET /models` 校验与「未校验」、请求体画布与质量、base64/URL 两种响应；options 路由；视频服务商选择）。`test/image-generation-grsai.test.mjs` 把积分接口的旧返回 `{ credits }` 改为 `{ key, account }`，并新增不限额 Key 的 0 额度加账户 Token 余额、`credits` 为 `null` 时报 `RESPONSE` 而非 0（恢复旧解析会让该用例失败）、GrsAI 原因透传与回显 Key 时屏蔽、Token 的保存/保留/清除/校验失败、各 GrsAI 模型的分辨率与质量字段、MiniMax 1080p 限 10 秒和视频默认比例；内置视频列表断言加入 `wan-3.0`。`test/image-generation.test.mjs` 路由列表加入 `/api/image-generation.options`，Seedream 用例改为在文档像素范围内遍历每个模型提供的比例和分辨率。`test/image-generation-settings-ui.test.mjs` 新增 0 额度说明与账户余额行、失败原因、参数菜单与保存内容、OpenAI 兼容的地址字段。相关 7 个测试文件 115 项通过，`npm run typecheck`、`npm run build` 通过。
+- 影像生成开发版实测（独立开发 Profile `dsh-desktop-dev-imagegen`）：启用内置插件并重启 Harness 后，五个服务商的设置区都能正常显示，参数菜单随模型变化；GrsAI 在线拉取到最新模型；用无效 Key 对真实 GrsAI 查询余额显示「Key 无效或不存在 · GrsAI：apikey不存在」，对真实 Agnes 中国站保存显示「API Key 无效」；Host 日志只记录错误码。没有真实 Key，GrsAI 有效 Key/Token 的余额读取、Agnes AI 和 OpenAI 兼容的真实生成只按文档和本机模拟服务验证。`scripts/verify-image-generation.mjs` 在加载 `scripts/image-preview-fixture.mjs` 时因 `@deepseek-ai/dsh-session-persistence-jsonl` 没有默认导出而失败，与本次改动无关，未修复。未打包。
+
 ## 0.0.6 — 2026-10-30
 
 ### 更新内容

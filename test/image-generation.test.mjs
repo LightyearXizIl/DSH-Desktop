@@ -19,6 +19,7 @@ import { DEFAULTS, MODEL_CATALOG, generate, generationBody, ImageError, profile,
 import { normalizeImage } from '../packages/dsh-image-generation/lib/assets.js'
 import { materialize } from '../packages/dsh-image-generation/lib/storage.js'
 import { previewImage, imageResult } from '../packages/dsh-image-generation/lib/preview.js'
+import { imageCapabilities } from '../packages/dsh-image-generation/lib/options.js'
 import { writerEnvironment } from '../packages/dsh-image-generation/lib/commit.js'
 
 const cleanups = []
@@ -216,12 +217,18 @@ describe('image settings save and provider requests', () => {
     expect(generationBody('bytedance', profile('bytedance'), args)).not.toHaveProperty('quality')
     await expect(readBounded(new Response('too much'), 2)).rejects.toMatchObject({ code: 'TOO_LARGE' })
   })
-  it.each([...MODEL_CATALOG.bytedance.models, 'ep-custom'])('generates every supported aspect ratio with the single-image contract for %s', async model => {
+  it.each([...MODEL_CATALOG.bytedance.models, 'ep-custom'])('generates every offered ratio and resolution inside the documented canvas range for %s', async model => {
     const s = await server()
-    for (const aspect_ratio of ['1:1', '16:9', '9:16', '4:3', '3:4']) {
-      expect(await generate('bytedance', { baseUrl: s.baseUrl, model }, 'test-image-key', { prompt: 'A flower', aspect_ratio })).toEqual(s.png)
+    const { resolutions, ratios } = imageCapabilities('bytedance', model)
+    // 5.0 Pro and opaque endpoint IDs stay at 2K; the 4.x / 5.0 IDs also offer 4K.
+    expect(resolutions).toEqual(['doubao-seedream-5-0-pro-260628', 'ep-custom'].includes(model) ? ['2K'] : ['2K', '4K'])
+    for (const imageResolution of resolutions) {
+      for (const aspect_ratio of ratios) {
+        expect(await generate('bytedance', { baseUrl: s.baseUrl, model, imageResolution }, 'test-image-key', { prompt: 'A flower', aspect_ratio })).toEqual(s.png)
+      }
     }
-    expect(s.calls).toHaveLength(5)
+    expect(s.calls).toHaveLength(resolutions.length * ratios.length)
+    expect(s.calls.at(-1).body.size).toBe(resolutions.length === 2 ? '6048x2592' : '3024x1296')
   })
   it('reports the rejected parameter and request ID through ToolRuntime while keeping provider echoes private', async () => {
     const f = await fixture(); const s = await server()
@@ -318,6 +325,8 @@ describe('image tool and durable Office assets', () => {
       { path: '/api/image-generation.settings', methods: ['GET'], requestBody: 'buffered' },
       // The saved GrsAI key's credit balance.
       { path: '/api/image-generation.credits', methods: ['GET', 'POST'], requestBody: 'buffered' },
+      // The ratio/resolution/quality choices of the selected models.
+      { path: '/api/image-generation.options', methods: ['POST'], requestBody: 'buffered' },
       { path: '/api/image-generation.save', methods: ['POST'], requestBody: 'buffered' },
       { path: '/api/image-generation.models', methods: ['POST'], requestBody: 'buffered' },
       { path: '/api/image-generation.preview', methods: ['GET'], requestBody: 'buffered' },

@@ -11,7 +11,11 @@
 // Result URLs stay valid for two hours. The model menus come from GrsAI's
 // public model catalog (see grsaiCatalog); the lists below are the offline
 // fallback, matching that catalog on 2026-10-29.
-import { ImageError, readBounded, safeError } from './errors.js'
+import { HTTP_ERRORS, ImageError, providerDetail, readBounded, safeError } from './errors.js'
+import { download } from './download.js'
+import { grsaiImageFields, imageChoice, videoCapabilities as familyCapabilities, videoChoice, videoFamily } from './options.js'
+
+export { download }
 
 export const GRSAI_DEFAULT_BASE = 'https://grsai.dakka.com.cn'
 export const GRSAI_DEFAULT_IMAGE_MODEL = 'nano-banana-fast'
@@ -35,7 +39,7 @@ export const GRSAI_IMAGE_MODELS = Object.freeze([
   'gpt-image-2.5-flare',
   'gpt-image-2.5-sunburst',
 ])
-export const GRSAI_VIDEO_MODELS = Object.freeze(['minimax-h3', 'agnes-video-2.5', 'veo3.1-fast', 'veo3.1-pro'])
+export const GRSAI_VIDEO_MODELS = Object.freeze(['minimax-h3', 'agnes-video-2.5', 'wan-3.0', 'veo3.1-fast', 'veo3.1-pro'])
 export const GRSAI_DEFAULT_TEXT_MODEL = 'gemini-3.1-pro'
 // The two text models GrsAI's documents use as examples come first.
 export const GRSAI_TEXT_MODELS = Object.freeze([
@@ -57,63 +61,34 @@ export const GRSAI_TEXT_MODELS = Object.freeze([
 export const MAX_VIDEO_BYTES = 200 * 1024 * 1024
 export const MAX_TEXT_OUTPUT_TOKENS = 32_768
 
-/**
- * What each video family accepts. `duration` is null when the model renders a
- * fixed length; `resolution` is the tier sent on every request, kept at the
- * family's lower tier because cost scales with it.
- */
-const VIDEO_FAMILIES = {
-  veo: { ratios: ['16:9', '9:16'], duration: null },
-  minimax: { ratios: ['16:9', '9:16'], duration: { min: 1, max: 15, default: 6 }, resolution: '768p' },
-  agnes: { ratios: ['16:9', '9:16', '21:9', '4:3', '1:1', '3:4'], duration: { min: 4, max: 12, default: 5 }, resolution: '720p' },
-  // A model the catalog added after this release: send the unified API's
-  // common fields and let GrsAI reject what it does not accept.
-  other: { ratios: ['16:9', '9:16', '21:9', '4:3', '1:1', '3:4'], duration: { min: 1, max: 60 } },
-}
-
-function videoFamily(model) {
-  if (model.startsWith('veo')) return 'veo'
-  if (model.startsWith('minimax')) return 'minimax'
-  if (model.startsWith('agnes')) return 'agnes'
-  return 'other'
-}
-
-/** Ratios and duration range the given video model accepts. */
-export function videoCapabilities(model) {
-  const { ratios, duration } = VIDEO_FAMILIES[videoFamily(model)]
-  return { ratios, duration }
-}
+/** Ratios, resolutions and duration range the given GrsAI video model accepts. */
+export const videoCapabilities = model => familyCapabilities('grsai', model)
 
 const POLL_MS = { image: 2500, video: 5000 }
 const DEADLINE_MS = { image: 180_000, video: 840_000 }
-
-/** Nano Banana models take a ratio plus a 1K/2K/4K size. */
-export function isNanoBanana(model) {
-  return model.startsWith('nano-banana')
-}
 
 const MODERATION = new Set(['input_moderation', 'output_moderation'])
 
 // Keep only identifiers: a free-form provider message can echo the prompt,
 // the key or a proxy page.
 function rejected(response) {
-  const errors = {
-    401: ['AUTH', 'The API key is invalid or expired.'],
-    403: ['PERMISSION', 'This API key lacks access to the model.'],
-    404: ['MODEL', 'The model or API endpoint is unavailable.'],
-    429: ['QUOTA', 'The provider quota or rate limit has been reached.'],
-  }
-  const [code, message] = errors[response.status] ?? ['PROVIDER_ERROR', 'The provider could not complete the request.']
+  const [code, message] = HTTP_ERRORS[response.status] ?? ['PROVIDER_ERROR', 'The provider could not complete the request.']
   return Object.assign(new ImageError(code, `${message} (HTTP ${response.status})`, 502), { providerStatus: response.status })
 }
 
-function businessError(payload) {
+/**
+ * GrsAI reports a bad key, a bad account token or an empty balance in the
+ * business code/msg. `secrets` keeps a message that echoes one out of `detail`,
+ * the short reason the settings card may show.
+ */
+function businessError(payload, secrets = []) {
   const code = Number.isInteger(payload?.code) ? payload.code : undefined
   const message = typeof payload?.msg === 'string' ? payload.msg : typeof payload?.error === 'string' ? payload.error : ''
-  // GrsAI reports a bad key or an empty balance in the business code/msg.
-  if (/api\s*key|apikey|unauthori|token|密钥|无效/i.test(message)) return new ImageError('AUTH', 'The API key is invalid or expired.', 502)
-  if (/credit|balance|insufficient|积分|余额/i.test(message)) return new ImageError('QUOTA', 'The GrsAI balance is insufficient for this model.', 502)
-  return Object.assign(new ImageError('PROVIDER_ERROR', `The provider could not complete the request.${code === undefined ? '' : ` (code=${code})`}`, 502), { providerCode: code === undefined ? undefined : String(code) })
+  const details = { providerCode: code === undefined ? undefined : String(code), detail: providerDetail(message, secrets) }
+  if (/用户不存在|user not (?:found|exist)/i.test(message)) return Object.assign(new ImageError('TOKEN', 'The GrsAI account token is invalid.', 502), details)
+  if (/api\s*key|apikey|unauthori|token|密钥|无效/i.test(message)) return Object.assign(new ImageError('AUTH', 'The API key is invalid or expired.', 502), details)
+  if (/credit|balance|insufficient|积分|余额/i.test(message)) return Object.assign(new ImageError('QUOTA', 'The GrsAI balance is insufficient for this model.', 502), details)
+  return Object.assign(new ImageError('PROVIDER_ERROR', `The provider could not complete the request.${code === undefined ? '' : ` (code=${code})`}`, 502), details)
 }
 
 /**
@@ -217,57 +192,39 @@ export async function runLegacyTask(spec, key, path, body, kind, options = {}) {
   } catch (error) { throw safeError(error) }
 }
 
-const secure = url => url.protocol === 'https:' || (url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname))
-
-/** Download a result file (no credentials; the URL is a short-lived signed link). */
-export async function download(link, maxBytes, options = {}) {
-  let url
-  try { url = new URL(String(link)) } catch { throw new ImageError('RESPONSE', 'The provider returned no result file.', 502) }
-  if (!secure(url)) throw new ImageError('RESPONSE', 'The provider returned an insecure result link.', 502)
-  const signal = AbortSignal.any([AbortSignal.timeout(120_000), ...(options.signal ? [options.signal] : [])])
-  try {
-    // Result links may hop through a CDN redirect; the file must still arrive over HTTPS.
-    const response = await (options.fetchImpl ?? fetch)(url.href, { signal })
-    if (response.url && !secure(new URL(response.url))) throw new ImageError('RESPONSE', 'The provider returned an insecure result link.', 502)
-    if (!response.ok) throw new ImageError('RESPONSE', `The result file could not be downloaded. (HTTP ${response.status})`, 502)
-    return await readBounded(response, maxBytes, signal)
-  } catch (error) { throw safeError(error) }
-}
-
 const firstUrl = task => task?.results?.find?.(result => typeof result?.url === 'string')?.url ?? task?.url
 
-// The VIP, Flare and Sunburst canvases take pixel sizes only; these are their
-// 1K sizes for each ratio. GPT Image 2 / 2.5 take the ratio itself.
-const PIXEL_SIZES = { '1:1': '1024x1024', '16:9': '1280x720', '9:16': '720x1280', '4:3': '1152x864', '3:4': '864x1152' }
-
-export function grsaiImageBody(spec, prompt, ratio) {
-  if (isNanoBanana(spec.model)) return { model: spec.model, prompt, aspectRatio: ratio, imageSize: '1K' }
-  if (/-(vip|flare|sunburst)$/u.test(spec.model)) return { model: spec.model, prompt, aspectRatio: PIXEL_SIZES[ratio] }
-  return { model: spec.model, prompt, aspectRatio: ratio }
+/**
+ * The unified-API body for one image: Nano Banana takes a ratio and 1K/2K/4K,
+ * the VIP, Flare and Sunburst canvases a pixel size (plus quality where
+ * offered), GPT Image 2 / 2.5 the ratio itself. `choice` defaults to the
+ * saved options; see options.js.
+ */
+export function grsaiImageBody(spec, prompt, choice = imageChoice('grsai', spec)) {
+  return { model: spec.model, prompt, ...grsaiImageFields(spec.model, choice) }
 }
 
-export async function grsaiImage(spec, key, prompt, ratio, maxBytes, options = {}) {
-  const task = await runGenerate(spec, key, grsaiImageBody(spec, prompt, ratio), 'image', options)
+export async function grsaiImage(spec, key, prompt, choice, maxBytes, options = {}) {
+  const task = await runGenerate(spec, key, grsaiImageBody(spec, prompt, choice), 'image', options)
   return download(firstUrl(task), maxBytes, options)
 }
 
 /**
  * The request for one clip. MiniMax names its two canvases instead of using
- * ratios; Veo renders a fixed length on the legacy route.
+ * ratios; Veo renders a fixed length on the legacy route. `ratio` and the
+ * resolution fall back to the saved defaults (`saved.videoRatio`,
+ * `saved.videoResolution`) when omitted.
  */
-export function grsaiVideoRequest(model, prompt, ratio, duration) {
-  const family = videoFamily(model)
-  const { ratios, duration: range, resolution } = VIDEO_FAMILIES[family]
-  if (!ratios.includes(ratio)) throw new ImageError('RATIO', `${model} supports ${ratios.join(', ')}.`)
-  if (family === 'veo') return { legacy: true, path: '/v1/video/veo', body: { model, prompt, aspectRatio: ratio } }
-  const seconds = duration ?? range.default
-  if (seconds !== undefined && (!Number.isInteger(seconds) || seconds < range.min || seconds > range.max)) throw new ImageError('DURATION', `${model} renders ${range.min}-${range.max} seconds.`)
-  const aspectRatio = family === 'minimax' ? (ratio === '9:16' ? 'portrait' : 'landscape') : ratio
-  return { legacy: false, body: { model, prompt, aspectRatio, ...(resolution ? { resolution } : {}), ...(seconds === undefined ? {} : { duration: seconds }) } }
+export function grsaiVideoRequest(model, prompt, ratio, duration, saved = {}) {
+  const family = videoFamily('grsai', model)
+  const choice = videoChoice('grsai', { ...saved, videoModel: model }, ratio, duration)
+  if (family === 'grsai:veo') return { legacy: true, path: '/v1/video/veo', body: { model, prompt, aspectRatio: choice.ratio } }
+  const aspectRatio = family === 'grsai:minimax' ? (choice.ratio === '9:16' ? 'portrait' : 'landscape') : choice.ratio
+  return { legacy: false, body: { model, prompt, aspectRatio, ...(choice.resolution ? { resolution: choice.resolution } : {}), ...(choice.seconds === undefined ? {} : { duration: choice.seconds }) } }
 }
 
 export async function grsaiVideo(spec, key, prompt, { ratio, duration }, options = {}) {
-  const planned = grsaiVideoRequest(spec.videoModel, prompt, ratio, duration)
+  const planned = grsaiVideoRequest(spec.videoModel, prompt, ratio, duration, spec)
   const task = planned.legacy
     ? await runLegacyTask(spec, key, planned.path, planned.body, 'video', options)
     : await runGenerate(spec, key, planned.body, 'video', options)
@@ -387,17 +344,47 @@ export async function grsaiCatalog(spec, options = {}) {
   return { source: 'builtin', models: [...GRSAI_IMAGE_MODELS], videoModels: [...GRSAI_VIDEO_MODELS], textModels: [...GRSAI_TEXT_MODELS] }
 }
 
-/** The key's credit balance: one request that generates nothing. */
-export async function grsaiCredits(spec, key, options = {}) {
-  const signal = AbortSignal.any([AbortSignal.timeout(15_000), ...(options.signal ? [options.signal] : [])])
-  const result = await request(spec.baseUrl, '/client/openapi/getAPIKeyCredits', key, { ...options, body: { apiKey: key }, signal })
-  if (result?.code !== 0) throw businessError(result)
-  const credits = Number(result?.data?.credits)
+// The two documented balance routes (GrsAI console > 在线体验/文档 > other
+// APIs, checked 2026-11-02): POST /client/openapi/getAPIKeyCredits with
+// `{ apiKey }` and POST /client/openapi/getCredits with the account `{ token }`
+// from the console's user page; both answer `{ code: 0, data: { credits } }`.
+// A key is either unlimited (type 0, drawing on the account balance) or
+// limited (type 1, with its own quota). The key route reports the key's own
+// quota, which an unlimited key leaves at 0, so only the account route shows
+// what the account can still spend.
+
+/** A credit count from `{ code, data: { credits } }`; anything else is a failure, never 0. */
+function creditsOf(result, secrets) {
+  if (result?.code !== 0) throw businessError(result, secrets)
+  const value = result?.data?.credits
+  const credits = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : NaN
   if (!Number.isFinite(credits)) throw new ImageError('RESPONSE', 'The provider returned no credit balance.', 502)
   return credits
 }
 
+/**
+ * The key's own credit quota: one request that generates nothing. `unlimited`
+ * is set only when GrsAI states the key type (a field outside the documented
+ * response, read if present).
+ */
+export async function grsaiCredits(spec, key, options = {}) {
+  const signal = AbortSignal.any([AbortSignal.timeout(15_000), ...(options.signal ? [options.signal] : [])])
+  const result = await request(spec.baseUrl, '/client/openapi/getAPIKeyCredits', key, { ...options, body: { apiKey: key }, signal })
+  const credits = creditsOf(result, [key])
+  const type = result.data.type
+  return { credits, ...(type === 0 || type === 1 ? { unlimited: type === 0 } : {}) }
+}
+
+/** The account balance behind every key, read with the console's account token. */
+export async function grsaiAccountCredits(spec, token, options = {}) {
+  const signal = AbortSignal.any([AbortSignal.timeout(15_000), ...(options.signal ? [options.signal] : [])])
+  // The route reads the body token; the shared helper also sends it as the bearer header to the same host.
+  const result = await request(spec.baseUrl, '/client/openapi/getCredits', token, { ...options, body: { token }, signal })
+  return creditsOf(result, [token])
+}
+
 export async function grsaiValidate(spec, key, options = {}) {
   await grsaiCredits(spec, key, options)
+  if (spec.accountToken) await grsaiAccountCredits(spec, spec.accountToken, options)
   return 'credits'
 }

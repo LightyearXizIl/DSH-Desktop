@@ -5,7 +5,9 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import { BUNDLED_SKILL_RANK } from '@deepseek-ai/dsh-skill'
 import { createSettings } from './lib/settings.js'
 import { ImageError, generate, readBounded, safeError } from './lib/provider.js'
-import { MAX_TEXT_OUTPUT_TOKENS, grsaiText, grsaiVideo, grsaiVideoRequest } from './lib/grsai.js'
+import { MAX_TEXT_OUTPUT_TOKENS, grsaiText, grsaiVideo } from './lib/grsai.js'
+import { agnesVideo } from './lib/agnes.js'
+import { IMAGE_RATIOS, VIDEO_RATIOS, videoChoice } from './lib/options.js'
 import { assetDirectory, normalizeImage, workspaceFor } from './lib/assets.js'
 import { commitAsset, commitImage, writerPlan } from './lib/commit.js'
 import { previewImage } from './lib/preview.js'
@@ -17,7 +19,7 @@ export const IMAGE_PROMPT_SECTION = 'tool:image-generation'
 export const UNCONFIGURED_IMAGE_PROMPT = 'Do not call image_generate. Direct the user to Settings > Built-in plugins > Image & video generation. Never ask for an API key in conversation.'
 export const CONFIGURED_IMAGE_PROMPT = 'For image creation, load the generate-image Skill and call image_generate. Presentations and documents may call it in parallel for multiple visuals. Reuse its PNG workspace path in PPT and Word. The user configures this shared capability in Settings > Built-in plugins > Image & video generation.'
 export const VIDEO_PROMPT_SECTION = 'tool:video-generation'
-export const UNCONFIGURED_VIDEO_PROMPT = 'Do not call video_generate. Video generation needs a GrsAI key saved in Settings > Built-in plugins > Image & video generation. Never ask for an API key in conversation.'
+export const UNCONFIGURED_VIDEO_PROMPT = 'Do not call video_generate. Video generation needs a GrsAI or Agnes AI key saved in Settings > Built-in plugins > Image & video generation. Never ask for an API key in conversation.'
 export const CONFIGURED_VIDEO_PROMPT = 'For a short video clip, call video_generate once per clip. It saves an MP4 in the session workspace and usually takes a few minutes; tell the user it is running. Ratios and duration depend on the saved video model; the tool reports what that model accepts.'
 export const TEXT_PROMPT_SECTION = 'tool:text-generation'
 export const UNCONFIGURED_TEXT_PROMPT = 'Do not call text_generate. Text generation needs a GrsAI key saved in Settings > Built-in plugins > Image & video generation. Never ask for an API key in conversation.'
@@ -34,12 +36,12 @@ function isMp4(data) {
 export function videoTool(ctx, settings) {
   return defineTool({
     name: 'video_generate',
-    description: 'Generate one short video clip with the GrsAI video model saved in Settings (such as MiniMax H3 or Agnes Video 2.5) and save it as an MP4 in the session workspace. Requires a saved GrsAI key. Generation usually takes a few minutes. Describe subject, motion, camera and mood in the prompt.',
+    description: 'Generate one short video clip with the video model saved in Settings (GrsAI models such as MiniMax H3, or Agnes Video 2.5) and save it as an MP4 in the session workspace. Requires a saved GrsAI or Agnes AI key. Generation usually takes a few minutes. Describe subject, motion, camera and mood in the prompt.',
     parameters: {
       prompt: { type: 'string', required: true, description: 'Subject, action, camera movement, setting, lighting and mood of the clip.' },
       style_context: { type: 'string', description: 'Shared visual style to keep consistent with other assets.' },
-      aspect_ratio: { type: 'string', enum: ['16:9', '9:16', '1:1', '4:3', '3:4', '21:9'], description: 'Landscape 16:9 (default) or portrait 9:16 on every model; Agnes Video also takes 1:1, 4:3, 3:4 and 21:9.' },
-      duration: { type: 'integer', description: 'Clip length in seconds: MiniMax H3 1-15 (default 6), Agnes Video 4-12 (default 5). Veo renders a fixed length and ignores it.' },
+      aspect_ratio: { type: 'string', enum: [...VIDEO_RATIOS], description: 'Omit to use the default ratio saved in Settings. 16:9 and 9:16 work on every model; Agnes and Wan models also take 1:1, 4:3, 3:4 and 21:9.' },
+      duration: { type: 'integer', description: 'Clip length in seconds: MiniMax H3 1-15 (default 6, at most 10 at 1080p), Agnes Video 4-12 (default 5), Wan 2-30 (default 5). Veo renders a fixed length and ignores it.' },
     },
     output: {
       schema: { type: 'object', additionalProperties: false, properties: {
@@ -58,22 +60,23 @@ export function videoTool(ctx, settings) {
         const prompt = typeof args.prompt === 'string' ? args.prompt.trim() : ''
         const style = typeof args.style_context === 'string' ? args.style_context.trim() : ''
         if (!prompt || prompt.length + style.length > 8000) throw new ImageError('PROMPT', 'Enter a video description of up to 8000 characters including style context.')
-        const ratio = args.aspect_ratio ?? '16:9'
+        const ratio = args.aspect_ratio
         if (args.duration !== undefined && !Number.isInteger(args.duration)) throw new ImageError('DURATION', 'Give the video duration in whole seconds.')
         const root = await workspaceFor(ctx, exec)
         await assetDirectory(root, false, 'video')
         await writerPlan(ctx, root, exec, 'video')
-        const spec = await settings.grsaiSpec()
+        const spec = await settings.videoSpec()
         // Refuse a ratio or length the saved model cannot render before spending credits.
-        grsaiVideoRequest(spec.videoModel, prompt, ratio, args.duration)
-        ctx.logger.info('image-generation: video started; provider=grsai model=%s', spec.videoModel)
-        const data = await grsaiVideo(spec, spec.key, [prompt, style && `Visual style: ${style}`].filter(Boolean).join('\n\n'), { ratio, duration: args.duration }, { signal: exec.signal })
+        const choice = videoChoice(spec.provider, spec, ratio, args.duration)
+        ctx.logger.info('image-generation: video started; provider=%s model=%s ratio=%s resolution=%s', spec.provider, spec.videoModel, choice.ratio, choice.resolution)
+        const render = spec.provider === 'agnes' ? agnesVideo : grsaiVideo
+        const data = await render(spec, spec.key, [prompt, style && `Visual style: ${style}`].filter(Boolean).join('\n\n'), { ratio, duration: args.duration }, { signal: exec.signal })
         if (!isMp4(data)) throw new ImageError('VIDEO', 'The provider returned an unsupported video file.', 502)
         // Recheck live session permissions after the long provider call.
         if (await workspaceFor(ctx, exec) !== root) throw new Error('workspace changed')
         const asset = await commitAsset(ctx, root, data, exec, 'video')
         ctx.logger.info('image-generation: video saved; sha256=%s bytes=%d', asset.sha256, data.length)
-        return { ...asset, asset_id: `sha256:${asset.sha256}`, media_type: 'video/mp4', bytes: data.length, provider: 'grsai', model: spec.videoModel }
+        return { ...asset, asset_id: `sha256:${asset.sha256}`, media_type: 'video/mp4', bytes: data.length, provider: spec.provider, model: spec.videoModel }
       } catch (error) {
         const safe = safeError(error)
         failureLog(ctx)('image-generation: video failed; code=%s http=%s provider_code=%s', safe.code, safe.providerStatus, safe.providerCode)
@@ -139,7 +142,7 @@ export function imageTool(ctx, settings) {
       prompt: { type: 'string', required: true, description: 'Visual subject, composition, palette, lighting, and space for document or slide text.' },
       style_context: { type: 'string', description: 'Shared brand, template and illustration style for consistency across the document.' },
       purpose: { type: 'string', enum: ['general', 'presentation', 'document', 'web', 'marketing'] },
-      aspect_ratio: { type: 'string', enum: ['1:1', '16:9', '9:16', '4:3', '3:4'], description: 'Target composition; actual dimensions are returned. OpenAI uses its closest supported canvas.' },
+      aspect_ratio: { type: 'string', enum: [...IMAGE_RATIOS], description: 'Target composition; omit to use the default ratio saved in Settings. Actual dimensions are returned; GPT Image 1.x uses its closest canvas.' },
     },
     output: {
       schema: { type: 'object', additionalProperties: false, properties: {
@@ -159,7 +162,7 @@ export function imageTool(ctx, settings) {
         await assetDirectory(root)
         await writerPlan(ctx, root, exec)
         const spec = await settings.active()
-        ctx.logger.info('image-generation: generation started; provider=%s model=%s', spec.provider, spec.model)
+        ctx.logger.info('image-generation: generation started; provider=%s model=%s resolution=%s quality=%s', spec.provider, spec.model, spec.imageResolution, spec.imageQuality)
         const raw = await generate(spec.provider, spec, spec.key, args, { signal: exec.signal })
         const image = await normalizeImage(raw)
         // Recheck live session permissions after a potentially long provider call.
@@ -185,7 +188,9 @@ export async function apply(ctx) {
       return Response.json(await run(), { headers: { 'Cache-Control': 'no-store' } })
     } catch (error) {
       const safe = safeError(error)
-      return Response.json({ code: safe.code, error: safe.message }, { status: safe.status, headers: { 'Cache-Control': 'no-store' } })
+      // `detail` is a provider's short business reason, already screened for secrets (errors.js).
+      return Response.json({ code: safe.code, error: safe.message, ...(safe.detail ? { detail: safe.detail } : {}), ...(safe.providerStatus ? { providerStatus: safe.providerStatus } : {}) },
+        { status: safe.status, headers: { 'Cache-Control': 'no-store' } })
     }
   }
   const registerJson = (path, methods, fetch) => ctx.connection.fetch.register({
@@ -196,6 +201,8 @@ export async function apply(ctx) {
   registerJson('/api/image-generation.credits', ['GET', 'POST'], request => jsonResponse(async () => request.method === 'POST'
     ? settings.credits(request.signal, JSON.parse((await readBounded(request, 16_384, request.signal)).toString('utf8')))
     : settings.credits(request.signal)))
+  registerJson('/api/image-generation.options', ['POST'], request => jsonResponse(async () => settings.options(
+    JSON.parse((await readBounded(request, 16_384, request.signal)).toString('utf8')))))
   for (const suffix of ['save', 'models']) {
     registerJson(`/api/image-generation.${suffix}`, ['POST'], request => jsonResponse(async () => settings[suffix](
       JSON.parse((await readBounded(request, 16_384, request.signal)).toString('utf8')), request.signal,
@@ -219,9 +226,11 @@ export async function apply(ctx) {
   ctx.on('system-prompt/assemble', async (_assembly, _context, next) => {
     let configured = false
     let grsai = false
+    let video = false
     try {
       configured = await settings.isConfigured()
       grsai = await settings.isGrsaiConfigured()
+      video = await settings.isVideoConfigured()
     } catch (error) {
       ctx.logger.info('image-generation: prompt assembly treated configuration as unset; code=%s', safeError(error).code)
     }
@@ -230,7 +239,7 @@ export async function apply(ctx) {
       ...assembly,
       sections: assembly.sections.map(section => {
         if (section.name === IMAGE_PROMPT_SECTION) return { ...section, text: configured ? CONFIGURED_IMAGE_PROMPT : UNCONFIGURED_IMAGE_PROMPT }
-        if (section.name === VIDEO_PROMPT_SECTION) return { ...section, text: grsai ? CONFIGURED_VIDEO_PROMPT : UNCONFIGURED_VIDEO_PROMPT }
+        if (section.name === VIDEO_PROMPT_SECTION) return { ...section, text: video ? CONFIGURED_VIDEO_PROMPT : UNCONFIGURED_VIDEO_PROMPT }
         if (section.name === TEXT_PROMPT_SECTION) return { ...section, text: grsai ? CONFIGURED_TEXT_PROMPT : UNCONFIGURED_TEXT_PROMPT }
         return section
       }),

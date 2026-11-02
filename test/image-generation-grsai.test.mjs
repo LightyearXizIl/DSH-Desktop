@@ -43,8 +43,21 @@ async function grsai({ failure, chat } = {}) {
     const json = (value, status = 200) => { res.writeHead(status, { 'content-type': 'application/json' }); res.end(JSON.stringify(value)) }
     const isVideo = model => /^(veo|minimax|agnes)/.test(model ?? '')
     const result = id => isVideo(id) ? `${base}/files/out.mp4` : `${base}/files/out.png`
+    // The documented balance routes. A limited key reports its own quota; an
+    // unlimited key (type 0) reports 0 there, and only the account token route
+    // shows what the account holds.
     if (url.pathname === '/client/openapi/getAPIKeyCredits') {
-      return json(body?.apiKey === 'grsai-good-key' ? { code: 0, msg: 'success', data: { credits: 5000 } } : { code: -1, msg: 'apikey invalid: grsai-bad-key' })
+      const keys = {
+        'grsai-good-key': { code: 0, msg: 'success', data: { credits: 5000 } },
+        'grsai-unlimited-key': { code: 0, msg: 'success', data: { credits: 0 } },
+        'grsai-typed-key': { code: 0, msg: 'success', data: { credits: 0, type: 0 } },
+        'grsai-null-key': { code: 0, msg: 'success', data: { credits: null } },
+        'grsai-missing-key': { code: -1, data: null, msg: 'apikey不存在' },
+      }
+      return json(keys[body?.apiKey] ?? { code: -1, msg: 'apikey invalid: grsai-bad-key' })
+    }
+    if (url.pathname === '/client/openapi/getCredits') {
+      return json(body?.token === 'grsai-account-token' ? { code: 0, msg: 'success', data: { credits: 98765 } } : { code: -1, data: null, msg: '用户不存在' })
     }
     if (url.pathname === '/v1/api/generate') {
       const id = `${body.model}-${randomUUID()}`
@@ -126,7 +139,7 @@ describe('GrsAI provider', () => {
     expect(MODEL_CATALOG.grsai.textModels.some(model => /image|banana/.test(model))).toBe(false)
     expect(() => profile('grsai', { textModel: 'bad model' })).toThrow(/valid text model/)
     expect(MODEL_CATALOG.grsai.models).toEqual(expect.arrayContaining(['nano-banana-pro', 'gpt-image-2']))
-    expect(MODEL_CATALOG.grsai.videoModels).toEqual(['minimax-h3', 'agnes-video-2.5', 'veo3.1-fast', 'veo3.1-pro'])
+    expect(MODEL_CATALOG.grsai.videoModels).toEqual(['minimax-h3', 'agnes-video-2.5', 'wan-3.0', 'veo3.1-fast', 'veo3.1-pro'])
     expect(MODEL_CATALOG.grsai.canFetch).toBe(true)
     // A pasted endpoint collapses to the documented host.
     expect(profile('grsai', { baseUrl: 'https://grsaiapi.com/v1/draw/completions' }).baseUrl).toBe('https://grsaiapi.com')
@@ -171,6 +184,40 @@ describe('GrsAI provider', () => {
     const bodies = s.calls.filter(call => call.url === '/v1/api/generate').map(call => call.body)
     expect(bodies[1]).toMatchObject({ model: 'gpt-image-2', aspectRatio: '9:16' })
     expect(bodies[2]).toMatchObject({ model: 'gpt-image-2-vip', aspectRatio: '1280x720' })
+    expect(bodies[2]).not.toHaveProperty('quality')
+  })
+
+  it('sends the saved resolution, quality and default ratio in GrsAI image requests', async () => {
+    const s = await grsai()
+    const body = async (spec, args = { prompt: 'A lighthouse' }) => {
+      await generate('grsai', { baseUrl: s.baseUrl, ...spec }, 'k', args)
+      return s.calls.filter(call => call.url === '/v1/api/generate').at(-1).body
+    }
+    // Nano Banana: the saved default ratio applies when the tool names none; the tool's ratio wins otherwise.
+    expect(await body({ model: 'nano-banana-pro', imageRatio: '3:4', imageResolution: '2K' })).toMatchObject({ aspectRatio: '3:4', imageSize: '2K' })
+    expect(await body({ model: 'nano-banana-pro', imageRatio: '3:4', imageResolution: '4K' }, { prompt: 'x', aspect_ratio: '16:9' })).toMatchObject({ aspectRatio: '16:9', imageSize: '4K' })
+    // A channel variant named for a size renders only that size, whatever was saved.
+    expect(await body({ model: 'nano-banana-2-4k-cl', imageResolution: '1K' })).toMatchObject({ imageSize: '4K' })
+    // VIP canvases: pixel sizes from the 1K/2K/4K table, and quality only where the model offers it.
+    const vip = await body({ model: 'gpt-image-2-vip', imageResolution: '4K', imageQuality: 'high' }, { prompt: 'x', aspect_ratio: '16:9' })
+    expect(vip).toMatchObject({ aspectRatio: '3840x2160' })
+    expect(vip).not.toHaveProperty('quality')
+    expect(await body({ model: 'gpt-image-2.5-sunburst', imageResolution: '2K', imageQuality: 'max' }, { prompt: 'x', aspect_ratio: '21:9' })).toMatchObject({ aspectRatio: '2912x1248', quality: 'max' })
+    expect(await body({ model: 'gpt-image-2.5-flare' }, { prompt: 'x', aspect_ratio: '1:1' })).not.toHaveProperty('quality')
+    // GPT Image 2 takes the ratio only.
+    const plain = await body({ model: 'gpt-image-2', imageResolution: '4K' }, { prompt: 'x', aspect_ratio: '3:2' })
+    expect(plain).toMatchObject({ aspectRatio: '3:2' })
+    expect(plain).not.toHaveProperty('imageSize')
+  })
+
+  it('refuses image options the selected GrsAI model does not offer when saving', async () => {
+    const f = await fixture(); const s = await grsai()
+    await expect(save(f, s.baseUrl, 'grsai-good-key', { model: 'gpt-image-2.5-flare', imageQuality: 'max' })).rejects.toMatchObject({ code: 'OPTION' })
+    await expect(save(f, s.baseUrl, 'grsai-good-key', { videoModel: 'minimax-h3', videoResolution: '2k' })).rejects.toMatchObject({ code: 'OPTION' })
+    // Nothing was submitted or stored.
+    expect(s.calls).toHaveLength(0)
+    const saved = await save(f, s.baseUrl, 'grsai-good-key', { model: 'gpt-image-2.5-flare', imageQuality: 'high', imageResolution: '2K', imageRatio: '16:9', videoRatio: '9:16', videoResolution: '1080p' })
+    expect(saved.profiles.grsai).toMatchObject({ imageQuality: 'high', imageResolution: '2K', imageRatio: '16:9', videoRatio: '9:16', videoResolution: '1080p' })
   })
 
   it('downloads result links only over HTTPS, including after a redirect', async () => {
@@ -201,7 +248,14 @@ describe('GrsAI provider', () => {
     expect(() => grsaiVideoRequest('minimax-h3', 'p', '1:1')).toThrow(expect.objectContaining({ code: 'RATIO' }))
     expect(() => grsaiVideoRequest('agnes-video-2.5', 'p', '16:9', 13)).toThrow(expect.objectContaining({ code: 'DURATION' }))
     expect(() => grsaiVideoRequest('minimax-h3', 'p', '16:9', 16)).toThrow(expect.objectContaining({ code: 'DURATION' }))
-    expect(videoCapabilities('veo3.1-fast')).toEqual({ ratios: ['16:9', '9:16'], duration: null })
+    expect(videoCapabilities('veo3.1-fast')).toEqual({ ratios: ['16:9', '9:16'], resolutions: [], duration: null })
+    // The saved resolution goes out; MiniMax caps 1080p clips at 10 seconds.
+    expect(grsaiVideoRequest('minimax-h3', 'p', '16:9', 8, { videoResolution: '1080p' }).body).toMatchObject({ resolution: '1080p', duration: 8 })
+    expect(() => grsaiVideoRequest('minimax-h3', 'p', '16:9', 12, { videoResolution: '1080p' })).toThrow(expect.objectContaining({ code: 'DURATION', message: expect.stringContaining('1-10 seconds at 1080p') }))
+    expect(grsaiVideoRequest('agnes-video-2.5', 'p', undefined, undefined, { videoRatio: '1:1', videoResolution: '2k' }).body).toMatchObject({ aspectRatio: '1:1', resolution: '2k', duration: 5 })
+    // A resolution the model does not offer falls back to its default instead of failing.
+    expect(grsaiVideoRequest('agnes-video-2.5', 'p', '16:9', undefined, { videoResolution: '768p' }).body).toMatchObject({ resolution: '720p' })
+    expect(grsaiVideoRequest('wan-3.0', 'p', '4:3', 30, { videoResolution: '480p' }).body).toEqual({ model: 'wan-3.0', prompt: 'p', aspectRatio: '4:3', resolution: '480p', duration: 30 })
     // A video model added after this release gets the unified API's common fields only.
     expect(grsaiVideoRequest('seedance-2', 'p', '1:1')).toEqual({ legacy: false, body: { model: 'seedance-2', prompt: 'p', aspectRatio: '1:1' } })
     expect(grsaiVideoRequest('seedance-2', 'p', '16:9', 8).body).toEqual({ model: 'seedance-2', prompt: 'p', aspectRatio: '16:9', duration: 8 })
@@ -296,6 +350,15 @@ describe('video_generate', () => {
     expect(s.calls.filter(call => call.url === '/v1/api/generate').at(-1).body).toMatchObject({ model: 'agnes-video-2.5', aspectRatio: '21:9', resolution: '720p', duration: 5 })
   })
 
+  it('uses the saved default ratio and resolution when the call names none', async () => {
+    const f = await fixture(); const s = await grsai()
+    await mountPlugin(f)
+    await save(f, s.baseUrl, 'grsai-good-key', { videoModel: 'agnes-video-2.5', videoRatio: '9:16', videoResolution: '1080p' })
+    const result = await runVideo(f, { prompt: 'A city at dawn' })
+    expect(result.isError, JSON.stringify(result)).toBeFalsy()
+    expect(s.calls.find(call => call.url === '/v1/api/generate').body).toMatchObject({ model: 'agnes-video-2.5', aspectRatio: '9:16', resolution: '1080p', duration: 5 })
+  })
+
   it('refuses a ratio the saved model cannot render before submitting anything', async () => {
     const f = await fixture(); const s = await grsai()
     await mountPlugin(f)
@@ -382,19 +445,22 @@ describe('text_generate', () => {
 })
 
 describe('GrsAI credits', () => {
+  const credits = (plugin, body) => plugin.route('/api/image-generation.credits').fetch(body === undefined
+    ? new Request('http://local/api/image-generation.credits')
+    : new Request('http://local/api/image-generation.credits', { method: 'POST', body: JSON.stringify(body) }))
+
   it('checks a typed key\'s balance before it is saved, without storing it', async () => {
     const f = await fixture(); const s = await grsai()
     const plugin = await mountPlugin(f)
-    const check = body => plugin.route('/api/image-generation.credits').fetch(new Request('http://local/api/image-generation.credits', { method: 'POST', body: JSON.stringify(body) }))
-    const response = await check({ apiKey: 'grsai-good-key', baseUrl: s.baseUrl })
+    const response = await credits(plugin, { apiKey: 'grsai-good-key', baseUrl: s.baseUrl })
     const text = await response.text()
-    expect(JSON.parse(text)).toEqual({ credits: 5000 })
+    expect(JSON.parse(text)).toEqual({ key: { credits: 5000 }, account: null })
     expect(text).not.toContain('grsai-good-key')
     expect((await f.settings.describe()).profiles.grsai.configured).toBe(false)
     // A rejected key says so; a missing one is refused before any request.
-    expect(await (await check({ apiKey: 'grsai-bad-key', baseUrl: s.baseUrl })).json()).toMatchObject({ code: 'AUTH' })
+    expect(await (await credits(plugin, { apiKey: 'grsai-bad-key', baseUrl: s.baseUrl })).json()).toMatchObject({ code: 'AUTH' })
     const before = s.calls.length
-    expect(await (await check({ apiKey: ' ', baseUrl: s.baseUrl })).json()).toMatchObject({ code: 'KEY_REQUIRED' })
+    expect(await (await credits(plugin, { apiKey: ' ', baseUrl: s.baseUrl })).json()).toMatchObject({ code: 'KEY_REQUIRED' })
     expect(s.calls.length).toBe(before)
     expect(JSON.stringify(f.log.mock.calls)).not.toMatch(/grsai-(good|bad)-key/)
   })
@@ -402,17 +468,84 @@ describe('GrsAI credits', () => {
   it('reads the saved key\'s balance through the credits route, never returning the key', async () => {
     const f = await fixture(); const s = await grsai()
     const plugin = await mountPlugin(f)
-    const unconfigured = await plugin.route('/api/image-generation.credits').fetch(new Request('http://local/api/image-generation.credits'))
+    const unconfigured = await credits(plugin)
     expect(unconfigured.status).toBe(400)
     expect(await unconfigured.json()).toMatchObject({ code: 'NOT_CONFIGURED' })
 
     await save(f, s.baseUrl)
-    const response = await plugin.route('/api/image-generation.credits').fetch(new Request('http://local/api/image-generation.credits'))
+    const response = await credits(plugin)
     expect(response.headers.get('cache-control')).toBe('no-store')
     const text = await response.text()
-    expect(JSON.parse(text)).toEqual({ credits: 5000 })
+    expect(JSON.parse(text)).toEqual({ key: { credits: 5000 }, account: null })
     expect(text).not.toContain('grsai-good-key')
-    expect(s.calls.at(-1)).toMatchObject({ url: '/client/openapi/getAPIKeyCredits', auth: 'Bearer grsai-good-key' })
+    expect(s.calls.at(-1)).toMatchObject({ url: '/client/openapi/getAPIKeyCredits', method: 'POST', body: { apiKey: 'grsai-good-key' } })
   })
 
+  it('reads the account balance with a saved account token, which an unlimited key cannot show', async () => {
+    const f = await fixture(); const s = await grsai()
+    const plugin = await mountPlugin(f)
+    // The reported bug: an unlimited key's own quota is 0 whatever the account holds.
+    await save(f, s.baseUrl, 'grsai-unlimited-key')
+    expect(await (await credits(plugin)).json()).toEqual({ key: { credits: 0 }, account: null })
+
+    const saved = await f.settings.save({ provider: 'grsai', baseUrl: s.baseUrl, model: DEFAULTS.grsai.model, apiKey: '', accountToken: 'grsai-account-token', revision: 1 })
+    // Saving checks the token once and never returns it.
+    expect(s.calls.at(-1)).toMatchObject({ url: '/client/openapi/getCredits', method: 'POST', body: { token: 'grsai-account-token' } })
+    expect(saved.profiles.grsai.accountTokenConfigured).toBe(true)
+    expect(JSON.stringify(saved)).not.toContain('grsai-account-token')
+    const text = await (await credits(plugin)).text()
+    expect(JSON.parse(text)).toEqual({ key: { credits: 0 }, account: { credits: 98765 } })
+    expect(text).not.toContain('grsai-account-token')
+    expect(JSON.stringify(f.log.mock.calls)).not.toContain('grsai-account-token')
+
+    // Saving again without a token keeps it; clearing removes it.
+    expect((await f.settings.save({ provider: 'grsai', baseUrl: s.baseUrl, model: DEFAULTS.grsai.model, apiKey: '', revision: 2 })).profiles.grsai.accountTokenConfigured).toBe(true)
+    expect((await f.settings.save({ provider: 'grsai', baseUrl: s.baseUrl, model: DEFAULTS.grsai.model, apiKey: '', clearAccountToken: true, revision: 3 })).profiles.grsai.accountTokenConfigured).toBe(false)
+    expect(await (await credits(plugin)).json()).toEqual({ key: { credits: 0 }, account: null })
+  })
+
+  it('refuses to save a rejected account token, keeping the previous configuration', async () => {
+    const f = await fixture(); const s = await grsai()
+    await save(f, s.baseUrl)
+    await expect(f.settings.save({ provider: 'grsai', baseUrl: s.baseUrl, model: DEFAULTS.grsai.model, apiKey: '', accountToken: 'wrong-token', revision: 1 }))
+      .rejects.toMatchObject({ code: 'TOKEN', detail: '用户不存在' })
+    expect((await f.settings.describe()).profiles.grsai).toMatchObject({ configured: true, accountTokenConfigured: false })
+  })
+
+  it('reports a typed account token\'s failure beside a working key instead of failing the whole read', async () => {
+    const f = await fixture(); const s = await grsai()
+    const plugin = await mountPlugin(f)
+    const result = await (await credits(plugin, { apiKey: 'grsai-good-key', accountToken: 'wrong-token', baseUrl: s.baseUrl })).json()
+    expect(result).toEqual({ key: { credits: 5000 }, account: { error: { code: 'TOKEN', detail: '用户不存在' } } })
+    // A typed token next to the saved key reads the account balance.
+    await save(f, s.baseUrl, 'grsai-unlimited-key')
+    expect(await (await credits(plugin, { accountToken: 'grsai-account-token', baseUrl: s.baseUrl })).json()).toEqual({ key: { credits: 0 }, account: { credits: 98765 } })
+  })
+
+  it('shows why a balance read failed instead of reporting 0', async () => {
+    const f = await fixture(); const s = await grsai()
+    const plugin = await mountPlugin(f)
+    // A missing balance field is a malformed answer, not 0 credits.
+    expect(await (await credits(plugin, { apiKey: 'grsai-null-key', baseUrl: s.baseUrl })).json()).toMatchObject({ code: 'RESPONSE' })
+    // GrsAI's short reason comes through...
+    const missing = await credits(plugin, { apiKey: 'grsai-missing-key', baseUrl: s.baseUrl })
+    expect(await missing.json()).toMatchObject({ code: 'AUTH', detail: 'apikey不存在' })
+    // ...unless it echoes the key.
+    const echoed = await (await credits(plugin, { apiKey: 'grsai-bad-key', baseUrl: s.baseUrl })).json()
+    expect(echoed.code).toBe('AUTH')
+    expect(echoed).not.toHaveProperty('detail')
+    expect(JSON.stringify(echoed)).not.toContain('grsai-bad-key')
+    // An HTTP failure carries its status.
+    const down = createServer((_req, res) => { res.writeHead(503); res.end('busy') })
+    await new Promise(resolve => down.listen(0, '127.0.0.1', resolve))
+    cleanups.push(() => new Promise(resolve => down.close(resolve)))
+    const unavailable = await (await credits(plugin, { apiKey: 'grsai-good-key', baseUrl: `http://127.0.0.1:${down.address().port}` })).json()
+    expect(unavailable).toMatchObject({ code: 'PROVIDER_ERROR', providerStatus: 503 })
+  })
+
+  it('reads the key type when GrsAI states it', async () => {
+    const f = await fixture(); const s = await grsai()
+    const plugin = await mountPlugin(f)
+    expect(await (await credits(plugin, { apiKey: 'grsai-typed-key', baseUrl: s.baseUrl })).json()).toEqual({ key: { credits: 0, unlimited: true }, account: null })
+  })
 })

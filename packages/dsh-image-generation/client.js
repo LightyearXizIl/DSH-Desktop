@@ -28,6 +28,21 @@ window.__ModuleLoader__.load({
       READ_ONLY: '当前凭据存储为只读，请联系管理员。', RESPONSE: '服务商返回了无法识别的结果，请检查 API 地址。',
       PARAMETERS: '服务商未通过连接检查，请确认 API 地址、模型 ID 及接入点配置。',
       UNAVAILABLE: '连接失败，请检查网络和 API 地址后重新保存。', CANCELLED: '校验已取消，可以重新保存。', PROVIDER_ERROR: '服务商暂时不可用，请稍后重新保存。',
+      agnes: 'Agnes AI', compatible: 'OpenAI 兼容',
+      agnesHint: 'Agnes AI 一个 Key 同时提供生图和生视频。默认使用中国站地址 https://api.agnes-ai.cn/v1，国际站账号可在高级设置中改为 https://apihub.agnes-ai.com/v1。',
+      compatibleHint: '接入任何兼容 OpenAI Images API（POST /images/generations）的服务。填写服务的 API 地址（通常以 /v1 结尾）、API Key 和模型名。',
+      imageOptions: '图片参数', videoOptions: '视频参数', ratio: '默认比例', resolution: '分辨率', quality: '质量',
+      optionsHint: '对话、PPT 或文档调用时指定了比例，以调用为准；否则使用这里的默认比例。可选值按当前模型实际支持的取值列出。',
+      optionsLoading: '正在读取当前模型支持的参数…', optionsFailed: '暂时无法读取当前模型支持的参数，保存时沿用已保存的参数。',
+      quality_default: '默认（不指定）', quality_auto: '自动', quality_low: '低', quality_medium: '中', quality_high: '高', quality_xhigh: '超高', quality_max: '最高', quality_standard: '标准', quality_hd: '高清',
+      resolution_gpt: 'GPT Image 画布（1024 / 1536）', resolution_dalle3: 'DALL·E 3 画布（1024 / 1792）', resolution_omit: '不指定尺寸',
+      creditsKey: 'Key 额度', creditsAccount: '账户余额', creditsUnlimited: '不限额', creditsToken: '账户 Token 无效', creditsResponse: 'GrsAI 返回的数据里没有积分',
+      creditsQuota: '余额或额度不足', creditsReason: 'GrsAI：{detail}',
+      creditsZeroHint: '这里显示的是该 Key 自己的额度：不限额 Key 不单独计额度，所以是 0；限额 Key 为 0 表示额度已用完。填写下方的账户 Token 可查询账户积分余额。',
+      accountToken: '账户 Token（可选，用于查询账户余额）', accountTokenPlaceholder: '在 GrsAI 控制台「用户信息」中复制', accountTokenSaved: '已保存，输入新 Token 可替换',
+      accountTokenClear: '保存时清除已保存的 Token', accountTokenHint: '只用于查询账户积分余额，不参与生成。这个 Token 能管理账户下的 API Key，只保存在本机凭据存储中，不会显示或回传。',
+      TOKEN: 'GrsAI 账户 Token 无效，请到控制台「用户信息」重新复制。', OPTION: '所选参数不适用于当前模型，请重新选择后保存。',
+      NOT_CONFIGURED: '尚未保存 Key。', savedUnverified: '已保存。该服务没有模型列表接口，Key 会在第一次生成时确认。',
     }
     const en = {
       previewLoading: 'Loading image…', previewRetry: 'Reload image', generatedImage: 'Generated image', title: 'Image & video generation', description: 'Connect image, video and text generation models to create pictures, short clips and copy in chat, presentations and documents.', provider: 'Provider', bytedance: 'Seedream', openai: 'OpenAI', grsai: 'GrsAI',
@@ -52,6 +67,21 @@ window.__ModuleLoader__.load({
       RESPONSE: 'The provider returned an invalid response. Check the API URL.', UNAVAILABLE: 'Connection failed. Check your network and API URL.',
       PARAMETERS: 'The provider did not confirm the connection check. Verify the API URL and model ID.',
       CANCELLED: 'Validation was cancelled. Save again to retry.', PROVIDER_ERROR: 'The provider is temporarily unavailable. Save again later.',
+      agnes: 'Agnes AI', compatible: 'OpenAI-compatible',
+      agnesHint: 'One Agnes AI key covers image and video generation. The default is the China site, https://api.agnes-ai.cn/v1; for an international account, switch to https://apihub.agnes-ai.com/v1 under Advanced settings.',
+      compatibleHint: 'Connect any service that implements the OpenAI Images API (POST /images/generations). Enter its API URL (usually ending in /v1), an API key and the model name.',
+      imageOptions: 'Image options', videoOptions: 'Video options', ratio: 'Default ratio', resolution: 'Resolution', quality: 'Quality',
+      optionsHint: 'A ratio named by the chat, presentation or document wins; otherwise the default ratio here applies. Each list shows what the selected model supports.',
+      optionsLoading: 'Reading the options this model supports…', optionsFailed: 'The options for this model could not be read; saving keeps the saved options.',
+      quality_default: 'Default (not sent)', quality_auto: 'Auto', quality_low: 'Low', quality_medium: 'Medium', quality_high: 'High', quality_xhigh: 'Extra high', quality_max: 'Maximum', quality_standard: 'Standard', quality_hd: 'HD',
+      resolution_gpt: 'GPT Image canvases (1024 / 1536)', resolution_dalle3: 'DALL·E 3 canvases (1024 / 1792)', resolution_omit: 'No size sent',
+      creditsKey: 'Key quota', creditsAccount: 'Account balance', creditsUnlimited: 'Unlimited', creditsToken: 'The account token is invalid', creditsResponse: 'GrsAI returned no credit count',
+      creditsQuota: 'Balance or quota is insufficient', creditsReason: 'GrsAI: {detail}',
+      creditsZeroHint: 'This is the key\'s own quota: an unlimited key has no quota of its own, so it reads 0; a limited key at 0 has used up its quota. Enter the account token below to see the account balance.',
+      accountToken: 'Account token (optional, for the account balance)', accountTokenPlaceholder: 'Copy it from User info in the GrsAI console', accountTokenSaved: 'Saved. Enter a new token to replace it',
+      accountTokenClear: 'Remove the saved token when saving', accountTokenHint: 'Used only to read the account balance, never for generation. This token can manage the account\'s API keys, so it stays in this computer\'s credential store and is never shown or returned.',
+      TOKEN: 'The GrsAI account token is invalid. Copy it again from User info in the console.', OPTION: 'The selected options do not apply to this model. Choose again and save.',
+      NOT_CONFIGURED: 'No key is saved yet.', savedUnverified: 'Saved. This service has no Models API, so the key is confirmed by the first generation.',
     }
     const css = `
       /* Match the Host PluginCard design contract; its component is internal. */
@@ -72,20 +102,34 @@ window.__ModuleLoader__.load({
       .dshImageCard :focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
       .dshImageHeader:focus-visible{outline-offset:-2px}.dshImageSave:focus-visible{outline-offset:1px}
       .dshImageFetch{appearance:none;align-self:flex-start;font:inherit;font-size:13px;line-height:1.5;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:5px 14px;background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer}.dshImageFetch:disabled{opacity:.4;cursor:default}
-      .dshImageCredits{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:.5px solid var(--dsw-alias-border-l4);border-radius:10px;background:var(--dsw-alias-bg-layer-3);font-size:13px;line-height:1.5}
-      .dshImageCreditsLabel{color:var(--dsw-alias-label-secondary)}.dshImageCreditsValue{margin-left:auto;color:var(--dsw-alias-label-primary);font-weight:600;font-variant-numeric:tabular-nums}.dshImageCreditsValue[data-state=failed]{color:var(--dsw-alias-label-tertiary);font-weight:400}
+      .dshImageCredits{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:.5px solid var(--dsw-alias-border-l4);border-radius:10px;background:var(--dsw-alias-bg-layer-3);font-size:13px;line-height:1.5}
+      .dshImageCreditsRow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+      .dshImageCreditsLabel{color:var(--dsw-alias-label-secondary)}.dshImageCreditsValue{margin-left:auto;color:var(--dsw-alias-label-primary);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}.dshImageCreditsValue[data-state=failed]{color:var(--dsw-alias-state-error-primary);font-weight:400}
+      .dshImageOptions{display:flex;flex-direction:column}.dshImageOptionsTitle{margin:12px 0 0;font-size:13px;font-weight:600;color:var(--dsw-alias-label-secondary)}
+      .dshImageCheck{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dsw-alias-label-secondary);cursor:pointer}.dshImageCheck input{width:auto;height:auto;accent-color:var(--dsw-alias-brand-primary)}
       .dshImageHostControl{border-bottom:.5px solid var(--dsw-alias-border-l2);padding:12px 0;display:flex;flex-direction:column;gap:8px}.dshImageHostControl label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--dsw-alias-label-primary);cursor:pointer}.dshImageHostControl input{accent-color:var(--dsw-alias-brand-primary)}
     `
     const emptyDrafts = {
       bytedance: { baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', model: 'doubao-seedream-4-5-251128', configured: false, validation: null, apiKey: '' },
       openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-image-1.5', configured: false, validation: null, apiKey: '' },
-      grsai: { baseUrl: 'https://grsai.dakka.com.cn', model: 'nano-banana-fast', videoModel: 'minimax-h3', textModel: 'gemini-3.1-pro', configured: false, validation: null, apiKey: '' },
+      grsai: { baseUrl: 'https://grsai.dakka.com.cn', model: 'nano-banana-fast', videoModel: 'minimax-h3', textModel: 'gemini-3.1-pro', configured: false, validation: null, apiKey: '', accountToken: '' },
+      agnes: { baseUrl: 'https://api.agnes-ai.cn/v1', model: 'agnes-image-2.5-flash', videoModel: 'agnes-video-2.5', configured: false, validation: null, apiKey: '' },
+      compatible: { baseUrl: '', model: '', configured: false, validation: null, apiKey: '' },
     }
     const emptyCatalogs = {
       openai: { source: 'builtin', canFetch: true, models: [emptyDrafts.openai.model] },
       bytedance: { source: 'builtin', canFetch: false, models: [emptyDrafts.bytedance.model] },
       grsai: { source: 'builtin', canFetch: true, models: [emptyDrafts.grsai.model], videoModels: [emptyDrafts.grsai.videoModel], textModels: [emptyDrafts.grsai.textModel] },
+      agnes: { source: 'builtin', canFetch: true, models: [emptyDrafts.agnes.model], videoModels: [emptyDrafts.agnes.videoModel] },
+      compatible: { source: 'builtin', canFetch: true, models: [] },
     }
+    const PROVIDERS = ['bytedance', 'openai', 'grsai', 'agnes', 'compatible']
+    const OPTION_NAMES = ['imageRatio', 'imageResolution', 'imageQuality', 'videoRatio', 'videoResolution']
+    /** The option lists behind each saved option name. */
+    const optionList = (caps, name) => ({
+      imageRatio: caps?.image?.ratios, imageResolution: caps?.image?.resolutions, imageQuality: caps?.image?.qualities,
+      videoRatio: caps?.video?.ratios, videoResolution: caps?.video?.resolutions,
+    })[name] || []
     function ImageSelect({ name, label, value, options, onChange, disabled }) {
       const [open, setOpen] = React.useState(false)
       const trigger = React.useRef(null)
@@ -123,34 +167,75 @@ window.__ModuleLoader__.load({
      * when the section opens and after every save, never on a timer: each read
      * is a request to GrsAI.
      */
-    function GrsaiCredits({ t, callApi, revision, configured, draftKey, baseUrl }) {
+    /** Why a balance read failed: the code's text, GrsAI's short reason and the HTTP status. */
+    function creditFailure(t, error) {
+      const code = error?.code
+      const text = t(code === 'AUTH' ? 'creditsAuth' : code === 'KEY_REQUIRED' ? 'creditsNeedKey' : code === 'TOKEN' ? 'creditsToken' : code === 'QUOTA' ? 'creditsQuota'
+        : code === 'RESPONSE' ? 'creditsResponse' : code === 'UNAVAILABLE' || code === 'TIMEOUT' ? 'creditsNetwork' : 'creditsFailed')
+      return [text, typeof error?.detail === 'string' && t('creditsReason').replace('{detail}', error.detail),
+        Number.isInteger(error?.providerStatus) && `HTTP ${error.providerStatus}`].filter(Boolean).join(' · ')
+    }
+    /**
+     * The GrsAI key's own quota and, with an account token, the account balance,
+     * next to the key they belong to. They are read when the section opens and
+     * after every save, never on a timer: each read is a request to GrsAI. A
+     * failed read shows its reason, never 0.
+     */
+    function GrsaiCredits({ t, callApi, revision, configured, draftKey, draftToken, baseUrl }) {
       const [state, setState] = React.useState({ kind: configured ? 'loading' : 'idle' })
       const [attempt, setAttempt] = React.useState(0)
       const request = React.useRef(null)
-      const check = React.useCallback(useTypedKey => {
+      const check = React.useCallback(useTyped => {
         request.current?.abort()
         const controller = new AbortController(); request.current = controller
         setState({ kind: 'loading' })
-        // A typed key is checked once and never stored; otherwise the saved key answers.
-        callApi('credits', useTypedKey ? { apiKey: draftKey, baseUrl } : undefined, controller.signal).then(
-          result => { if (!controller.signal.aborted) setState(Number.isFinite(result.credits) ? { kind: 'ready', credits: result.credits } : { kind: 'failed', code: 'RESPONSE' }) },
-          error => { if (!controller.signal.aborted) setState({ kind: 'failed', code: error?.code }) })
-      }, [callApi, draftKey, baseUrl])
+        // A typed key or token is used once and never stored; otherwise the saved ones answer.
+        callApi('credits', useTyped ? { apiKey: draftKey, accountToken: draftToken, baseUrl } : undefined, controller.signal).then(
+          result => {
+            if (controller.signal.aborted) return
+            setState(Number.isFinite(result?.key?.credits) ? { kind: 'ready', key: result.key, account: result.account ?? null } : { kind: 'failed', error: { code: 'RESPONSE' } })
+          },
+          error => { if (!controller.signal.aborted) setState({ kind: 'failed', error }) })
+      }, [callApi, draftKey, draftToken, baseUrl])
       React.useEffect(() => {
         if (!configured) { setState({ kind: 'idle' }); return }
         check(false)
         return () => request.current?.abort()
       }, [configured, revision, attempt])
       React.useEffect(() => () => request.current?.abort(), [])
-      const failure = code => t(code === 'AUTH' ? 'creditsAuth' : code === 'UNAVAILABLE' || code === 'TIMEOUT' ? 'creditsNetwork' : 'creditsFailed')
-      const value = state.kind === 'ready' ? `${state.credits.toLocaleString()} ${t('creditsUnit')}`
-        : state.kind === 'loading' ? t('creditsLoading') : state.kind === 'failed' ? failure(state.code) : t('creditsNeedKey')
-      const typed = Boolean(draftKey)
+      const amount = credits => `${credits.toLocaleString()} ${t('creditsUnit')}`
+      const keyValue = state.kind === 'ready' ? (state.key.unlimited ? t('creditsUnlimited') : amount(state.key.credits))
+        : state.kind === 'loading' ? t('creditsLoading') : state.kind === 'failed' ? creditFailure(t, state.error) : t('creditsNeedKey')
+      const account = state.kind === 'ready' ? state.account : null
+      const typed = Boolean(draftKey || draftToken)
+      const row = (label, value, kind, action) => h('div', { className: 'dshImageCreditsRow' },
+        h('span', { className: 'dshImageCreditsLabel' }, t(label)),
+        h('span', { className: 'dshImageCreditsValue', 'data-state': kind, role: 'status', 'aria-live': 'polite' }, value), action)
       return h('div', { className: 'dshImageCredits', 'data-testid': 'grsai-credits' },
-        h('span', { className: 'dshImageCreditsLabel' }, t('credits')),
-        h('span', { className: 'dshImageCreditsValue', 'data-state': state.kind, role: 'status', 'aria-live': 'polite' }, value),
-        h('button', { className: 'dshImageFetch', type: 'button', disabled: state.kind === 'loading' || (!configured && !typed),
-          onClick: () => (typed ? check(true) : setAttempt(value => value + 1)) }, t(configured && !typed ? 'creditsRefresh' : 'creditsCheck')))
+        row('creditsKey', keyValue, state.kind, h('button', { className: 'dshImageFetch', type: 'button', disabled: state.kind === 'loading' || (!configured && !typed),
+          onClick: () => (typed ? check(true) : setAttempt(value => value + 1)) }, t(configured && !typed ? 'creditsRefresh' : 'creditsCheck'))),
+        account && row('creditsAccount', account.error ? creditFailure(t, account.error) : amount(account.credits), account.error ? 'failed' : 'ready'),
+        // 0 from the key route is the key's own quota, not the account balance.
+        state.kind === 'ready' && state.key.credits === 0 && !state.key.unlimited && !(account && !account.error)
+          && h('p', { className: 'dshImageHint' }, t('creditsZeroHint')))
+    }
+    /** Ratio, resolution and quality menus listing exactly what the selected models support. */
+    function GenerationOptions({ t, caps, provider, draft, disabled, onChange }) {
+      if (!caps) return h('p', { className: 'dshImageHint', role: 'status' }, t('optionsLoading'))
+      if (caps.error) return h('p', { className: 'dshImageHint', role: 'status' }, t('optionsFailed'))
+      const label = (name, id) => (name.endsWith('Quality') ? t(`quality_${id}`) : name === 'imageResolution' && provider === 'compatible' ? t(`resolution_${id}`) : id)
+      const menu = (name, title) => {
+        const list = optionList(caps, name)
+        if (list.length === 0) return null
+        // A saved value the model does not offer shows (and saves) as the model's default.
+        return h(ImageSelect, { key: name, name, label: t(title), value: list.includes(draft[name]) ? draft[name] : list[0], disabled: disabled || list.length < 2,
+          options: list.map(id => ({ id, label: label(name, id) })), onChange: value => onChange(name, value) })
+      }
+      return h('div', { className: 'dshImageOptions', 'data-testid': 'generation-options' },
+        h('p', { className: 'dshImageOptionsTitle' }, t('imageOptions')),
+        menu('imageRatio', 'ratio'), menu('imageResolution', 'resolution'), menu('imageQuality', 'quality'),
+        caps.video && h(React.Fragment, null, h('p', { className: 'dshImageOptionsTitle' }, t('videoOptions')), menu('videoRatio', 'ratio'), menu('videoResolution', 'resolution')),
+        h('p', { className: 'dshImageHint' }, t('optionsHint')))
     }
     function ImageCard({ t, callApi }) {
       const [expanded, setExpanded] = React.useState(false)
@@ -177,7 +262,7 @@ window.__ModuleLoader__.load({
         lastGood.current = result
         setSaved(result); setProvider(result.provider)
         setCatalogs({}); setCustomModels(Object.fromEntries(Object.entries(result.profiles).map(([key, value]) => [key, !result.catalogs[key].models.includes(value.model)])))
-        setDrafts(Object.fromEntries(Object.entries(result.profiles).map(([key, value]) => [key, { ...value, apiKey: '' }])))
+        setDrafts(Object.fromEntries(Object.entries(result.profiles).map(([key, value]) => [key, { ...value, apiKey: '', ...(key === 'grsai' ? { accountToken: '', clearAccountToken: false } : {}) }])))
       }
       const seedDrafts = () => {
         setSaved(null)
@@ -253,7 +338,7 @@ window.__ModuleLoader__.load({
         try {
           const result = await callApi('models', { revision: saved.revision, provider, model: draft.model || undefined, baseUrl: draft.baseUrl, apiKey: draft.apiKey }, lifetime.current.signal)
           // Only a well-formed catalog replaces the menus the card renders from.
-          const lists = ['models', ...(provider === 'grsai' ? ['videoModels', 'textModels'] : [])]
+          const lists = ['models', ...(provider === 'grsai' ? ['videoModels', 'textModels'] : provider === 'agnes' ? ['videoModels'] : [])]
           if (!lists.every(list => Array.isArray(result?.[list]) && result[list].every(model => typeof model === 'string'))) throw { code: 'RESPONSE' }
           setCatalogs(previous => ({ ...previous, [provider]: result }))
           setCustomModels(previous => ({ ...previous, [provider]: !result.models.includes(draft.model) }))
@@ -277,6 +362,34 @@ window.__ModuleLoader__.load({
         autoFetched.current.add(draft.baseUrl)
         void fetchModels({ quiet: true })
       }, [expanded, provider, saved, loadFailed, draft?.baseUrl])
+      // The option menus follow the selected models; the Host answers from its
+      // capability table (lib/options.js), debounced while a custom model is typed.
+      const [optionCaps, setOptionCaps] = React.useState({})
+      const capsKey = draft ? `${provider}|${(draft.model || '').trim()}|${(draft.videoModel || '').trim()}` : ''
+      React.useEffect(() => {
+        if (!expanded || !saved || !draft || optionCaps[capsKey]) return
+        const controller = new AbortController()
+        const timer = setTimeout(() => {
+          callApi('options', { provider, model: (draft.model || '').trim(), videoModel: draft.videoModel }, controller.signal).then(
+            result => { if (!controller.signal.aborted) setOptionCaps(previous => ({ ...previous, [capsKey]: result?.image ? result : { error: true } })) },
+            // The card says the options could not be read; saving then keeps the saved values.
+            () => { if (!controller.signal.aborted) setOptionCaps(previous => ({ ...previous, [capsKey]: { error: true } })) })
+        }, 250)
+        return () => { clearTimeout(timer); controller.abort() }
+      }, [expanded, saved, capsKey])
+      const caps = optionCaps[capsKey]
+      const editOption = (name, value) => {
+        setDrafts(previous => ({ ...previous, [provider]: { ...previous[provider], [name]: value } }))
+        setStatus(''); setError('')
+      }
+      /** Saved options, limited to what the selected models offer once their lists are known. */
+      const optionPayload = () => Object.fromEntries(OPTION_NAMES.flatMap(name => {
+        const value = draft[name]
+        if (!value) return []
+        if (!caps || caps.error) return [[name, value]]
+        const list = optionList(caps, name)
+        return list.includes(value) ? [[name, value]] : []
+      }))
       const catalogNote = current => {
         if (current.origin === 'catalog') return t('catalogOnline').replace('{image}', current.models.length).replace('{video}', current.videoModels.length).replace('{text}', current.textModels.length)
         return t(current.origin === 'models-endpoint' ? 'catalogEndpoint' : 'catalogFallback')
@@ -290,10 +403,11 @@ window.__ModuleLoader__.load({
         if (!nextKey && !reuseKey) { setError('KEY_REQUIRED'); return }
         inFlight.current = true; setBusy(true); setError(''); setStatus('')
         try {
-          const result = await callApi('save', { revision: saved.revision, provider, model: draft.model, baseUrl: draft.baseUrl, apiKey: nextKey,
-            ...(provider === 'grsai' ? { videoModel: draft.videoModel, textModel: draft.textModel } : {}) }, lifetime.current.signal)
+          const result = await callApi('save', { revision: saved.revision, provider, model: draft.model, baseUrl: draft.baseUrl, apiKey: nextKey, ...optionPayload(),
+            ...(provider === 'grsai' ? { videoModel: draft.videoModel, textModel: draft.textModel, accountToken: (draft.accountToken || '').trim(), clearAccountToken: Boolean(draft.clearAccountToken) } : {}),
+            ...(provider === 'agnes' ? { videoModel: draft.videoModel } : {}) }, lifetime.current.signal)
           applySettings(result)
-          setStatus('saved')
+          setStatus(result.profiles?.[provider]?.validation === 'unverified' ? 'savedUnverified' : 'saved')
         } catch (error) { if (!lifetime.current.signal.aborted) setError(error.code || 'UNAVAILABLE') }
         finally { inFlight.current = false; if (!lifetime.current.signal.aborted) setBusy(false) }
       }
@@ -313,11 +427,18 @@ window.__ModuleLoader__.load({
             !loadFailed && h('p', { className: 'dshImageHint' }, t(draft.configured ? 'configuredHint' : 'setupHint')),
             h('fieldset', { className: 'dshImageFields', disabled: busy || fetching || !writable },
               h(ImageSelect, { name: 'provider', label: t('provider'), value: provider, disabled: busy || fetching || !writable,
-                options: [{ id: 'bytedance', label: t('bytedance') }, { id: 'openai', label: t('openai') }, { id: 'grsai', label: t('grsai') }],
+                options: PROVIDERS.map(id => ({ id, label: t(id) })),
                 onChange: value => { setProvider(value); setStatus(''); setError('') } }),
-              provider === 'grsai' && h('p', { className: 'dshImageHint' }, t('grsaiHint')),
+              ['grsai', 'agnes', 'compatible'].includes(provider) && h('p', { className: 'dshImageHint' }, t(`${provider}Hint`)),
+              // A compatible service has no default address, so it is asked for up front.
+              provider === 'compatible' && field('baseUrl', 'baseUrl', 'url', 'https://example.com/v1'),
               field('apiKey', 'apiKey', 'password', t(draft.configured ? 'savedKey' : 'keyPlaceholder')),
-              provider === 'grsai' && h(GrsaiCredits, { t, callApi, revision: saved?.revision, configured: Boolean(saved?.profiles?.grsai?.configured), draftKey: (draft.apiKey || '').trim(), baseUrl: draft.baseUrl }),
+              provider === 'grsai' && h(GrsaiCredits, { t, callApi, revision: saved?.revision, configured: Boolean(saved?.profiles?.grsai?.configured),
+                draftKey: (draft.apiKey || '').trim(), draftToken: (draft.accountToken || '').trim(), baseUrl: draft.baseUrl }),
+              provider === 'grsai' && field('accountToken', 'accountToken', 'password', t(draft.accountTokenConfigured ? 'accountTokenSaved' : 'accountTokenPlaceholder')),
+              provider === 'grsai' && h('p', { className: 'dshImageHint' }, t('accountTokenHint')),
+              provider === 'grsai' && draft.accountTokenConfigured && h('label', { className: 'dshImageCheck' },
+                h('input', { type: 'checkbox', name: 'clearAccountToken', checked: Boolean(draft.clearAccountToken), onChange: event => edit('clearAccountToken', event.target.checked) }), t('accountTokenClear')),
               h(ImageSelect, { name: 'model', label: t('modelSelect'), value: customModels[provider] || !catalog.models.includes(draft.model) ? '__custom__' : draft.model, disabled: busy || fetching || !writable,
                 options: [...catalog.models.map(model => ({ id: model, label: model })), { id: '__custom__', label: t('customModel') }],
                 onChange: value => { const custom = value === '__custom__'; setCustomModels(previous => ({ ...previous, [provider]: custom })); if (!custom) edit('model', value) } }),
@@ -334,7 +455,8 @@ window.__ModuleLoader__.load({
                 t(fetching ? 'fetchingModels' : provider === 'grsai' ? 'refreshModels' : 'fetchModels')),
               provider === 'grsai' && catalogs.grsai && h('p', { className: 'dshImageHint', role: 'status' }, catalogNote(catalogs.grsai)),
               catalog.source === 'provider' && catalog.models.length === 0 && h('p', { className: 'dshImageHint', role: 'status' }, t('emptyModels')),
-              h('details', { className: 'dshImageAdvanced' }, h('summary', null, t('advanced')), field('baseUrl', 'baseUrl'))),
+              h(GenerationOptions, { t, caps, provider, draft, disabled: busy || fetching || !writable, onChange: editOption }),
+              provider !== 'compatible' && h('details', { className: 'dshImageAdvanced' }, h('summary', null, t('advanced')), field('baseUrl', 'baseUrl'))),
             h('div', { className: 'dshImageActions' },
               h('button', { className: 'dshImageSave', type: 'submit', disabled: busy || fetching || !writable || !(draft.model || '').trim() }, t(busy ? 'saving' : 'save')),
               error === 'LOAD_FAILED' && h('button', { className: 'dshImageFetch', type: 'button', onClick: () => load(lifetime.current.signal) }, t('reload')),
