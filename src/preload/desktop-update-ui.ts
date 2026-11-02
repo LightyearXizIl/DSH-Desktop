@@ -630,7 +630,7 @@ const styles = `
      item leading with its bold name in the primary label colour, prose a step
      quieter, list nesting indented. */
   .notes-theme { margin:4px 0 0; font-size:13px; font-weight:500; line-height:20px; color:var(--dsw-alias-label-primary,#202124); }
-  .release-notes { max-height:260px; overflow:auto; margin:6px 0 0; padding-right:6px; font-size:12.5px; line-height:20px; scrollbar-width:thin; scrollbar-color:var(--dsw-alias-border-l3,rgba(0,0,0,.22)) transparent; }
+  .release-notes { max-height:260px; overflow:auto; overscroll-behavior:contain; margin:6px 0 0; padding-right:6px; font-size:12.5px; line-height:20px; scrollbar-width:thin; scrollbar-color:var(--dsw-alias-border-l3,rgba(0,0,0,.22)) transparent; }
   .release-notes .notes-section { display:flex; align-items:center; gap:7px; margin:12px 0 6px; font-size:13px; font-weight:600; line-height:20px; color:var(--dsw-alias-label-primary,#202124); }
   .release-notes .notes-section:first-child { margin-top:6px; }
   .release-notes .notes-section::before { content:''; flex:none; width:3px; height:12px; border-radius:2px; background:var(--dsw-alias-state-business-primary,#3d7eff); }
@@ -676,7 +676,12 @@ const styles = `
   .version-tag-btn:hover { background:var(--dsw-alias-interactive-bg-hover,#f0f2f5); }
   .progress { height:5px; background:var(--dsh-update-progress-track); border-radius:999px; overflow:hidden; margin:12px 0; }
   .progressValue { height:100%; background:var(--dsh-update-progress-fill); border-radius:inherit; transition:width .12s linear; }
-  .spinner { position:absolute; inset:16px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin .75s linear infinite; }
+  /* A corner badge on the app icon, not a ring over its middle: centred, the
+     white ring sat on the brand mark and the two read as one tangled glyph. */
+  .spinner { position:absolute; right:-6px; bottom:-6px; width:22px; height:22px; box-sizing:border-box; border-radius:50%; background:#0d1716; }
+  .spinner::after { content:''; position:absolute; inset:4px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation:spin .75s linear infinite; }
+  .notification .spinner { right:-5px; bottom:-5px; width:18px; height:18px; }
+  .notification .spinner::after { inset:3px; }
   @keyframes spin { to { transform:rotate(360deg); } }
   @media (prefers-color-scheme:dark) {
     .card,.about-card,.version-picker-container { color:var(--dsw-alias-label-primary,#f3f4f6); }
@@ -690,7 +695,7 @@ const styles = `
     .details { color:var(--dsw-alias-label-primary,#f3f4f6); }
     :host { --dsh-update-progress-fill: var(--dsw-alias-button-primary-fill, #f9fafb); }
   }
-  @media (prefers-reduced-motion:reduce) { .spinner { animation:none; } .progressValue { transition:none; } }
+  @media (prefers-reduced-motion:reduce) { .spinner::after { animation:none; } .progressValue { transition:none; } }
 `
 const aboutStyles = styles
 

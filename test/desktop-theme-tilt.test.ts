@@ -127,6 +127,81 @@ describe('Liquid Glass hover tilt', () => {
     }
   })
 
+  it('glides back when the pointer leaves the window from over the card', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      const { column, button } = mountSidebar()
+      stop = startSpotlight()
+      hover(button, 260, 100)
+      expect(column.style.transform).toMatch(TILT)
+      // Leaving the page (window edge, resize border, caption drag region)
+      // has no related target and reports the last in-page position, which
+      // is still over the glass. The card used to stay tilted here.
+      button.dispatchEvent(new MouseEvent('pointerout', { bubbles: true, clientX: 260, clientY: 100, relatedTarget: null }))
+      expect(column.style.transform).toBe('perspective(800px) rotateX(0rad) rotateY(0rad) scale(1)')
+      vi.advanceTimersByTime(300)
+      expect(column.style.transform).toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('stays tilted while the pointer moves between controls on the card', () => {
+    const { column, root, button } = mountSidebar()
+    stop = startSpotlight()
+    hover(button, 40, 100)
+    button.dispatchEvent(new MouseEvent('pointerout', { bubbles: true, clientX: 40, clientY: 100, relatedTarget: root }))
+    expect(column.style.transform).toMatch(TILT)
+  })
+
+  it('rests when the window loses focus mid-hover', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    try {
+      const { column, button } = mountSidebar()
+      stop = startSpotlight()
+      hover(button, 40, 100)
+      window.dispatchEvent(new Event('blur'))
+      vi.advanceTimersByTime(300)
+      expect(column.style.transform).toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('re-measures the glow when the hovered pane resizes under a resting pointer', () => {
+    const observed = new Set<Element>()
+    let notify: (() => void) | undefined
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback: () => void) { notify = callback }
+      observe(target: Element) { observed.add(target) }
+      unobserve(target: Element) { observed.delete(target) }
+      disconnect() { observed.clear() }
+    })
+    document.documentElement.setAttribute('data-dsh-desktop-spotlight', '')
+    try {
+      const { root, button } = mountSidebar()
+      let width = 256
+      Object.defineProperty(root, 'offsetWidth', { configurable: true, get: () => width })
+      stop = startSpotlight()
+      hover(button, 40, 100)
+      const glow = query('[data-dsh-desktop-glow]')
+      expect(glow.style.width).toBe('256px')
+      expect(observed.has(root)).toBe(true)
+
+      // The header widens when the right sidebar closes; no DOM changes, so
+      // only a resize can tell. The glow used to keep its old box and cut
+      // its gradient off at the old edge.
+      width = 320
+      notify?.()
+      expect(glow.style.width).toBe('320px')
+
+      button.dispatchEvent(new MouseEvent('pointerout', { bubbles: true, clientX: 600, clientY: 400 }))
+      expect(observed.has(root)).toBe(false)
+    } finally {
+      document.documentElement.removeAttribute('data-dsh-desktop-spotlight')
+    }
+  })
+
   it('rests while the settings overlay is open over the sidebar', () => {
     const { column, button } = mountSidebar()
     const dialog = document.createElement('div')

@@ -191,9 +191,25 @@ export function startSpotlight(): () => void {
     target.style.removeProperty('transition')
   }
 
+  /** Re-measure the hovered pane on the next frame (coalesced). */
+  const refreshSession = (): void => {
+    if (session === null || refreshRaf !== 0) return
+    refreshRaf = requestAnimationFrame(() => {
+      refreshRaf = 0
+      if (session !== null) session = measure(session.spot)
+    })
+  }
+
+  // A pane can change size under a resting pointer without any DOM change,
+  // e.g. the header widening when the right sidebar closes. The glow overlay
+  // kept the old box and its gradient was cut off at the old edge, a visible
+  // seam across the pane until the pointer moved away.
+  const resizes = typeof ResizeObserver === 'function' ? new ResizeObserver(refreshSession) : null
+
   /** Drop every effect this controller wrote onto a pane. */
   const clearSpot = (spot: HTMLElement): void => {
     spot.removeAttribute(ON_ATTR)
+    resizes?.unobserve(spot)
     if (current === spot) {
       current = null
       session = null
@@ -294,6 +310,8 @@ export function startSpotlight(): () => void {
     const next = measure(spot)
     if (!inside(next.visual, event.clientX, event.clientY)) return
     spot.setAttribute(ON_ATTR, '')
+    if (current !== null && current !== spot) resizes?.unobserve(current)
+    resizes?.observe(spot)
     current = spot
     session = next
     paint(next, event.clientX, event.clientY)
@@ -303,9 +321,18 @@ export function startSpotlight(): () => void {
     const spot = closestSpot(event.target)
     if (spot === null || spot !== current) return
     // Moving between children keeps the effects live; leaving the visible
-    // glass (including into the wrapper's gutters) clears them.
-    if (session !== null && inside(session.visual, event.clientX, event.clientY)) return
+    // glass (including into the wrapper's gutters) clears them. Leaving the
+    // page altogether (no related target: out of the window, onto its resize
+    // border or into a caption drag region) reports the last position inside
+    // the page, which is still over the glass when the pointer exits from a
+    // pane at the window edge, so it clears regardless of coordinates.
+    if (event.relatedTarget !== null && session !== null && inside(session.visual, event.clientX, event.clientY)) return
     clearSpot(spot)
+  }
+
+  // Switching windows while hovering leaves no pointer event behind.
+  const onBlur = (): void => {
+    if (current !== null) clearSpot(current)
   }
 
   // The glow divs live with the panes through React re-renders; DOM changes
@@ -322,21 +349,20 @@ export function startSpotlight(): () => void {
         snapFlat(tiltTarget(spot))
       }
     }
-    if (session === null || refreshRaf !== 0) return
-    refreshRaf = requestAnimationFrame(() => {
-      refreshRaf = 0
-      if (session !== null) session = measure(session.spot)
-    })
+    refreshSession()
   })
 
   document.addEventListener('pointermove', onMove, { passive: true })
   document.addEventListener('pointerover', onOver, { passive: true })
   document.addEventListener('pointerout', onOut, { passive: true })
+  window.addEventListener('blur', onBlur)
 
   return () => {
     document.removeEventListener('pointermove', onMove)
     document.removeEventListener('pointerover', onOver)
     document.removeEventListener('pointerout', onOut)
+    window.removeEventListener('blur', onBlur)
+    resizes?.disconnect()
     keeper()
     if (raf !== 0) cancelAnimationFrame(raf)
     if (refreshRaf !== 0) cancelAnimationFrame(refreshRaf)

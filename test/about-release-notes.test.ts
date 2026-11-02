@@ -170,6 +170,13 @@ describe('About page release notes', () => {
     expect(readReleaseNotes).toHaveBeenCalledTimes(1)
   })
 
+  it('keeps wheel scrolling inside the notes instead of scrolling the About page', () => {
+    // At either end of the notes the wheel used to chain to the About page,
+    // so reading the notes moved the whole page.
+    expect(source).toMatch(/\.dshDesktopNotesBody \{[^}]*overflow:auto; overscroll-behavior:contain;/)
+    expect(source).toMatch(/\.dshDesktopAboutReleaseNotes \{[^}]*overflow:auto; overscroll-behavior:contain;/)
+  })
+
   it('reports a failed read only when opened and reads again on retry', async () => {
     const readReleaseNotes = vi.fn()
       .mockRejectedValueOnce(new Error('offline'))

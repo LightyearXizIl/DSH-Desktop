@@ -117,6 +117,23 @@ describe('desktop update presentation at the IPC boundary', () => {
     } else expect(ui.host.style.display).toBe('none')
   })
 
+  it('shows the checking spinner as a corner badge, not over the brand mark', async () => {
+    const ui = await mount(Promise.resolve(status('idle', { manual: false })))
+    ui.emit(status('checking', { presentationId: 11 }))
+    const icon = required(ui.shadow.querySelector('[role="dialog"] .app-icon'))
+    expect(icon.querySelector('svg')).not.toBeNull()
+    expect(icon.querySelector('.spinner')).not.toBeNull()
+    const css = Array.from(ui.shadow.querySelectorAll('style'), node => node.textContent ?? '').join('\n')
+    // Centred (inset:16px) the white ring sat on the whale and read as one
+    // tangled glyph; it now hangs off the icon's bottom-right corner.
+    expect(css).not.toContain('.spinner { position:absolute; inset:16px;')
+    expect(css).toContain('.spinner { position:absolute; right:-6px; bottom:-6px; width:22px; height:22px;')
+    expect(css).toContain('.spinner::after {')
+    expect(css).toContain('@media (prefers-reduced-motion:reduce) { .spinner::after { animation:none; }')
+    // The notes scroll on their own; the wheel no longer chains to the page.
+    expect(css).toContain('.release-notes { max-height:260px; overflow:auto; overscroll-behavior:contain;')
+  })
+
   it('does not let a late initial snapshot overwrite a live manual request', async () => {
     let resolve: (value: UpdateStatus) => void = () => { throw new Error('Snapshot promise not initialized') }
     const initial = new Promise<UpdateStatus>(done => { resolve = done })
