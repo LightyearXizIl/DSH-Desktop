@@ -258,15 +258,31 @@ describe('native Workspace navigation with workbench routing', () => {
     expect(source).toContain('rowKeys.push(group.workspaceId === void 0 ? "chat-heading" : `workspace:${group.key}`);')
   })
 
-  it('renders the chat heading like the workspace heading', () => {
-    const start = source.indexOf('if (isChat) return')
+  it('renders the chat heading with the workspace section header', () => {
+    const start = source.indexOf('if (isChat) {')
     const end = source.indexOf('const [menuOpen', start)
     const chatRow = source.slice(start, end)
-    // The chat heading is a plain section header: no leading glyph, and the
-    // actions are search, collapse, then create (create last).
+    // Same header, label, inline search and action classes as "工作区", so
+    // the two headings match in size, colour and alignment.
+    expect(chatRow).toContain('const css = WorkspaceBrowser_module_css_default;')
+    for (const part of ['css.sectionHeader', 'css.sectionLabel', 'css.searchSlot', 'css.searchInput', 'css.clearButton', 'css.headerActions', 'css.iconButton']) {
+      expect(chatRow).toContain(part)
+    }
     expect(chatRow).not.toContain('Rows_module_css_default.slot')
-    expect(chatRow.indexOf('actions.chatSearch')).toBeLessThan(chatRow.indexOf('actions.chatCollapse'))
-    expect(chatRow.indexOf('actions.chatCollapse')).toBeLessThan(chatRow.indexOf('actions.newSession'))
+    // The fold chevron sits with the label; search, then create, on the right.
+    expect(chatRow.indexOf('actions.chatCollapse')).toBeLessThan(chatRow.indexOf('actions.chatSearch'))
+    expect(chatRow.indexOf('actions.chatSearch')).toBeLessThan(chatRow.indexOf('actions.newSession'))
+    expect(chatRow).toContain('IconChevronDownOutlineRegular')
+  })
+
+  it('filters only the chat group by the title each row shows', () => {
+    expect(source).toContain('const chatFilter = chatSearchOpen ? chatSearchQuery.trim().toLocaleLowerCase() : "";')
+    expect(source).toContain('const filtering = group.workspaceId === void 0 && chatFilter !== "";')
+    expect(source).toContain('group.sessions.filter((node) => displayTitle(node, t).toLocaleLowerCase().includes(chatFilter))')
+    // Searching shows every match, so the "show more" row goes away.
+    expect(source).toContain('if (!filtering && collapsed.hiddenCount > 0) rowKeys.push(`overflow:${group.key}`);')
+    // Opening the search unfolds the chat list it filters.
+    expect(source).toMatch(/setOpen: \(next\) => \{\s+if \(next\) setGroupExpanded\("", true\);/)
   })
 
   it('registers one reactive sidebar session filter and restores all sessions on release', () => {

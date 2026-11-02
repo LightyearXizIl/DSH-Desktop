@@ -12,6 +12,32 @@ const host = (): HTMLElement | null => document.querySelector('[data-dsh-windows
 const button = (name: string): HTMLButtonElement | null =>
   host()?.shadowRoot?.querySelector<HTMLButtonElement>(`button[data-menu="${name}"]`) ?? null
 
+it('keeps the expanded seat while the sidebar is still collapsing', async () => {
+  const overlay = document.createElement('div')
+  overlay.setAttribute('data-shell-overlay', '')
+  document.body.append(overlay)
+  const menu = mountWindowsMenuBar({ document, ipcRenderer: { invoke: vi.fn(async () => undefined) } })
+  const seat = document.getElementById('dsh-desktop-windows-menu-seat-style')
+  expect(seat).not.toBeNull()
+
+  // Harness moves the seat to 84px on the first frame of the collapse; the
+  // page rules hold it at 48px and hide the rail's new-session button until
+  // the column has closed, so no gap opens beside the toggle.
+  const rail = document.createElement('button')
+  rail.setAttribute('data-dsh-sidebar-new-session', '')
+  document.body.append(rail)
+  document.documentElement.setAttribute('data-dsh-sidebar-collapsing', '')
+  expect(host()?.matches('html[data-dsh-sidebar-collapsing] [data-dsh-windows-menu]')).toBe(true)
+  expect(seat?.textContent).toContain('html[data-dsh-sidebar-collapsing] [data-dsh-windows-menu] { left: 48px; }')
+  expect(seat?.textContent).toContain('html[data-dsh-sidebar-collapsing] [data-dsh-sidebar-new-session] { opacity: 0; pointer-events: none; }')
+  expect(getComputedStyle(rail).opacity).toBe('0')
+
+  document.documentElement.removeAttribute('data-dsh-sidebar-collapsing')
+  expect(getComputedStyle(rail).opacity).toBe('1')
+  menu.dispose()
+  expect(document.getElementById('dsh-desktop-windows-menu-seat-style')).toBeNull()
+})
+
 it('waits for the Harness shell overlay before taking the caption seat', async () => {
   const invoke = vi.fn(async () => undefined)
   const menu = mountWindowsMenuBar({ document, ipcRenderer: { invoke } })

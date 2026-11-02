@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js
-index bf57a02..5c2b1e4 100644
+index bf57a02..68096ff 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js
 @@ -1028,11 +1028,13 @@ window.__ModuleLoader__.load({
@@ -373,83 +373,125 @@ index bf57a02..5c2b1e4 100644
  		//#endregion
  		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-workspace/src/client/rows/Rows.module.css.mjs
 -		const css$3 = ".YDXeBa_projectRow,.YDXeBa_sessionRow{border-radius:var(--dsw-radius-md);padding:0 8px;cursor:pointer;user-select:none;color:var(--dsw-alias-label-primary);align-items:center;gap:6px;padding-inline-start:calc(8px + var(--dsh-workspace-indent,0px));display:flex}.YDXeBa_projectRow:hover,.YDXeBa_sessionRow:hover,.YDXeBa_sessionRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultRow{box-sizing:border-box;border-radius:var(--dsw-radius-lg);cursor:pointer;text-align:left;width:100%;min-height:48px;color:var(--dsw-alias-label-primary);background:0 0;border:none;flex-direction:column;align-items:stretch;padding:4px 8px;display:flex}.YDXeBa_searchResultRow:hover,.YDXeBa_searchResultRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultHeading{align-items:center;min-width:0;display:flex}.YDXeBa_searchResultTitle{text-overflow:ellipsis;white-space:nowrap;flex:0 auto;min-width:0;margin-left:4px;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_searchResultMeta{align-items:center;gap:6px;min-width:0;margin-left:20px;display:flex}.YDXeBa_searchResultWorkspace,.YDXeBa_searchResultSnippet{text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:17px;overflow:hidden}.YDXeBa_searchResultWorkspace{max-width:40%;color:var(--dsw-alias-label-tertiary);flex:none}.YDXeBa_searchResultWorkspace:only-child{max-width:100%}.YDXeBa_searchResultSnippet{min-width:0;color:var(--dsw-alias-label-secondary);flex:1}.YDXeBa_projectRow{box-sizing:border-box;align-items:center;height:34px}.YDXeBa_projectRow .YDXeBa_rowActions{height:20px}.YDXeBa_sessionRow{gap:0;height:32px}.YDXeBa_sessionRow .YDXeBa_title{margin:0 6px 0 4px}.YDXeBa_slot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.YDXeBa_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}.YDXeBa_folderActive{color:var(--dsw-alias-state-business-primary)}.YDXeBa_projectRow .YDXeBa_chevron{display:none}.YDXeBa_projectRow:hover .YDXeBa_chevron{display:inline-flex}.YDXeBa_projectRow:hover .YDXeBa_folder{display:none}.YDXeBa_arrow{transition:transform .15s var(--ds-ease-in-out)}.YDXeBa_arrowOpen{transform:rotate(90deg)}.YDXeBa_projectText{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.YDXeBa_title{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_renameInput{border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-button-elevated-fill);min-width:0;color:inherit;outline:none;padding:0 2px;font-size:14px;line-height:20px}.YDXeBa_sessionRow .YDXeBa_title{flex:1}.YDXeBa_sessionRow .YDXeBa_title[data-scrolled]{mask-image:linear-gradient(90deg,#0000,#000 12px)}.YDXeBa_sessionRow .YDXeBa_title[data-clipped]{mask-image:linear-gradient(270deg,#0000,#000 12px)}.YDXeBa_sessionRow .YDXeBa_title[data-scrolled][data-clipped]{mask-image:linear-gradient(90deg,#0000,#000 12px calc(100% - 12px),#0000)}.YDXeBa_meta{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:20px;overflow:hidden}.YDXeBa_time{color:var(--dsw-alias-label-tertiary);flex:none;font-size:10px;line-height:16px}.YDXeBa_pinIndicator{width:16px;height:20px;color:var(--dsw-alias-label-caption);flex:none;justify-content:center;align-items:center;margin-left:6px;display:inline-flex}.YDXeBa_sessionRow.YDXeBa_archived .YDXeBa_title,.YDXeBa_searchResultRow.YDXeBa_archived .YDXeBa_searchResultTitle,.YDXeBa_searchResultRow.YDXeBa_archived .YDXeBa_searchResultWorkspace,.YDXeBa_searchResultRow.YDXeBa_archived .YDXeBa_searchResultSnippet{color:var(--dsw-alias-label-caption)}.YDXeBa_dot{flex:none}.YDXeBa_rowActions{flex:none;align-items:center;gap:15px;display:none}.YDXeBa_projectRow:hover .YDXeBa_rowActions,.YDXeBa_sessionRow:hover .YDXeBa_rowActions,.YDXeBa_searchResultRow:hover .YDXeBa_rowActions,.YDXeBa_projectRow.YDXeBa_menuOpen .YDXeBa_rowActions,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_rowActions{display:inline-flex}.YDXeBa_searchResultHeading .YDXeBa_rowActions{margin-left:auto}.YDXeBa_sessionRow:hover .YDXeBa_time,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_time,.YDXeBa_sessionRow:hover .YDXeBa_pinIndicator,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_pinIndicator{display:none}@media (hover:hover){.YDXeBa_sessionRow:hover .YDXeBa_title,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_title{text-overflow:clip}}.YDXeBa_projectRow.YDXeBa_menuOpen,.YDXeBa_sessionRow.YDXeBa_menuOpen{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_sessionRow.YDXeBa_dropBefore,.YDXeBa_sessionRow.YDXeBa_dropAfter{position:relative}.YDXeBa_sessionRow.YDXeBa_dropBefore:before,.YDXeBa_sessionRow.YDXeBa_dropAfter:after{content:\"\";z-index:1;background:linear-gradient(55deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 0 / 5px 7px no-repeat, linear-gradient(125deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 5px / 5px 7px no-repeat, linear-gradient(var(--dsw-alias-state-business-primary) 0 0) 4px 5px / calc(100% - 4px) 2px no-repeat;pointer-events:none;height:12px;position:absolute;left:0;right:4px}.YDXeBa_sessionRow.YDXeBa_dropBefore:before{top:-7px}.YDXeBa_sessionRow.YDXeBa_dropAfter:after{bottom:-7px}.YDXeBa_hoverContent{flex-direction:column;gap:8px;display:flex}.YDXeBa_hoverTitle{color:#fff;overflow-wrap:break-word;font-size:14px;line-height:20px}.YDXeBa_hoverPath{color:#cfd3d6;word-break:break-all;font-size:12px;line-height:16px}.YDXeBa_hoverTime{color:#cfd3d6;font-size:12px;line-height:16px}.YDXeBa_hoverStatus{color:#adb2b8;align-items:center;gap:8px;font-size:12px;line-height:20px;display:flex}.YDXeBa_hoverArchived svg{flex-shrink:0;margin:0 -4px}.YDXeBa_iconButton{border-radius:var(--dsw-radius-xs);cursor:pointer;width:16px;height:16px;color:var(--dsw-alias-label-tertiary);background:0 0;border:none;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.YDXeBa_iconButton:hover{color:var(--dsw-alias-label-primary)}.YDXeBa_chevron{color:var(--dsw-alias-label-caption)}@media (prefers-reduced-motion:reduce){.YDXeBa_arrow{transition:none;animation:none}}";
-+		const css$3 = ".YDXeBa_projectRow,.YDXeBa_sessionRow{border-radius:var(--dsw-radius-md);padding:0 8px;cursor:pointer;user-select:none;color:var(--dsw-alias-label-primary);align-items:center;gap:6px;padding-inline-start:calc(8px + var(--dsh-workspace-indent,0px));display:flex}.YDXeBa_projectRow:hover,.YDXeBa_sessionRow:hover,.YDXeBa_sessionRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultRow{box-sizing:border-box;border-radius:var(--dsw-radius-lg);cursor:pointer;text-align:left;width:100%;min-height:48px;color:var(--dsw-alias-label-primary);background:0 0;border:none;flex-direction:column;align-items:stretch;padding:4px 8px;display:flex}.YDXeBa_searchResultRow:hover,.YDXeBa_searchResultRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultHeading{align-items:center;min-width:0;display:flex}.YDXeBa_searchResultTitle{text-overflow:ellipsis;white-space:nowrap;flex:0 auto;min-width:0;margin-left:4px;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_searchResultMeta{align-items:center;gap:6px;min-width:0;margin-left:20px;display:flex}.YDXeBa_searchResultWorkspace,.YDXeBa_searchResultSnippet{text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:17px;overflow:hidden}.YDXeBa_searchResultWorkspace{max-width:40%;color:var(--dsw-alias-label-tertiary);flex:none}.YDXeBa_searchResultWorkspace:only-child{max-width:100%}.YDXeBa_searchResultSnippet{min-width:0;color:var(--dsw-alias-label-secondary);flex:1}.YDXeBa_projectRow{box-sizing:border-box;align-items:center;height:34px}.YDXeBa_projectRow .YDXeBa_rowActions{height:20px}.YDXeBa_sessionRow{gap:0;height:32px}.YDXeBa_sessionRow .YDXeBa_title{margin:0 6px 0 4px}.YDXeBa_slot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.YDXeBa_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}.YDXeBa_folderActive{color:var(--dsw-alias-state-business-primary)}.YDXeBa_projectRow .YDXeBa_chevron{display:none}.YDXeBa_projectRow:hover .YDXeBa_chevron{display:inline-flex}.YDXeBa_projectRow:hover .YDXeBa_folder{display:none}.YDXeBa_arrow{transition:transform .15s var(--ds-ease-in-out)}.YDXeBa_arrowOpen{transform:rotate(90deg)}.YDXeBa_projectText{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.YDXeBa_title{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_renameInput{border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-button-elevated-fill);min-width:0;color:inherit;outline:none;padding:0 2px;font-size:14px;line-height:20px}.YDXeBa_sessionRow .YDXeBa_title{flex:1}.YDXeBa_sessionRow .YDXeBa_title[data-scrolled]{mask-image:linear-gradient(90deg,#0000,#000 12px)}.YDXeBa_sessionRow .YDXeBa_title[data-clipped]{mask-image:linear-gradient(270deg,#0000,#000 12px)}.YDXeBa_sessionRow .YDXeBa_title[data-scrolled][data-clipped]{mask-image:linear-gradient(90deg,#0000,#000 12px calc(100% - 12px),#0000)}.YDXeBa_meta{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:20px;overflow:hidden}.YDXeBa_time{color:var(--dsw-alias-label-tertiary);flex:none;font-size:10px;line-height:16px}.YDXeBa_pinIndicator{width:16px;height:20px;color:var(--dsw-alias-label-caption);flex:none;justify-content:center;align-items:center;margin-left:6px;display:inline-flex}.YDXeBa_sessionRow.YDXeBa_archived .YDXeBa_title,.YDXeBa_searchResultRow.YDXeBa_archived .YDXeBa_searchResultTitle,.YDXeBa_searchResultRow.YDXeBa_archived .YDXeBa_searchResultWorkspace,.YDXeBa_searchResultRow.YDXeBa_archived .YDXeBa_searchResultSnippet{color:var(--dsw-alias-label-caption)}.YDXeBa_dot{flex:none}.YDXeBa_rowActions{flex:none;align-items:center;gap:15px;display:none}.YDXeBa_projectRow:hover .YDXeBa_rowActions,.YDXeBa_sessionRow:hover .YDXeBa_rowActions,.YDXeBa_searchResultRow:hover .YDXeBa_rowActions,.YDXeBa_projectRow.YDXeBa_menuOpen .YDXeBa_rowActions,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_rowActions{display:inline-flex}.YDXeBa_searchResultHeading .YDXeBa_rowActions{margin-left:auto}.YDXeBa_projectRow.YDXeBa_chatHeader .YDXeBa_rowActions{display:inline-flex;gap:4px}.YDXeBa_projectRow.YDXeBa_chatHeader .YDXeBa_iconButton{width:20px;height:20px}.YDXeBa_sessionRow:hover .YDXeBa_time,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_time,.YDXeBa_sessionRow:hover .YDXeBa_pinIndicator,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_pinIndicator{display:none}@media (hover:hover){.YDXeBa_sessionRow:hover .YDXeBa_title,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_title{text-overflow:clip}}.YDXeBa_projectRow.YDXeBa_menuOpen,.YDXeBa_sessionRow.YDXeBa_menuOpen{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_sessionRow.YDXeBa_dropBefore,.YDXeBa_sessionRow.YDXeBa_dropAfter{position:relative}.YDXeBa_sessionRow.YDXeBa_dropBefore:before,.YDXeBa_sessionRow.YDXeBa_dropAfter:after{content:\"\";z-index:1;background:linear-gradient(55deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 0 / 5px 7px no-repeat, linear-gradient(125deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 5px / 5px 7px no-repeat, linear-gradient(var(--dsw-alias-state-business-primary) 0 0) 4px 5px / calc(100% - 4px) 2px no-repeat;pointer-events:none;height:12px;position:absolute;left:0;right:4px}.YDXeBa_sessionRow.YDXeBa_dropBefore:before{top:-7px}.YDXeBa_sessionRow.YDXeBa_dropAfter:after{bottom:-7px}.YDXeBa_hoverContent{flex-direction:column;gap:8px;display:flex}.YDXeBa_hoverTitle{color:#fff;overflow-wrap:break-word;font-size:14px;line-height:20px}.YDXeBa_hoverPath{color:#cfd3d6;word-break:break-all;font-size:12px;line-height:16px}.YDXeBa_hoverTime{color:#cfd3d6;font-size:12px;line-height:16px}.YDXeBa_hoverStatus{color:#adb2b8;align-items:center;gap:8px;font-size:12px;line-height:20px;display:flex}.YDXeBa_hoverArchived svg{flex-shrink:0;margin:0 -4px}.YDXeBa_iconButton{border-radius:var(--dsw-radius-xs);cursor:pointer;width:16px;height:16px;color:var(--dsw-alias-label-tertiary);background:0 0;border:none;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.YDXeBa_iconButton:hover{color:var(--dsw-alias-label-primary)}.YDXeBa_chevron{color:var(--dsw-alias-label-caption)}@media (prefers-reduced-motion:reduce){.YDXeBa_arrow{transition:none;animation:none}}";
++		const css$3 = ".YDXeBa_projectRow,.YDXeBa_sessionRow{border-radius:var(--dsw-radius-md);padding:0 8px;cursor:pointer;user-select:none;color:var(--dsw-alias-label-primary);align-items:center;gap:6px;padding-inline-start:calc(8px + var(--dsh-workspace-indent,0px));display:flex}.YDXeBa_projectRow:hover,.YDXeBa_sessionRow:hover,.YDXeBa_sessionRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultRow{box-sizing:border-box;border-radius:var(--dsw-radius-lg);cursor:pointer;text-align:left;width:100%;min-height:48px;color:var(--dsw-alias-label-primary);background:0 0;border:none;flex-direction:column;align-items:stretch;padding:4px 8px;display:flex}.YDXeBa_searchResultRow:hover,.YDXeBa_searchResultRow.YDXeBa_selected{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_searchResultHeading{align-items:center;min-width:0;display:flex}.YDXeBa_searchResultTitle{text-overflow:ellipsis;white-space:nowrap;flex:0 auto;min-width:0;margin-left:4px;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_searchResultMeta{align-items:center;gap:6px;min-width:0;margin-left:20px;display:flex}.YDXeBa_searchResultWorkspace,.YDXeBa_searchResultSnippet{text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:17px;overflow:hidden}.YDXeBa_searchResultWorkspace{max-width:40%;color:var(--dsw-alias-label-tertiary);flex:none}.YDXeBa_searchResultWorkspace:only-child{max-width:100%}.YDXeBa_searchResultSnippet{min-width:0;color:var(--dsw-alias-label-secondary);flex:1}.YDXeBa_projectRow{box-sizing:border-box;align-items:center;height:34px}.YDXeBa_projectRow .YDXeBa_rowActions{height:20px}.YDXeBa_sessionRow{gap:0;height:32px}.YDXeBa_sessionRow .YDXeBa_title{margin:0 6px 0 4px}.YDXeBa_slot{width:16px;height:20px;color:var(--dsw-alias-label-tertiary);flex:none;justify-content:center;align-items:center;display:inline-flex}.YDXeBa_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}.YDXeBa_folderActive{color:var(--dsw-alias-state-business-primary)}.YDXeBa_projectRow .YDXeBa_chevron{display:none}.YDXeBa_projectRow:hover .YDXeBa_chevron{display:inline-flex}.YDXeBa_projectRow:hover .YDXeBa_folder{display:none}.YDXeBa_arrow{transition:transform .15s var(--ds-ease-in-out)}.YDXeBa_arrowOpen{transform:rotate(90deg)}.YDXeBa_projectText{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.YDXeBa_title{text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:14px;line-height:20px;overflow:hidden}.YDXeBa_renameInput{border:.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-button-elevated-fill);min-width:0;color:inherit;outline:none;padding:0 2px;font-size:14px;line-height:20px}.YDXeBa_sessionRow .YDXeBa_title{flex:1}.YDXeBa_sessionRow .YDXeBa_title[data-scrolled]{mask-image:linear-gradient(90deg,#0000,#000 12px)}.YDXeBa_sessionRow .YDXeBa_title[data-clipped]{mask-image:linear-gradient(270deg,#0000,#000 12px)}.YDXeBa_sessionRow .YDXeBa_title[data-scrolled][data-clipped]{mask-image:linear-gradient(90deg,#0000,#000 12px calc(100% - 12px),#0000)}.YDXeBa_meta{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:20px;overflow:hidden}.YDXeBa_time{color:var(--dsw-alias-label-tertiary);flex:none;font-size:10px;line-height:16px}.YDXeBa_pinIndicator{width:16px;height:20px;color:var(--dsw-alias-label-caption);flex:none;justify-content:center;align-items:center;margin-left:6px;display:inline-flex}.YDXeBa_sessionRow.YDXeBa_archived .YDXeBa_title,.YDXeBa_searchResultRow.YDXeBa_archived .YDXeBa_searchResultTitle,.YDXeBa_searchResultRow.YDXeBa_archived .YDXeBa_searchResultWorkspace,.YDXeBa_searchResultRow.YDXeBa_archived .YDXeBa_searchResultSnippet{color:var(--dsw-alias-label-caption)}.YDXeBa_dot{flex:none}.YDXeBa_rowActions{flex:none;align-items:center;gap:15px;display:none}.YDXeBa_projectRow:hover .YDXeBa_rowActions,.YDXeBa_sessionRow:hover .YDXeBa_rowActions,.YDXeBa_searchResultRow:hover .YDXeBa_rowActions,.YDXeBa_projectRow.YDXeBa_menuOpen .YDXeBa_rowActions,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_rowActions{display:inline-flex}.YDXeBa_searchResultHeading .YDXeBa_rowActions{margin-left:auto}.bhn1Oq_root:not(.bhn1Oq_rail) .bhn1Oq_sectionHeader.YDXeBa_chatHeader{margin-right:5px}.YDXeBa_chatFold{cursor:pointer;color:inherit;font:inherit;background:0 0;border:none;border-radius:var(--dsw-radius-sm);align-items:center;gap:2px;height:28px;margin-right:auto;padding:0;display:inline-flex}.YDXeBa_chatFold:hover{color:var(--dsw-alias-label-secondary)}.YDXeBa_chatFold:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-2px}.YDXeBa_chatFoldIcon{flex:none;transition:transform .15s var(--ds-ease-in-out)}.YDXeBa_chatFoldIconClosed{transform:rotate(-90deg)}@media (prefers-reduced-motion:reduce){.YDXeBa_chatFoldIcon{transition:none}}.YDXeBa_sessionRow:hover .YDXeBa_time,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_time,.YDXeBa_sessionRow:hover .YDXeBa_pinIndicator,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_pinIndicator{display:none}@media (hover:hover){.YDXeBa_sessionRow:hover .YDXeBa_title,.YDXeBa_sessionRow.YDXeBa_menuOpen .YDXeBa_title{text-overflow:clip}}.YDXeBa_projectRow.YDXeBa_menuOpen,.YDXeBa_sessionRow.YDXeBa_menuOpen{background:var(--dsw-alias-interactive-bg-hover)}.YDXeBa_sessionRow.YDXeBa_dropBefore,.YDXeBa_sessionRow.YDXeBa_dropAfter{position:relative}.YDXeBa_sessionRow.YDXeBa_dropBefore:before,.YDXeBa_sessionRow.YDXeBa_dropAfter:after{content:\"\";z-index:1;background:linear-gradient(55deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 0 / 5px 7px no-repeat, linear-gradient(125deg, transparent calc(50% - 1px), var(--dsw-alias-state-business-primary) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) 0 5px / 5px 7px no-repeat, linear-gradient(var(--dsw-alias-state-business-primary) 0 0) 4px 5px / calc(100% - 4px) 2px no-repeat;pointer-events:none;height:12px;position:absolute;left:0;right:4px}.YDXeBa_sessionRow.YDXeBa_dropBefore:before{top:-7px}.YDXeBa_sessionRow.YDXeBa_dropAfter:after{bottom:-7px}.YDXeBa_hoverContent{flex-direction:column;gap:8px;display:flex}.YDXeBa_hoverTitle{color:#fff;overflow-wrap:break-word;font-size:14px;line-height:20px}.YDXeBa_hoverPath{color:#cfd3d6;word-break:break-all;font-size:12px;line-height:16px}.YDXeBa_hoverTime{color:#cfd3d6;font-size:12px;line-height:16px}.YDXeBa_hoverStatus{color:#adb2b8;align-items:center;gap:8px;font-size:12px;line-height:20px;display:flex}.YDXeBa_hoverArchived svg{flex-shrink:0;margin:0 -4px}.YDXeBa_iconButton{border-radius:var(--dsw-radius-xs);cursor:pointer;width:16px;height:16px;color:var(--dsw-alias-label-tertiary);background:0 0;border:none;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.YDXeBa_iconButton:hover{color:var(--dsw-alias-label-primary)}.YDXeBa_chevron{color:var(--dsw-alias-label-caption)}@media (prefers-reduced-motion:reduce){.YDXeBa_arrow{transition:none;animation:none}}";
  		const tagId$3 = "@deepseek-ai/dsh-client-ui-workspace/Rows.module.css";
  		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$3) + "]") === null) {
  			const tag = document.createElement("style");
-@@ -1752,6 +1942,7 @@ window.__ModuleLoader__.load({
+@@ -1752,6 +1942,10 @@ window.__ModuleLoader__.load({
  			"archived": "YDXeBa_archived",
  			"arrow": "YDXeBa_arrow",
  			"arrowOpen": "YDXeBa_arrowOpen",
++			"chatFold": "YDXeBa_chatFold",
++			"chatFoldIcon": "YDXeBa_chatFoldIcon",
++			"chatFoldIconClosed": "YDXeBa_chatFoldIconClosed",
 +			"chatHeader": "YDXeBa_chatHeader",
  			"chevron": "YDXeBa_chevron",
  			"dot": "YDXeBa_dot",
  			"dropAfter": "YDXeBa_dropAfter",
-@@ -1948,10 +2139,87 @@ window.__ModuleLoader__.load({
+@@ -1948,10 +2142,126 @@ window.__ModuleLoader__.load({
  		* @param props.t - the browser root's locale seat.
  		* @returns the row element.
  		*/
 -		function ProjectRowItem({ group, containsCurrentDescendant = false, onToggle, onCreate, actions, drag, home, newShortcut, t }) {
-+		function ProjectRowItem({ group, containsCurrentDescendant = false, onToggle, onCreate, onSearch, actions, drag, home, newShortcut, t }) {
++		function ProjectRowItem({ group, containsCurrentDescendant = false, onToggle, onCreate, chatSearch, actions, drag, home, newShortcut, t }) {
  			const row = group;
 -			const label = row.workspaceId === void 0 ? t("group.ungrouped") : row.label;
 +			const label = row.workspaceId === void 0 ? t("group.chat") : row.label;
  			const active = containsCurrentDescendant || group.expanded && group.containsCurrent;
 +			const isChat = row.workspaceId === void 0;
-+			if (isChat) return (0, react_jsx_runtime.jsxs)("div", {
-+				className: clsx(Rows_module_css_default.projectRow, Rows_module_css_default.chatHeader),
-+				"data-row-key": "chat-heading",
-+				"data-chat-group": "true",
-+				role: "treeitem",
-+				"aria-expanded": row.expanded,
-+				onClick: onToggle,
-+				children: [
-+					(0, react_jsx_runtime.jsx)("span", {
-+						className: Rows_module_css_default.projectText,
-+						children: (0, react_jsx_runtime.jsx)("span", {
-+							className: Rows_module_css_default.title,
-+							children: label
-+						})
-+					}),
-+					(0, react_jsx_runtime.jsx)("span", {
-+						className: Rows_module_css_default.rowActions,
-+						children: [
-+							(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
-+								label: t("search.sessions.aria"),
-+								side: "bottom",
-+								align: "end",
-+								delayMs: 500,
-+								portal: true,
-+								children: (0, react_jsx_runtime.jsx)("button", {
-+									type: "button",
-+									className: Rows_module_css_default.iconButton,
-+									"aria-label": t("actions.chatSearch"),
-+									onClick: (e) => {
-+										e.stopPropagation();
-+										onSearch();
-+									},
-+									children: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: 14 })
-+								})
-+							}),
-+							(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
-+								label: row.expanded ? t("actions.chatCollapse") : t("actions.chatExpand"),
-+								side: "bottom",
-+								align: "end",
-+								delayMs: 500,
-+								portal: true,
-+								children: (0, react_jsx_runtime.jsx)("button", {
-+									type: "button",
-+									className: Rows_module_css_default.iconButton,
-+									"aria-label": row.expanded ? t("actions.chatCollapse") : t("actions.chatExpand"),
-+									"aria-expanded": row.expanded,
-+									onClick: (e) => {
-+										e.stopPropagation();
-+										onToggle();
-+									},
-+									children: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutlineRegular, { className: clsx(Rows_module_css_default.arrow, row.expanded && Rows_module_css_default.arrowOpen) })
-+								})
-+							}),
-+							(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
++			if (isChat) {
++				// DSH Desktop: the chat heading reuses the workspace section header
++				// (label, inline search, action cluster) so the two sections read as
++				// one set. Its search filters chat sessions only; the fold chevron
++				// sits with the label, which toggles the list.
++				const css = WorkspaceBrowser_module_css_default;
++				const closeSearch = () => {
++					chatSearch.setQuery("");
++					chatSearch.setOpen(false);
++				};
++				const foldLabel = row.expanded ? t("actions.chatCollapse") : t("actions.chatExpand");
++				return (0, react_jsx_runtime.jsxs)("div", {
++					className: clsx(css.sectionHeader, Rows_module_css_default.chatHeader),
++					"data-row-key": "chat-heading",
++					"data-chat-group": "true",
++					role: "treeitem",
++					"aria-expanded": row.expanded,
++					children: [
++						(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
++							label: foldLabel,
++							side: "bottom",
++							align: "start",
++							delayMs: 500,
++							portal: true,
++							disabled: chatSearch.open,
++							children: (0, react_jsx_runtime.jsxs)("button", {
++								type: "button",
++								className: clsx(css.sectionLabel, css.wide, Rows_module_css_default.chatFold, chatSearch.open && css.sectionLabelHidden),
++								"aria-label": foldLabel,
++								"aria-expanded": row.expanded,
++								tabIndex: chatSearch.open ? -1 : 0,
++								onClick: onToggle,
++								children: [label, (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutlineRegular, {
++									size: 12,
++									className: clsx(Rows_module_css_default.chatFoldIcon, !row.expanded && Rows_module_css_default.chatFoldIconClosed)
++								})]
++							})
++						}),
++						(0, react_jsx_runtime.jsx)("div", {
++							className: clsx(css.searchSlot, chatSearch.open && css.searchSlotExpanded),
++							children: (0, react_jsx_runtime.jsxs)("div", {
++								className: clsx(css.search, chatSearch.open && css.searchExpanded),
++								onClick: (e) => {
++									chatSearch.setOpen(true);
++									e.currentTarget.querySelector("input")?.focus();
++								},
++								children: [
++									(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
++										label: t("actions.chatSearch"),
++										side: "bottom",
++										delayMs: 500,
++										disabled: chatSearch.open,
++										children: (0, react_jsx_runtime.jsx)("button", {
++											type: "button",
++											className: css.searchButton,
++											"aria-label": t("actions.chatSearch"),
++											"aria-expanded": chatSearch.open,
++											children: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSearchOutlineRegular, { size: chatSearch.open ? 11 : 14 })
++										})
++									}),
++									(0, react_jsx_runtime.jsx)("input", {
++										className: css.searchInput,
++										type: "text",
++										placeholder: t("chat.search.placeholder"),
++										maxLength: SEARCH_QUERY_MAX_CODE_UNITS,
++										value: chatSearch.query,
++										tabIndex: chatSearch.open ? 0 : -1,
++										onChange: (e) => {
++											chatSearch.setQuery(sanitizeSearchQuery(e.target.value));
++										},
++										onBlur: () => {
++											if (chatSearch.query === "") chatSearch.setOpen(false);
++										},
++										onKeyDown: (e) => {
++											if (e.key === "Escape") closeSearch();
++										}
++									}),
++									chatSearch.open && (0, react_jsx_runtime.jsx)("button", {
++										type: "button",
++										className: css.clearButton,
++										"aria-label": t("search.clear"),
++										onClick: (e) => {
++											e.stopPropagation();
++											closeSearch();
++										},
++										children: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCloseFillRegular, {})
++									})
++								]
++							})
++						}),
++						(0, react_jsx_runtime.jsx)("div", {
++							className: clsx(css.headerActions, chatSearch.open && css.headerActionsHidden),
++							children: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
 +								label: t("actions.newSession"),
 +								shortcutKeys: newShortcut?.keys,
 +								side: "bottom",
@@ -458,7 +500,7 @@ index bf57a02..5c2b1e4 100644
 +								portal: true,
 +								children: (0, react_jsx_runtime.jsx)("button", {
 +									type: "button",
-+									className: Rows_module_css_default.iconButton,
++									className: css.iconButton,
 +									"aria-keyshortcuts": newShortcut?.aria,
 +									"aria-label": t("actions.newSession.aria", { name: label }),
 +									onClick: (e) => {
@@ -468,14 +510,14 @@ index bf57a02..5c2b1e4 100644
 +									children: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconNewChatOutlineRegular, {})
 +								})
 +							})
-+						]
-+					})
-+				]
-+			});
++						})
++					]
++				});
++			}
  			const [menuOpen, setMenuOpen] = (0, react.useState)(false);
  			const workspaceMenuItems = [{
  				id: "rename",
-@@ -1966,6 +2234,7 @@ window.__ModuleLoader__.load({
+@@ -1966,6 +2276,7 @@ window.__ModuleLoader__.load({
  			const ownRow = (0, react_jsx_runtime.jsxs)("div", {
  				className: clsx(Rows_module_css_default.projectRow, menuOpen && Rows_module_css_default.menuOpen),
  				"data-row-key": `workspace:${group.key}`,
@@ -483,7 +525,7 @@ index bf57a02..5c2b1e4 100644
  				role: "treeitem",
  				"aria-expanded": row.expanded,
  				onClick: onToggle,
-@@ -1979,7 +2248,7 @@ window.__ModuleLoader__.load({
+@@ -1979,7 +2290,7 @@ window.__ModuleLoader__.load({
  				children: [
  					(0, react_jsx_runtime.jsx)("span", {
  						className: clsx(Rows_module_css_default.slot, Rows_module_css_default.folder, active && Rows_module_css_default.folderActive),
@@ -492,7 +534,7 @@ index bf57a02..5c2b1e4 100644
  					}),
  					(0, react_jsx_runtime.jsx)("span", {
  						className: clsx(Rows_module_css_default.slot, Rows_module_css_default.chevron),
-@@ -1994,7 +2263,7 @@ window.__ModuleLoader__.load({
+@@ -1994,7 +2305,7 @@ window.__ModuleLoader__.load({
  					}),
  					(0, react_jsx_runtime.jsxs)("span", {
  						className: Rows_module_css_default.rowActions,
@@ -501,7 +543,7 @@ index bf57a02..5c2b1e4 100644
  							open: menuOpen,
  							onClose: () => {
  								setMenuOpen(false);
-@@ -2176,7 +2445,7 @@ window.__ModuleLoader__.load({
+@@ -2176,7 +2487,7 @@ window.__ModuleLoader__.load({
  		* @param props.t - Workspace-browser translation seat.
  		* @returns the result row.
  		*/
@@ -510,7 +552,7 @@ index bf57a02..5c2b1e4 100644
  			const selected = result.id === currentId;
  			const statuses = sessionStatuses(result, t);
  			const primaryStatus = statuses[0];
-@@ -2191,6 +2460,7 @@ window.__ModuleLoader__.load({
+@@ -2191,6 +2502,7 @@ window.__ModuleLoader__.load({
  				children: [(0, react_jsx_runtime.jsxs)("span", {
  					className: Rows_module_css_default.searchResultHeading,
  					children: [
@@ -518,7 +560,7 @@ index bf57a02..5c2b1e4 100644
  						(0, react_jsx_runtime.jsx)("span", {
  							className: Rows_module_css_default.slot,
  							children: !result.archived && primaryStatus.state !== "idle" && (0, react_jsx_runtime.jsx)(SessionStatusDots, { statuses })
-@@ -2252,7 +2522,7 @@ window.__ModuleLoader__.load({
+@@ -2252,7 +2564,7 @@ window.__ModuleLoader__.load({
  		* @param props.t - the browser root's locale seat.
  		* @returns the session row.
  		*/
@@ -527,7 +569,7 @@ index bf57a02..5c2b1e4 100644
  			const row = node;
  			const title = displayTitle(node, t);
  			const selected = node.id === currentId;
-@@ -2281,6 +2551,11 @@ window.__ModuleLoader__.load({
+@@ -2281,6 +2593,11 @@ window.__ModuleLoader__.load({
  					onClick: () => {
  						onOpen(node.id);
  					},
@@ -539,7 +581,7 @@ index bf57a02..5c2b1e4 100644
  					onPointerEnter: marquee.enter,
  					onPointerLeave: marquee.leave,
  					draggable,
-@@ -2304,11 +2579,12 @@ window.__ModuleLoader__.load({
+@@ -2304,11 +2621,12 @@ window.__ModuleLoader__.load({
  					children: [
  						(0, react_jsx_runtime.jsx)("span", {
  							className: Rows_module_css_default.slot,
@@ -553,7 +595,7 @@ index bf57a02..5c2b1e4 100644
  							onDoubleClick: row.blank ? void 0 : (e) => {
  								e.stopPropagation();
  								onRenameRequest(node.id, row.title);
-@@ -2344,7 +2620,9 @@ window.__ModuleLoader__.load({
+@@ -2344,7 +2662,9 @@ window.__ModuleLoader__.load({
  								}),
  								children: renderSlot("sidebar.workspaces.session.menu.item", {
  									sessionId: node.id,
@@ -564,7 +606,7 @@ index bf57a02..5c2b1e4 100644
  								}, { hookContext: menuOpenState })
  							}), renderSlot("sidebar.workspaces.session.row.action", {
  								sessionId: node.id,
-@@ -2562,12 +2840,30 @@ window.__ModuleLoader__.load({
+@@ -2562,12 +2882,30 @@ window.__ModuleLoader__.load({
  		//#endregion
  		//#region lib/types/client/WorkspacePicker.js
  		const ADD_WORKSPACE = "::add-workspace";
@@ -596,7 +638,7 @@ index bf57a02..5c2b1e4 100644
  			const workspaceSnapshot = useWorkspaces((state) => state);
  			const workspaces = workspaceSnapshot.items;
  			const getAnchorRect = (0, react.useCallback)(() => anchorRef?.current?.getBoundingClientRect() ?? null, [anchorRef]);
-@@ -2590,12 +2886,18 @@ window.__ModuleLoader__.load({
+@@ -2590,12 +2928,18 @@ window.__ModuleLoader__.load({
  				disabled: flowBusy
  			}] : [];
  			const pinAdd = !addOnly && workspaces.length > 0;
@@ -617,7 +659,7 @@ index bf57a02..5c2b1e4 100644
  			const menuIsEmpty = items.length === 0;
  			const closeModal = () => {
  				setErrorOpen(false);
-@@ -2617,7 +2919,7 @@ window.__ModuleLoader__.load({
+@@ -2617,7 +2961,7 @@ window.__ModuleLoader__.load({
  				setFlowOpen(true);
  			}, [onClose]);
  			const listSettled = addOnly || workspaceSnapshot.phase === "ready";
@@ -626,7 +668,7 @@ index bf57a02..5c2b1e4 100644
  			(0, react.useEffect)(() => {
  				if (open && addIsTheOnlyEntry && !flowBusy) openDirectoryFlow();
  			}, [
-@@ -2713,7 +3015,8 @@ window.__ModuleLoader__.load({
+@@ -2713,7 +3057,8 @@ window.__ModuleLoader__.load({
  				renderDirectoryFlow: (owner) => renderSlot("conversation.hero.workspace.directoryFlow", owner),
  				selectedId,
  				onPick,
@@ -636,7 +678,7 @@ index bf57a02..5c2b1e4 100644
  			});
  		}
  		//#endregion
-@@ -3021,8 +3324,8 @@ window.__ModuleLoader__.load({
+@@ -3021,8 +3366,22 @@ window.__ModuleLoader__.load({
  				]
  			});
  		}
@@ -644,10 +686,24 @@ index bf57a02..5c2b1e4 100644
 -		function SessionTree({ list, useSessionStatus, startSession, open, workspaces, ungroupedSessionIds, rowState, onLeaveArchivedOnly, workspaceReady, animationResetKey, usePanelInfo, onRenameRequest, onDeleteRequest, onSessionRenameRequest, renderSlot, insertWorkspaceBefore, nestWorkspaces, groupExpansion, setGroupExpanded, setSessionOrder, home, t, revealSessionId, onSessionRevealed, shortcuts }) {
 +		/** The scrolling session tree; unmounting drops the sessions subscription and local row limits. */
 +		function SessionTree({ list, useSessionStatus, startSession, open, workspaces, ungroupedSessionIds, rowState, unreadSessionIds, onUnreadChange, onLeaveArchivedOnly, workspaceReady, animationResetKey, usePanelInfo, onRenameRequest, onDeleteRequest, onSessionRenameRequest, renderSlot, insertWorkspaceBefore, nestWorkspaces, groupExpansion, setGroupExpanded, setSessionOrder, home, t, revealSessionId, onSessionRevealed, shortcuts, requestSearch }) {
++			// DSH Desktop: the chat heading's own search. It stays inside the chat
++			// group, unlike the section search, which spans every workspace.
++			const [chatSearchOpen, setChatSearchOpen] = (0, react.useState)(false);
++			const [chatSearchQuery, setChatSearchQuery] = (0, react.useState)("");
++			const chatSearch = {
++				open: chatSearchOpen,
++				query: chatSearchQuery,
++				setOpen: (next) => {
++					if (next) setGroupExpanded("", true);
++					setChatSearchOpen(next);
++				},
++				setQuery: setChatSearchQuery
++			};
++			const chatFilter = chatSearchOpen ? chatSearchQuery.trim().toLocaleLowerCase() : "";
  			const panelActive = usePanelInfo((info) => info.activePanelId !== null);
  			const statuses = useSessionStatus((s) => s);
  			const current = panelActive ? void 0 : Object.values(list.byId).find((session) => (session.retainedBy.mainView ?? 0) > 0)?.id;
-@@ -3061,7 +3364,7 @@ window.__ModuleLoader__.load({
+@@ -3061,7 +3420,7 @@ window.__ModuleLoader__.load({
  			}, [currentGroup, parents]);
  			const expandedGroups = (0, react.useMemo)(() => {
  				const ancestorKeys = new Set(parents.values());
@@ -656,24 +712,31 @@ index bf57a02..5c2b1e4 100644
  			}, [
  				groupExpansion,
  				parents,
-@@ -3158,7 +3461,7 @@ window.__ModuleLoader__.load({
+@@ -3158,11 +3517,12 @@ window.__ModuleLoader__.load({
  				const collapsed = watermarkRows(group.sessions, baselines.get(group.key) ?? SESSION_WATERMARK_BASE);
  				const visible = watermarkRows(group.sessions, watermark);
  				const sessionsExpanded = visible.hiddenCount === 0;
 -				rowKeys.push(`workspace:${group.key}`);
 +				rowKeys.push(group.workspaceId === void 0 ? "chat-heading" : `workspace:${group.key}`);
  				const childRows = group.expanded ? children.map((child) => renderGroup(child, depth + 1)) : [];
- 				const sessions = visible.rows;
+-				const sessions = visible.rows;
++				const filtering = group.workspaceId === void 0 && chatFilter !== "";
++				const sessions = filtering ? group.sessions.filter((node) => displayTitle(node, t).toLocaleLowerCase().includes(chatFilter)) : visible.rows;
  				for (const node of sessions) rowKeys.push(`session:${node.id}`);
-@@ -3227,6 +3530,7 @@ window.__ModuleLoader__.load({
+-				if (collapsed.hiddenCount > 0) rowKeys.push(`overflow:${group.key}`);
++				if (!filtering && collapsed.hiddenCount > 0) rowKeys.push(`overflow:${group.key}`);
+ 				const workspaceMarker = workspaceId !== void 0 && workspaceDrag?.over?.id === workspaceId ? workspaceDrag.over.half : null;
+ 				const workspaceDragProps = workspaceId === void 0 ? void 0 : {
+ 					start: () => {
+@@ -3227,6 +3587,7 @@ window.__ModuleLoader__.load({
  							containsCurrentDescendant: currentAncestors.has(group.key),
  							home,
  							t,
-+							onSearch: requestSearch,
++							chatSearch,
  							onToggle: () => {
  								if (group.expanded) dropWatermarks((key) => withinGroup(key, group.key));
  								setGroupExpanded(group.key, !group.expanded);
-@@ -3236,6 +3540,10 @@ window.__ModuleLoader__.load({
+@@ -3236,6 +3597,10 @@ window.__ModuleLoader__.load({
  									setGroupExpanded(group.key, true);
  									startSession(group.workspaceId);
  								}
@@ -684,7 +747,7 @@ index bf57a02..5c2b1e4 100644
  							},
  							drag: workspaceDragProps,
  							actions: group.workspaceId === void 0 ? void 0 : {
-@@ -3300,6 +3608,8 @@ window.__ModuleLoader__.load({
+@@ -3300,6 +3665,8 @@ window.__ModuleLoader__.load({
  								onOpen: open,
  								onRenameRequest: onSessionRenameRequest,
  								renderSlot,
@@ -693,7 +756,16 @@ index bf57a02..5c2b1e4 100644
  								onReveal: node.id === revealSessionId && group.key === revealGroup ? () => {
  									onSessionRevealed(node.id);
  								} : void 0,
-@@ -3353,7 +3663,7 @@ window.__ModuleLoader__.load({
+@@ -3307,7 +3674,7 @@ window.__ModuleLoader__.load({
+ 								t
+ 							}, node.id);
+ 						}),
+-						collapsed.hiddenCount > 0 && (0, react_jsx_runtime.jsx)("button", {
++						!filtering && collapsed.hiddenCount > 0 && (0, react_jsx_runtime.jsx)("button", {
+ 							type: "button",
+ 							className: WorkspaceBrowser_module_css_default.sessionOverflowButton,
+ 							"data-row-key": `overflow:${group.key}`,
+@@ -3353,7 +3720,7 @@ window.__ModuleLoader__.load({
  			});
  		}
  		/** The flat "In one list" body: every session is one draggable top-level row. */
@@ -702,7 +774,7 @@ index bf57a02..5c2b1e4 100644
  			const panelActive = usePanelInfo((info) => info.activePanelId !== null);
  			const statuses = useSessionStatus((s) => s);
  			const rows = (0, react.useMemo)(() => deriveFlat(list, sessionIds, rowState, statuses), [
-@@ -3394,8 +3704,10 @@ window.__ModuleLoader__.load({
+@@ -3394,8 +3761,10 @@ window.__ModuleLoader__.load({
  							currentId,
  							now,
  							onOpen: open,
@@ -715,7 +787,7 @@ index bf57a02..5c2b1e4 100644
  							onReveal: node.id === revealSessionId ? () => {
  								onSessionRevealed(node.id);
  							} : void 0,
-@@ -3439,9 +3751,8 @@ window.__ModuleLoader__.load({
+@@ -3439,9 +3808,8 @@ window.__ModuleLoader__.load({
  			});
  		}
  		/** Flat search body: local metadata matches plus the current Host result page. */
@@ -726,7 +798,7 @@ index bf57a02..5c2b1e4 100644
  			const statuses = useSessionStatus((s) => s);
  			const currentRemote = remote.query === query ? remote : {
  				query,
-@@ -3475,6 +3786,7 @@ window.__ModuleLoader__.load({
+@@ -3475,6 +3843,7 @@ window.__ModuleLoader__.load({
  								currentId,
  								onOpen: open,
  								onUnarchive,
@@ -734,7 +806,7 @@ index bf57a02..5c2b1e4 100644
  								t
  							}, result.id))
  						}),
-@@ -3507,19 +3819,28 @@ window.__ModuleLoader__.load({
+@@ -3507,19 +3876,28 @@ window.__ModuleLoader__.load({
  		* @param props - composed slot props (shell owner share + store + injected actions).
  		* @returns the region element tree.
  		*/
@@ -767,7 +839,7 @@ index bf57a02..5c2b1e4 100644
  			const workspacePhase = useWorkspaces((state) => state.phase);
  			const workspaceStreamState = useWorkspaces((state) => state.state);
  			const archivedSessionIds = useWorkspaces((state) => state.archivedSessionIds);
-@@ -3530,6 +3851,11 @@ window.__ModuleLoader__.load({
+@@ -3530,6 +3908,11 @@ window.__ModuleLoader__.load({
  			const archivedFilter = useStore((s) => s.archivedFilter ?? "default");
  			const groupExpansion = useStore((s) => s.groupExpansion);
  			const sessionOrderByAccount = useStore((s) => s.sessionOrderByAccount);
@@ -779,7 +851,7 @@ index bf57a02..5c2b1e4 100644
  			const guardedOpen = (sessionId) => {
  				if (archivedSessionIds.includes(sessionId)) {
  					notifyArchivedNotOpenable();
-@@ -3799,6 +4125,11 @@ window.__ModuleLoader__.load({
+@@ -3799,6 +4182,11 @@ window.__ModuleLoader__.load({
  			const [deleting, setDeleting] = (0, react.useState)(false);
  			const [deleteCommittedId, setDeleteCommittedId] = (0, react.useState)(null);
  			const [deleteError, setDeleteError] = (0, react.useState)(null);
@@ -791,7 +863,7 @@ index bf57a02..5c2b1e4 100644
  			(0, react.useEffect)(() => {
  				if (deleteCommittedId === null || workspaces.some((workspace) => workspace.workspaceId === deleteCommittedId)) return;
  				setDeleting(false);
-@@ -3813,6 +4144,10 @@ window.__ModuleLoader__.load({
+@@ -3813,6 +4201,10 @@ window.__ModuleLoader__.load({
  			const confirmDelete = () => {
  				/* v8 ignore next -- the Modal is absent without a target and its button is disabled while deleting. */
  				if (deleting || deleteTarget === null) return;
@@ -802,7 +874,7 @@ index bf57a02..5c2b1e4 100644
  				setDeleting(true);
  				setDeleteCommittedId(null);
  				setDeleteError(null);
-@@ -3965,7 +4300,7 @@ window.__ModuleLoader__.load({
+@@ -3965,7 +4357,7 @@ window.__ModuleLoader__.load({
  						className: WorkspaceBrowser_module_css_default.listArea,
  						children: wide && (normalizedQuery !== "" ? (0, react_jsx_runtime.jsx)(SearchResults, {
  							usePanelInfo,
@@ -811,7 +883,7 @@ index bf57a02..5c2b1e4 100644
  							useSessionStatus,
  							open: openSearchResult,
  							onUnarchive: onSessionUnarchive,
-@@ -3981,6 +4316,8 @@ window.__ModuleLoader__.load({
+@@ -3981,6 +4373,8 @@ window.__ModuleLoader__.load({
  							list,
  							sessionIds: orderedFlatSessionIds,
  							rowState,
@@ -820,7 +892,7 @@ index bf57a02..5c2b1e4 100644
  							onLeaveArchivedOnly: leaveArchivedOnly,
  							workspaceReady,
  							animationResetKey: `${groupBy}/${orderBy}/${archivedFilter}`,
-@@ -3996,6 +4333,7 @@ window.__ModuleLoader__.load({
+@@ -3996,6 +4390,7 @@ window.__ModuleLoader__.load({
  							usePanelInfo,
  							list,
  							shortcuts,
@@ -828,7 +900,7 @@ index bf57a02..5c2b1e4 100644
  							useSessionStatus,
  							onSessionRenameRequest: requestSessionRename,
  							renderSlot,
-@@ -4008,6 +4346,8 @@ window.__ModuleLoader__.load({
+@@ -4008,6 +4403,8 @@ window.__ModuleLoader__.load({
  							setGroupExpanded: actions.setGroupExpanded,
  							setSessionOrder: saveSessionOrder,
  							rowState,
@@ -837,7 +909,7 @@ index bf57a02..5c2b1e4 100644
  							onLeaveArchivedOnly: leaveArchivedOnly,
  							startSession,
  							open: guardedOpen,
-@@ -4027,7 +4367,8 @@ window.__ModuleLoader__.load({
+@@ -4027,7 +4424,8 @@ window.__ModuleLoader__.load({
  							onDeleteRequest: (workspaceId, title) => {
  								setDeleteTarget({
  									workspaceId,
@@ -847,7 +919,7 @@ index bf57a02..5c2b1e4 100644
  								});
  								setDeleteError(null);
  							}
-@@ -4749,8 +5090,8 @@ window.__ModuleLoader__.load({
+@@ -4749,8 +5147,8 @@ window.__ModuleLoader__.load({
  		/** Simplified Chinese dictionary (the key-set source of truth). */
  		const zh = {
  			"defaultWorkspace.failed": "无法创建默认工作区，请通过“选择工作区”选择文件夹",
@@ -857,7 +929,7 @@ index bf57a02..5c2b1e4 100644
  			"group.ungrouped": "未分组",
  			"session.new": "新会话",
  			"session.untitled": "未命名",
-@@ -4788,6 +5129,7 @@ window.__ModuleLoader__.load({
+@@ -4788,6 +5186,7 @@ window.__ModuleLoader__.load({
  			"search.noMatches": "无匹配会话",
  			"search.hasMore": "仅显示前 {n} 条结果，请缩小搜索范围。",
  			"menu.addWorkspace": "添加工作区…",
@@ -865,17 +937,18 @@ index bf57a02..5c2b1e4 100644
  			"picker.loading": "正在加载工作区…",
  			"conflict.named": "已存在名为“{name}”的工作区。",
  			"folderError.title": "无法打开文件夹",
-@@ -4846,6 +5188,9 @@ window.__ModuleLoader__.load({
+@@ -4846,6 +5245,10 @@ window.__ModuleLoader__.load({
  			"actions.unpin": "取消置顶",
  			"actions.newSession": "新会话",
  			"actions.newSession.aria": "在“{name}”中新建会话",
 +			"actions.chatSearch": "搜索聊天会话",
++			"chat.search.placeholder": "搜索聊天名称",
 +			"actions.chatCollapse": "收起聊天列表",
 +			"actions.chatExpand": "展开聊天列表",
  			"status.running": "进行中",
  			"status.subagentsRunning.one": "{n} 个子智能体运行中",
  			"status.subagentsRunning.other": "{n} 个子智能体运行中",
-@@ -4857,6 +5202,7 @@ window.__ModuleLoader__.load({
+@@ -4857,6 +5260,7 @@ window.__ModuleLoader__.load({
  			"status.compact.planReview": "计划待审",
  			"status.compact.answer": "待回答",
  			"status.completed": "已完成",
@@ -883,7 +956,7 @@ index bf57a02..5c2b1e4 100644
  			"hover.created": "创建于 {time}",
  			"hover.copied": "已复制",
  			"date.ymd": "{y}年{m}月{d}日",
-@@ -4871,8 +5217,8 @@ window.__ModuleLoader__.load({
+@@ -4871,8 +5275,8 @@ window.__ModuleLoader__.load({
  		/** English dictionary, checked complete against the zh key set. */
  		const en = {
  			"defaultWorkspace.failed": "Unable to create default workspace. Use Choose workspace to select a folder.",
@@ -893,7 +966,7 @@ index bf57a02..5c2b1e4 100644
  			"group.ungrouped": "Ungrouped",
  			"session.new": "New Session",
  			"session.untitled": "Untitled",
-@@ -4910,6 +5256,7 @@ window.__ModuleLoader__.load({
+@@ -4910,6 +5314,7 @@ window.__ModuleLoader__.load({
  			"search.noMatches": "No matching sessions",
  			"search.hasMore": "Showing the first {n} results. Narrow your search.",
  			"menu.addWorkspace": "Add workspace…",
@@ -901,17 +974,18 @@ index bf57a02..5c2b1e4 100644
  			"picker.loading": "Loading workspaces…",
  			"conflict.named": "A workspace named “{name}” already exists.",
  			"folderError.title": "Couldn’t open folder",
-@@ -4968,6 +5315,9 @@ window.__ModuleLoader__.load({
+@@ -4968,6 +5373,10 @@ window.__ModuleLoader__.load({
  			"actions.unpin": "Unpin",
  			"actions.newSession": "New session",
  			"actions.newSession.aria": "New session in {name}",
 +			"actions.chatSearch": "Search chat sessions",
++			"chat.search.placeholder": "Search chat names",
 +			"actions.chatCollapse": "Collapse chat list",
 +			"actions.chatExpand": "Expand chat list",
  			"status.running": "Running",
  			"status.subagentsRunning.one": "{n} subagent running",
  			"status.subagentsRunning.other": "{n} subagents running",
-@@ -4979,6 +5329,7 @@ window.__ModuleLoader__.load({
+@@ -4979,6 +5388,7 @@ window.__ModuleLoader__.load({
  			"status.compact.planReview": "Plan review",
  			"status.compact.answer": "Answer",
  			"status.completed": "Completed",
@@ -919,7 +993,7 @@ index bf57a02..5c2b1e4 100644
  			"hover.created": "Created {time}",
  			"hover.copied": "Copied",
  			"date.ymd": "{y}-{m}-{d}",
-@@ -5180,6 +5531,8 @@ window.__ModuleLoader__.load({
+@@ -5180,6 +5590,8 @@ window.__ModuleLoader__.load({
  				}
  			});
  			const browserInjected = () => ({
@@ -928,7 +1002,7 @@ index bf57a02..5c2b1e4 100644
  				startSession: (workspaceId, options) => {
  					uiWorkspace.startSession(workspaceId, options);
  				},
-@@ -5194,7 +5547,7 @@ window.__ModuleLoader__.load({
+@@ -5194,7 +5606,7 @@ window.__ModuleLoader__.load({
  					await workspaces.rename(workspaceId, title);
  				},
  				deleteWorkspace: async (workspaceId) => {
@@ -937,7 +1011,7 @@ index bf57a02..5c2b1e4 100644
  				},
  				insertWorkspaceBefore: async (workspaceId, beforeWorkspaceId) => {
  					await workspaces.insertBefore(workspaceId, beforeWorkspaceId);
-@@ -5210,6 +5563,8 @@ window.__ModuleLoader__.load({
+@@ -5210,6 +5622,8 @@ window.__ModuleLoader__.load({
  				hooks: {
  					directoryFlow: browserFlowSource,
  					hostInfo,

@@ -177,6 +177,7 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 - **未执行的验收**：安装程序本身的安装与覆盖升级、全新机器安装、在出问题的那台电脑上验证 0.0.6 的市场修复、真实模型请求、真实 GrsAI Key 的付费生成、macOS 构建。
 - **0.0.6 的关于页与更新弹窗**：“设置 → 关于”常驻默认折叠的当前版本更新日志卡片，更新弹窗按同样的样式排版，两处都只显示 Release 正文的“更新内容”和“问题修复”（主进程过滤）；详见 [CHANGELOG.md](../CHANGELOG.md) 的 0.0.6 条目与 [运行架构](architecture.md#updates) 的 Updates 一节。
 - **0.0.6 的插件市场修复**：市场基线由 1.65.1 改为 1.71.1，常量统一放在 `src/main/state/market-version.ts`，安装器的 `RECOMMENDED_MARKET_VERSION` 必须与它一致，升级 Harness 时要一起检查 dshmarket 的 peer 范围；安装器只在 dsh-market 侧栏入口打开时才隐藏它的设置分区；窗口按 Harness 启动令牌判断是否需要重新载入。详见 [CHANGELOG.md](../CHANGELOG.md) 的 0.0.6 “问题修复”。
+- **0.0.6 之后的改动（未发布）**：侧栏收起不再掉帧（会话区补丁在列宽动画结束后才发布列宽），“应用 / 编辑”菜单和收起栏新会话按钮等侧栏收完再出现（`src/preload/sidebar-collapse-state.ts`），“聊天”标题复用工作区标题行，搜索只筛选聊天会话；详见 [CHANGELOG.md](../CHANGELOG.md) 的“未发布”条目。实测掉帧时要先让窗口在前台或关闭后台节流，否则 requestAnimationFrame 不推进。
 - **主题实测方法**：Liquid Glass 在 8 种组合下的检查方式见 [`packages/dsh-desktop-theme/README.md`](../packages/dsh-desktop-theme/README.md) 的 “Visual audit” 一节。
 
 ## 8. 文档维护规则

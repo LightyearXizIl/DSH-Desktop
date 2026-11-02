@@ -22,7 +22,7 @@
 | `dsh-client-ui-agent-preset` | 预设导入/导出、搜索、预设入口 | `preset-transfer-patch`、`preset-toolbar`、`legacy-preset-migration` | 上游公开相同扩展点和操作 |
 | `dsh-client-ui-attachment` | ready 状态附件的打开回调，失败不伪装成功 | `file-preview` | 上游暴露授权附件打开动作 |
 | `dsh-client-ui-chat` | 上传附件打开、PPT footer（首个人类消息只挂载一次）、额度/权限错误文案、解码速度显示 | `file-preview`、`local-path-links`、`ppt-integration`、`provider-error-patch` | 上游提供附件动作、消息 footer 及相同文件路由 |
-| `dsh-client-ui-conversation` | `conversation.hero.modeActions`、`conversation.hero.dock`、输入附件接缝、`desktop.workbench.frame`，同时保留上游的 `hero.options`、`input.accessory` 与 More 菜单；首页工作区选择“不在工作区”时把草稿带到新的聊天会话，聊天会话的工作区标签显示“不在工作区” | `workbench-patch-slots`、`ppt-integration`、`conversation-input-css`、`patch-runtime-compatibility`、`no-workspace-picker-patch` | 上游提供这些独立 slot，布局及生命周期等价；上游首页支持无工作区会话 |
+| `dsh-client-ui-conversation` | `conversation.hero.modeActions`、`conversation.hero.dock`、输入附件接缝、`desktop.workbench.frame`，同时保留上游的 `hero.options`、`input.accessory` 与 More 菜单；首页工作区选择“不在工作区”时把草稿带到新的聊天会话，聊天会话的工作区标签显示“不在工作区”；AppFrame 列宽动画进行中暂停发布 `--dsh-conversation-column-width`，结束后发布一次（逐帧发布会让整段记录逐帧重算样式） | `workbench-patch-slots`、`ppt-integration`、`conversation-input-css`、`patch-runtime-compatibility`、`no-workspace-picker-patch` | 上游提供这些独立 slot，布局及生命周期等价；上游首页支持无工作区会话；上游列宽发布不再逐帧改写继承变量 |
 | `dsh-client-ui-deliverables` | 识别回答中的本地路径/文件夹并提供打开入口，排除包名、邮箱等误识别 | `local-path-links`、`file-preview` | 上游原生识别相同路径并保留打开语义 |
 | `dsh-client-ui-model-selection` | 根元素带 `data-dsh-desktop-model-menu-stack`（Liquid Glass 的推理等级滑条挂载时设置）时，模型菜单的二级页面在同一个弹层里向上展开：模型列表接在两行之上，等级列表盖住"模型"行、接在"推理等级"行之上，根页面和其中的滑条保持可见；再点已展开的那一行收起（带 `aria-expanded`），列表放进按页面重建的容器，挂载时量出自然高度供滑条样式做向上生长动画；没有标记时保持上游的原地切换 | `model-selection-stack-patch`、`desktop-theme-effort-slider` | 上游提供保留根页面的二级展开方式，或滑条有了不依赖根页面的挂载位置 |
 | `dsh-client-ui-layout` | 在 `CenterColumn` 上渲染 `data-dsh-desktop-center` 标记，供 Liquid Glass 主题去掉中间列分隔线与阴影、挂载页面玻璃面板；边栏开合的第一次渲染就带上 `data-animating`，避免中间的布局读取让列宽跳过过渡 | `desktop-theme` | 上游提供稳定的中间列标记或主题变量，并在同一次提交里设置动画标记 |
@@ -32,7 +32,7 @@
 | `dsh-client-ui-settings-models` | 服务商选择与搜索、模型目录搜索、容量编辑、视觉开关（关闭时同时清除图片限制字段）、任意 reasoning 映射、服务商地址校验 | `model-picker-patch`、`model-reasoning-efforts-patch`、`model-settings-catalog-ux-patch`、`model-settings-render`、`model-endpoint-settings` | 原生编辑器覆盖任意映射、旧配置迁移及 Desktop 目录交互 |
 | `dsh-client-ui-sidebar` | 宿主导航与设置操作接缝、`sidebar.quickSwitcher`、聊天标题行、Windows 折叠行为，同时声明上游的面板固定与注入钩子 | `windows-sidebar-collapse`、`workbench-patch-slots`、`desktop-theme` | 上游有等价导航与布局 API |
 | `dsh-client-ui-trajectory` | 额度/权限错误的中英文提示；`data-dsh-desktop-trajectory` 标记供主题透出背景 | `provider-error-patch`、`query-rail-patch` | 上游采用同等错误文案与稳定标记 |
-| `dsh-client-ui-workspace` | 会话/工作区可见性过滤、打开/重用/删除注册接口、未读标记、在资源管理器中打开、无工作区的聊天会话；首页工作区选择器的“不在工作区”选项 | `workspace-unread-patch`、`session-delete-patch`、`workbench-patch-slots`、`open-in-finder`、`workbench-navigation`、`no-workspace-picker-patch` | 上游提供这些公开管理接口 |
+| `dsh-client-ui-workspace` | 会话/工作区可见性过滤、打开/重用/删除注册接口、未读标记、在资源管理器中打开、无工作区的聊天会话；“聊天”标题复用工作区标题行（就地搜索只筛选聊天会话，收起箭头跟在标题后）；首页工作区选择器的“不在工作区”选项 | `workspace-unread-patch`、`session-delete-patch`、`workbench-patch-slots`、`open-in-finder`、`workbench-navigation`、`no-workspace-picker-patch` | 上游提供这些公开管理接口 |
 | `dsh-deepseek-account-platform` | 桌面登录完成后显示本地回调页，不跟随 `dsh://` 回跳，避免被其他安装实例接管 | 账号组合回归（`settings-account-launcher`） | 上游提供不依赖协议注册的回跳方式 |
 | `dsh-llm-deepseek` | 区分 AUTH / QUOTA / FORBIDDEN，403 不误判为认证失败 | `provider-error-patch` | 上游采用同等错误分类 |
 | `dsh-llm-pi-ai` | 三种协议的 session 请求头、配置头覆盖、服务商错误上下文 | `pi-ai-session-headers`、`provider-error-patch`、`pi-ai-terminal-replay` | 上游提供同等身份头和错误上下文 |

@@ -101,6 +101,19 @@ describe('rc.2 workbench patch slots', () => {
     expect(source).toContain('"desktop.workbench.frame": { kind: "single", scope: "root" }')
   })
 
+  it('publishes the conversation column width once a column transition settles', async () => {
+    const source = await readFile(conversationPath, 'utf8')
+    const start = source.indexOf('function ConversationWidthControls(')
+    const body = source.slice(start, source.indexOf('const onStart', start))
+    // Publishing on every frame of a sidebar toggle restyled the whole
+    // transcript each frame (~13ms on a long session) and dropped frames.
+    expect(body).toContain('const animating = container.closest("[data-animating]");')
+    expect(body).toMatch(/if \(animating === null\) \{\s+publishWidths\(container\);\s+return;\s+\}/)
+    expect(body).toContain('if (animating.hasAttribute("data-animating")) return;')
+    expect(body).toContain('settle.observe(animating, { attributes: true, attributeFilter: ["data-animating"] });')
+    expect(body).toContain('settle?.disconnect();')
+  })
+
   it('renders Chat as a persistent heading below Workspaces', async () => {
     const workspacePath = new URL('../node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js', import.meta.url)
     const source = await readFile(workspacePath, 'utf8')
@@ -116,16 +129,22 @@ describe('rc.2 workbench patch slots', () => {
     expect(source).toContain('async startChatSession(prompt)')
     expect(source).toContain('this.view.markChatSession(sessionId)')
     expect(source).toContain('const chat = new Set(list.chatSessionIds ?? []);')
-    expect(source).toContain('function ProjectRowItem({ group, containsCurrentDescendant = false, onToggle, onCreate, onSearch, actions, drag, home, newShortcut, t })')
-    expect(source).toContain('onSearch: requestSearch,')
-    expect(source).toContain('onSearch();')
+    expect(source).toContain('function ProjectRowItem({ group, containsCurrentDescendant = false, onToggle, onCreate, chatSearch, actions, drag, home, newShortcut, t })')
+    // The chat search is the chat group's own: it no longer opens the
+    // workspace section search, which spans every workspace.
+    expect(source).toMatch(/\bchatSearch,\s+onToggle: \(\) => \{/)
+    expect(source).not.toContain('onSearch: requestSearch,')
     expect(source).toContain('onCreate();')
-    expect(source).toContain('onToggle();')
+    expect(source).toContain('onClick: onToggle,')
     expect(source).toMatch(/setGroupExpanded\(group\.key, true\);\s+startSession\(void 0, \{ chat: true \}\);/)
     expect(source).toContain('"actions.chatSearch": "搜索聊天会话"')
+    expect(source).toContain('"chat.search.placeholder": "搜索聊天名称"')
+    expect(source).toContain('"chat.search.placeholder": "Search chat names"')
     expect(source).toContain('"actions.chatCollapse": "收起聊天列表"')
     expect(source).toContain('"actions.chatExpand": "展开聊天列表"')
-    expect(source).toContain('.YDXeBa_projectRow.YDXeBa_chatHeader .YDXeBa_rowActions{display:inline-flex;gap:4px}')
+    // Aligned with the workspace header's actions despite the tree's gutter.
+    expect(source).toContain('.bhn1Oq_root:not(.bhn1Oq_rail) .bhn1Oq_sectionHeader.YDXeBa_chatHeader{margin-right:5px}')
+    expect(source).toContain('.YDXeBa_chatFoldIconClosed{transform:rotate(-90deg)}')
     expect(source).toContain('groupExpansion: { "": true }')
     expect(source).toContain('key === "" ? groupExpansion[key] !== false : groupExpansion[key] ?? ancestorKeys.has(key)')
   })

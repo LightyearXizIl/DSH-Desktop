@@ -183,9 +183,19 @@ Deep surfaces also expose the fluid backdrop: the trajectory view
 (`data-dsh-desktop-trajectory` in `dsh-client-ui-trajectory`) and right sidebar
 (`data-sidebar-right-session` in `dsh-client-ui-sidebar-right`) have their
 `--dsw-alias-bg-layer-1` and base backgrounds re-pointed to transparent. The
-Chat section heading aligns with the Workspace section header: no leading
-glyph, a quiet section title, and actions ordered as search, collapse, and
-new session at the end.
+Chat section heading is built from the Workspace section header itself (its
+label, inline search and action classes), so the two match in size, colour
+and alignment. The fold chevron follows the "聊天" label, which toggles the
+list; search and new session sit on the right. Its search expands in place
+and filters chat sessions only, by the title each row shows.
+
+Collapsing the sidebar is timed by `src/preload/sidebar-collapse-state.ts`:
+`data-dsh-sidebar-collapsing` stays on `<html>` from the first frame until
+AppFrame's column transition ends (rightbar transitions while collapsed do
+not count). Until then the Windows caption menubar keeps its expanded seat
+and the rail's new-session button stays hidden, and Liquid Glass keeps the
+sidebar card so it narrows with the column. The Conversation patch publishes
+its column width once the transition settles rather than every frame.
 
 The bundled `dsh-startup-screen` plugin defaults to author credentials:
 identity `NullPointer`, identity ID `007`, and access level `01`, configured

@@ -8,6 +8,24 @@ interface MenuBarOptions {
 }
 
 const HOST_ATTRIBUTE = 'data-dsh-windows-menu'
+const SEAT_STYLE_ID = 'dsh-desktop-windows-menu-seat-style'
+
+/**
+ * Harness moves the seat to 84px as soon as the sidebar is marked collapsed,
+ * while the column is still closing, which left a gap the width of the rail's
+ * new-session button. Until the column has closed (see
+ * sidebar-collapse-state.ts) the menubar keeps the expanded seat and that
+ * button stays hidden; then the button fades in and the menubar slides over.
+ * These rules live in the page because they key off the page's own state.
+ */
+const SEAT_STYLES = `
+  html[data-dsh-sidebar-collapsing] [${HOST_ATTRIBUTE}] { left: 48px; }
+  html[data-dsh-sidebar-collapsing] [data-dsh-sidebar-new-session] { opacity: 0; pointer-events: none; }
+  html[data-windows-titlebar] [data-sidebar-collapsed] [data-dsh-sidebar-new-session] { transition: opacity .15s ease; }
+  @media (prefers-reduced-motion: reduce) {
+    html[data-windows-titlebar] [data-sidebar-collapsed] [data-dsh-sidebar-new-session] { transition: none; }
+  }
+`
 
 /**
  * Mount the Windows caption menubar ("应用" / "编辑") where the upstream
@@ -31,8 +49,10 @@ export function mountWindowsMenuBar(options: MenuBarOptions): { dispose(): void 
   style.textContent = `
     :host { position: fixed; top: 0; left: var(--dsh-windows-menu-start, 48px); z-index: 1100;
       height: var(--dsh-windows-titlebar-height, 40px); display: flex; align-items: center;
-      font-family: var(--dsw-font-family, "Segoe UI", sans-serif); -webkit-app-region: no-drag; }
+      font-family: var(--dsw-font-family, "Segoe UI", sans-serif); -webkit-app-region: no-drag;
+      transition: left .18s var(--ds-ease-in-out, ease); }
     :host([data-standalone]) { left: 12px; }
+    @media (prefers-reduced-motion: reduce) { :host { transition: none; } }
     [role=menubar] { display: flex; gap: 2px; }
     button { height: 28px; padding: 0 10px; border: 0; border-radius: 6px;
       background: transparent; color: var(--dsw-alias-label-secondary, #5f6368);
@@ -135,6 +155,12 @@ export function mountWindowsMenuBar(options: MenuBarOptions): { dispose(): void 
     // AppFrame owns this seat on Harness pages; before it renders, the
     // caption row belongs to the loading surface.
     if (!standalone && document.querySelector('[data-shell-overlay]') === null) return
+    if (!standalone && document.getElementById(SEAT_STYLE_ID) === null) {
+      const seat = document.createElement('style')
+      seat.id = SEAT_STYLE_ID
+      seat.textContent = SEAT_STYLES
+      document.head.append(seat)
+    }
     document.body.append(host)
     mountObserver.disconnect()
   }
@@ -148,6 +174,7 @@ export function mountWindowsMenuBar(options: MenuBarOptions): { dispose(): void 
       languageObserver.disconnect()
       document.removeEventListener('focusout', rememberEditor, true)
       host.remove()
+      document.getElementById(SEAT_STYLE_ID)?.remove()
     }
   }
 }

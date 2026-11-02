@@ -9,6 +9,7 @@ import { findBootFailureText } from './boot-failure'
 import { markWindowsTitlebar, mountWindowsTitlebarLayout } from './windows-titlebar'
 import { mountMacosWindowChrome } from './macos-window-chrome'
 import { createHostPathsBridge, HOST_PATHS_BRIDGE } from './host-paths'
+import { trackSidebarCollapse } from './sidebar-collapse-state'
 
 if (process.platform === 'darwin') {
   const dispose = mountMacosWindowChrome(document, listener => {
@@ -353,6 +354,7 @@ ipcRenderer.on('mobile:status-changed', (_event, status: { connected?: boolean }
 })
 
 function initializeUi(): void {
+  if (location.protocol !== 'file:') trackSidebarCollapse(document)
   if (process.platform === 'win32') {
     mountWindowsTitlebarLayout({ document, ipcRenderer })
   }

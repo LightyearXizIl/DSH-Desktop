@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js
-index 6fbff72..fa28d03 100644
+index 6fbff72..d2414a6 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js
 @@ -16143,6 +16143,7 @@ window.__ModuleLoader__.load({
@@ -41,7 +41,42 @@ index 6fbff72..fa28d03 100644
  			"heroWorkspaceRow": "wSkVaW_heroWorkspaceRow",
  			"root": "wSkVaW_root",
  			"scrollBody": "wSkVaW_scrollBody",
-@@ -17690,6 +17694,8 @@ window.__ModuleLoader__.load({
+@@ -17557,13 +17561,33 @@ window.__ModuleLoader__.load({
+ 			}, []);
+ 			(0, react.useLayoutEffect)(() => {
+ 				if (container === null) return;
++				// DSH Desktop: while AppFrame animates its columns (sidebar or
++				// rightbar toggle) the column resizes every frame. Each publish
++				// rewrites an inherited custom property on the Conversation root,
++				// which restyles the whole transcript (~13ms a frame on a long
++				// session), so the toggle dropped frames. Publish once when the
++				// frame settles instead.
++				let settle;
+ 				const observer = new ResizeObserver(() => {
+-					publishWidths(container);
++					const animating = container.closest("[data-animating]");
++					if (animating === null) {
++						publishWidths(container);
++						return;
++					}
++					if (settle !== void 0) return;
++					settle = new MutationObserver(() => {
++						if (animating.hasAttribute("data-animating")) return;
++						settle.disconnect();
++						settle = void 0;
++						publishWidths(container);
++					});
++					settle.observe(animating, { attributes: true, attributeFilter: ["data-animating"] });
+ 				});
+ 				observer.observe(container);
+ 				publishWidths(container);
+ 				return () => {
+ 					observer.disconnect();
++					settle?.disconnect();
+ 				};
+ 			}, [container, publishWidths]);
+ 			const onStart = (0, react.useCallback)(() => {
+@@ -17690,6 +17714,8 @@ window.__ModuleLoader__.load({
  		* @param props.onClick - menu toggle.
  		* @returns the chip button element.
  		*/
@@ -50,7 +85,7 @@ index 6fbff72..fa28d03 100644
  		function WorkspaceChip({ buttonRef, label, menuOpen = false, onClick, t }) {
  			return (0, react_jsx_runtime.jsxs)("button", {
  				ref: buttonRef,
-@@ -17804,7 +17810,7 @@ window.__ModuleLoader__.load({
+@@ -17804,7 +17830,7 @@ window.__ModuleLoader__.load({
  		* @returns the Conversation view, Composer, and optional width controls.
  		*/
  		function ConversationContent(props) {
@@ -59,7 +94,7 @@ index 6fbff72..fa28d03 100644
  			const session = useSession((snapshot) => snapshot);
  			const Views = useFactorySlot("views", ConversationSessionView);
  			const WidthControls = useFactorySlot("widthControls", NoConversationWidthControls);
-@@ -17846,7 +17852,9 @@ window.__ModuleLoader__.load({
+@@ -17846,7 +17872,9 @@ window.__ModuleLoader__.load({
  				input: inputState
  			};
  			const storedChipTitle = pendingWorkspace?.title ?? (sessionId === void 0 ? void 0 : sessionWorkspace?.title ?? (workspaces.phase === "ready" || cwd === void 0 || cwd === "" ? void 0 : workspaceLabel(cwd)));
@@ -70,7 +105,7 @@ index 6fbff72..fa28d03 100644
  			const heroWorkspaceRow = (0, react_jsx_runtime.jsxs)("div", {
  				className: ConversationRoot_module_css_default.heroWorkspaceRow,
  				children: [
-@@ -17862,9 +17870,14 @@ window.__ModuleLoader__.load({
+@@ -17862,9 +17890,14 @@ window.__ModuleLoader__.load({
  					renderSlot("conversation.hero.workspace", {
  						open: pickerOpen,
  						anchorRef: pickerAnchor,
@@ -86,7 +121,7 @@ index 6fbff72..fa28d03 100644
  							setPendingWorkspaceId(workspaceId);
  							selectWorkspace(workspaceId).catch(() => {
  								setPendingWorkspaceId((current) => current === workspaceId ? void 0 : current);
-@@ -17878,12 +17891,18 @@ window.__ModuleLoader__.load({
+@@ -17878,12 +17911,18 @@ window.__ModuleLoader__.load({
  					sessionId === void 0 ? null : (0, react_jsx_runtime.jsx)("div", {
  						className: ConversationRoot_module_css_default.heroOptions,
  						children: renderSlot("conversation.hero.options", {})
@@ -106,7 +141,7 @@ index 6fbff72..fa28d03 100644
  				...inert ? {
  					disabled: true,
  					placeholder: t("placeholder.workspace"),
-@@ -17905,7 +17924,8 @@ window.__ModuleLoader__.load({
+@@ -17905,7 +17944,8 @@ window.__ModuleLoader__.load({
  					}),
  					hero && heroWorkspaceRow,
  					zone !== void 0 && renderSlot("conversation.input.dock", zone),
@@ -116,7 +151,7 @@ index 6fbff72..fa28d03 100644
  				]
  			});
  			const composer = renderSlotChain("conversation.composer", {
-@@ -17949,7 +17969,8 @@ window.__ModuleLoader__.load({
+@@ -17949,7 +17989,8 @@ window.__ModuleLoader__.load({
  		* @returns the Conversation subtree.
  		*/
  		function ConversationPanel({ renderSlot }) {
@@ -126,7 +161,7 @@ index 6fbff72..fa28d03 100644
  		}
  		//#endregion
  		//#region lib/types/client/skeleton/ConversationHeader.js
-@@ -18336,7 +18357,7 @@ window.__ModuleLoader__.load({
+@@ -18336,7 +18377,7 @@ window.__ModuleLoader__.load({
  		* @param props - borrowed editor and presentation values; this component owns no Hooks.
  		* @returns the existing text-area DOM without an additional wrapper.
  		*/
@@ -135,7 +170,7 @@ index 6fbff72..fa28d03 100644
  			return (0, react_jsx_runtime.jsx)("div", {
  				ref: scrollRef,
  				className: css.scroll,
-@@ -18344,7 +18365,22 @@ window.__ModuleLoader__.load({
+@@ -18344,7 +18385,22 @@ window.__ModuleLoader__.load({
  				children: (0, react_jsx_runtime.jsxs)("div", {
  					className: css.grow,
  					children: [
@@ -159,7 +194,7 @@ index 6fbff72..fa28d03 100644
  							editor: workspaceTrigger ? null : editor,
  							editable,
  							className: clsx(css.input, editorDisabled && css.inputDisabled),
-@@ -18898,13 +18934,16 @@ window.__ModuleLoader__.load({
+@@ -18898,13 +18954,16 @@ window.__ModuleLoader__.load({
  		}
  		//#endregion
  		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-conversation/src/client/skeleton/InputBar.module.css.mjs
@@ -178,7 +213,7 @@ index 6fbff72..fa28d03 100644
  			document.head.appendChild(tag);
  		}
  		var InputBar_module_css_default = {
-@@ -18925,7 +18964,9 @@ window.__ModuleLoader__.load({
+@@ -18925,7 +18984,9 @@ window.__ModuleLoader__.load({
  			"overlayAnchor": "uV2eYG_overlayAnchor",
  			"pending": "uV2eYG_pending",
  			"placeholder": "uV2eYG_placeholder",
@@ -188,7 +223,7 @@ index 6fbff72..fa28d03 100644
  			"retry": "uV2eYG_retry",
  			"root": "uV2eYG_root",
  			"row": "uV2eYG_row",
-@@ -18952,13 +18993,16 @@ window.__ModuleLoader__.load({
+@@ -18952,13 +19013,16 @@ window.__ModuleLoader__.load({
  		* The no-session state renders the SAME div inert as the Workspace-picker
  		* trigger instead of a parallel tree.
  		*/
@@ -206,7 +241,7 @@ index 6fbff72..fa28d03 100644
  			(0, react.useEffect)(() => {
  				setActivity(false);
  			}, [sessionId]);
-@@ -18968,8 +19012,9 @@ window.__ModuleLoader__.load({
+@@ -18968,8 +19032,9 @@ window.__ModuleLoader__.load({
  			const removed = useSession((s) => s.removed) ?? false;
  			const planActive = useProjection("plan", (plan) => plan !== void 0 && (plan.pending ? !plan.active : plan.active));
  			const hasGoal = useProjection("goal", (goal) => goal != null);
@@ -217,7 +252,7 @@ index 6fbff72..fa28d03 100644
  			const editor = keyboard?.editor ?? null;
  			const attachments = (0, react.useMemo)(() => input === void 0 || resolveDraftAttachments === void 0 ? [] : resolveDraftAttachments(input.attachmentIds), [resolveDraftAttachments, input?.attachmentIds]);
  			const empty = draft.trim() === "" && attachments.length === 0;
-@@ -19015,13 +19060,13 @@ window.__ModuleLoader__.load({
+@@ -19015,13 +19080,13 @@ window.__ModuleLoader__.load({
  			const scrollRef = (0, react.useRef)(null);
  			const continuable = subagent?.address.mode === "continuable";
  			const parentOffline = continuable && subagent.parentAvailable !== true;
@@ -234,7 +269,7 @@ index 6fbff72..fa28d03 100644
  			const steeringAvailable = subagent === null || subagent.address.mode === "continuable";
  			const canSteerQueue = !locked && !machineBusy && !commandMenuOpen && empty && running && steeringAvailable && input.queue.length > 0;
  			(0, react.useEffect)(() => {
-@@ -19047,6 +19092,16 @@ window.__ModuleLoader__.load({
+@@ -19047,6 +19112,16 @@ window.__ModuleLoader__.load({
  				if (locked || draft === "") return;
  				revealSelection();
  			}, [draft !== ""]);
@@ -251,7 +286,7 @@ index 6fbff72..fa28d03 100644
  			(0, react.useEffect)(() => {
  				return installDraftWheel(scrollRef);
  			}, []);
-@@ -19143,6 +19198,21 @@ window.__ModuleLoader__.load({
+@@ -19143,6 +19218,21 @@ window.__ModuleLoader__.load({
  					onRequestWorkspace();
  				}
  			};
@@ -273,7 +308,7 @@ index 6fbff72..fa28d03 100644
  			const primaryStops = running && subagent === null && (empty || blocked !== void 0);
  			const primaryDisabled = primaryStops ? stop === void 0 : empty || disabled || machineBusy || uploadsPending;
  			const interruptible = running && continuable;
-@@ -19150,6 +19220,10 @@ window.__ModuleLoader__.load({
+@@ -19150,6 +19240,10 @@ window.__ModuleLoader__.load({
  			const plainMessageDraft = !empty && input?.phase === "plain" && !draft.trimStart().startsWith("/");
  			const primaryLabel = primaryStops ? t("input.stop") : running && steeringAvailable && !disabled && !uploadsPending && plainMessageDraft ? t(primarySubmitMode === "steer" ? "input.send.steer" : "input.send.queue") : t("input.send");
  			const onPrimary = () => {
@@ -284,7 +319,7 @@ index 6fbff72..fa28d03 100644
  				if (primaryStops) {
  					stop?.();
  					return;
-@@ -19167,7 +19241,7 @@ window.__ModuleLoader__.load({
+@@ -19167,7 +19261,7 @@ window.__ModuleLoader__.load({
  				const translated = t(hintKey);
  				return translated !== hintKey ? translated : rawHint;
  			})();
@@ -293,7 +328,7 @@ index 6fbff72..fa28d03 100644
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: clsx(InputBar_module_css_default.root, variant === "hero" && InputBar_module_css_default.hero),
  				children: [
-@@ -19191,16 +19265,13 @@ window.__ModuleLoader__.load({
+@@ -19191,16 +19285,13 @@ window.__ModuleLoader__.load({
  							e.stopPropagation();
  						} : void 0,
  						onMouseDown: onCardMouseDown,
@@ -311,7 +346,7 @@ index 6fbff72..fa28d03 100644
  							renderSlot("conversation.input.attachments", {
  								attachments,
  								canAcceptDrop,
-@@ -19212,25 +19283,41 @@ window.__ModuleLoader__.load({
+@@ -19212,25 +19303,41 @@ window.__ModuleLoader__.load({
  								onRetryFile: (id) => {
  									retryFileUpload?.(id);
  								},
@@ -367,7 +402,7 @@ index 6fbff72..fa28d03 100644
  							}),
  							(0, react_jsx_runtime.jsxs)("div", {
  								ref: rowRef,
-@@ -19358,8 +19445,7 @@ window.__ModuleLoader__.load({
+@@ -19358,8 +19465,7 @@ window.__ModuleLoader__.load({
  					}),
  					(0, react_jsx_runtime.jsxs)("div", {
  						className: InputBar_module_css_default.dock,
@@ -377,7 +412,7 @@ index 6fbff72..fa28d03 100644
  							useProjection,
  							t
  						})]
-@@ -19926,6 +20012,24 @@ window.__ModuleLoader__.load({
+@@ -19926,6 +20032,24 @@ window.__ModuleLoader__.load({
  					};
  				}
  			});
@@ -402,7 +437,7 @@ index 6fbff72..fa28d03 100644
  			const registerConversationRoot = () => slots.register({
  				name: "main.conversation",
  				children: { "conversation.header": {
-@@ -19969,6 +20073,14 @@ window.__ModuleLoader__.load({
+@@ -19969,6 +20093,14 @@ window.__ModuleLoader__.load({
  					"conversation.hero.options": {
  						kind: "list",
  						scope: "session"
@@ -417,7 +452,7 @@ index 6fbff72..fa28d03 100644
  					}
  				},
  				slots: {
-@@ -19977,23 +20089,10 @@ window.__ModuleLoader__.load({
+@@ -19977,23 +20109,10 @@ window.__ModuleLoader__.load({
  				},
  				inject: (sessionId) => ({
  					hooks: { composerBlock: sessionId === void 0 ? ABSENT_BLOCK : composerBlocks.storeFor(sessionId) },
@@ -445,7 +480,7 @@ index 6fbff72..fa28d03 100644
  				})
  			}, ConversationContent);
  			const registerConversationSession = () => slots.register({
-@@ -20101,6 +20200,10 @@ window.__ModuleLoader__.load({
+@@ -20101,6 +20220,10 @@ window.__ModuleLoader__.load({
  						kind: "list",
  						scope: "session"
  					},
@@ -456,7 +491,7 @@ index 6fbff72..fa28d03 100644
  					"conversation.input.permission": {
  						kind: "single",
  						scope: "session"
-@@ -20137,6 +20240,7 @@ window.__ModuleLoader__.load({
+@@ -20137,6 +20260,7 @@ window.__ModuleLoader__.load({
  						removeAttachment: void 0,
  						resolveDraftAttachments: void 0,
  						retryFileUpload: void 0,
@@ -464,7 +499,7 @@ index 6fbff72..fa28d03 100644
  						toggleCommandMenu: void 0,
  						stop: void 0,
  						hooks: {
-@@ -20203,6 +20307,11 @@ window.__ModuleLoader__.load({
+@@ -20203,6 +20327,11 @@ window.__ModuleLoader__.load({
  						retryFileUpload: (id) => {
  							if (sessions.binding(sessionId) !== void 0) conversation.retryFileUpload(sessionId, id);
  						},
@@ -476,7 +511,7 @@ index 6fbff72..fa28d03 100644
  						toggleCommandMenu: inputTriggers === void 0 ? void 0 : (selection) => {
  							shell.dismissPopup();
  							const snapshot = shell.snapshot;
-@@ -20235,10 +20344,7 @@ window.__ModuleLoader__.load({
+@@ -20235,10 +20364,7 @@ window.__ModuleLoader__.load({
  				yield slots.register({
  					name: "main",
  					key: "conversation",

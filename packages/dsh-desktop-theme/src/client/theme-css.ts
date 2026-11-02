@@ -73,45 +73,6 @@ export const THEME_RUNTIME_STYLES = String.raw`
 [data-dsh-desktop-theme] [data-sidebar-right-session] [data-sidebar-right-guide-entry] {
   background-color: transparent;
 }
-/* The chat group is a Desktop addition to the workspace tree. Give it the
-   same section-header shape as "工作区": no leading glyph, a quiet title and
-   the action cluster on the right. Creation stays the last action. */
-[data-dsh-desktop-theme] [data-chat-group] {
-  box-sizing: border-box;
-  height: 36px;
-  padding: 0 0 0 4px;
-  border-radius: var(--dsw-radius-md);
-  background: transparent;
-}
-[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_projectText {
-  flex: 1;
-  min-width: 0;
-}
-[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_projectText > span {
-  color: var(--dsw-alias-label-tertiary);
-  font-size: 14px;
-  font-weight: 400;
-}
-[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions {
-  display: inline-flex;
-  gap: 4px;
-  height: 28px;
-  margin-left: auto;
-}
-[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions button {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--dsw-radius-sm);
-}
-[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions > *:nth-child(1) {
-  order: 1;
-}
-[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions > *:nth-child(3) {
-  order: 2;
-}
-[data-dsh-desktop-theme] [data-chat-group] > span.YDXeBa_rowActions > *:nth-child(2) {
-  order: 3;
-}
 /* Liquid Glass material. The tint, floor, stroke and shadow are scheme-aware
    theme tokens (tokens.ts) published on body, so these derived values are
    declared there too. Over the fluid, the live floor from glass-floor.ts
@@ -285,8 +246,10 @@ export const THEME_RUNTIME_STYLES = String.raw`
   50% { opacity: 0.38; }
 }
 
-/* Controls inside a pane are tiles on that glass, not a second filter. */
-[data-dsh-desktop-float] [data-dsh-desktop-new-session] {
+/* Controls inside a pane are tiles on that glass, not a second filter. The
+   collapsed rail has no pane: its new-session button stays the bare upstream
+   icon beside the toggle. */
+[data-dsh-desktop-float] [data-dsh-desktop-frame]:not([data-sidebar-collapsed]) [data-dsh-desktop-new-session] {
   border-radius: var(--dsw-radius-md);
   background: var(--dsh-desktop-glass-tile);
   border: 1px solid var(--dsh-desktop-glass-stroke);
@@ -396,8 +359,11 @@ export const THEME_RUNTIME_STYLES = String.raw`
 }
 /* Collapsed keeps the upstream icon rail. A zero-width grid track cannot host
    a floating card, and a backdrop-filter on it would become the containing
-   block for the fixed rail controls and clip them away. */
-[data-dsh-desktop-float] [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-sidebar] {
+   block for the fixed rail controls and clip them away. While the column is
+   still closing (data-dsh-sidebar-collapsing, set by the Desktop preload
+   until AppFrame's column transition ends) the card stays and narrows with
+   it, instead of vanishing on the first frame. */
+[data-dsh-desktop-float]:not([data-dsh-sidebar-collapsing]) [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-sidebar] {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -408,7 +374,7 @@ export const THEME_RUNTIME_STYLES = String.raw`
   backdrop-filter: none;
   overflow: visible;
 }
-[data-dsh-desktop-float] [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-sidebar]::before {
+[data-dsh-desktop-float]:not([data-dsh-sidebar-collapsing]) [data-dsh-desktop-frame][data-sidebar-collapsed] [data-dsh-desktop-sidebar]::before {
   display: none;
 }
 [data-dsh-desktop-float] [data-dsh-desktop-frame]:not([data-sidebar-collapsed]) [data-dsh-sidebar-root] {
