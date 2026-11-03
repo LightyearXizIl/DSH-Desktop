@@ -44,6 +44,7 @@ node scripts/electron-builder-windows.mjs --win --x64 --publish never `
 
 - `afterPack` 门禁会在打包阶段自动检查：ASAR 原生文件布局与解包清单、生产依赖清单、临时 Safe Mode Harness 启动、认证后的 HTML 与 bootstrap 注册、node-pty 与语音原生模块、PPT 模块，以及 Office DOCX/PPTX/XLSX 生成、重读和 PDF 转换。门禁失败即打包失败。
 - 打包门禁不代表界面可用：发布前至少实际安装一次、启动并进入主界面。
+- 验收结束、写完记录后，删除这次留下的程序副本和临时数据目录（`win-unpacked` 副本、改名后的 userData 目录、`dsh-desktop-dev-<名字>` 开发 Profile），只保留正式数据 `dsh-desktop` 和默认开发 Profile `dsh-desktop-dev`。这些目录里可能有导入的会话和密钥，副本也不要放在仓库旁边长期保留。
 - 在交付说明中分别写明：已执行的检查、安装包大小与 SHA-256、`latest.yml` 版本，以及未执行的验收（例如全新机器安装、真实模型请求、插件组合）。
 
 ## 5. 发布到 GitHub Release
