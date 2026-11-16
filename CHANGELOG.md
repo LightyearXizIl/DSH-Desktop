@@ -27,6 +27,7 @@
 - 打包门禁通过：Harness、bootstrap、原生模块、终端和 730 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换。
 - 打包版验收在 `win-unpacked` 的副本上进行，数据目录改为独立名称，不覆盖本机正式安装和 `dsh-desktop` 数据：进入主界面且模块系统与桌面接缝都已加载；“关于”显示 Desktop `0.0.8`、Harness `0.2.2-rc.1`；添加模拟服务商并完成一轮对话；侧栏收起与聊天会话正常；安装插件市场得到 dsh-market 1.73.20 并加载其设置分区。验收后副本和数据目录已删除。
 - Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：289713982 字节，SHA-256 `56054520DDDA51C0FB70F70217425D31FDEFF450EB984994D758CD18D78E96F7`；`latest.yml` 版本为 `0.0.8`，SHA-512 为 `EJSZiVRDIswVDTMsFJ0lNm6bJHQ9Gz+79vu2u+cCIZmn3VIPu93dBsXQIFYpW9Kvgk7oqeG1i7uHhnaTUwxXNg==`；安装包与主程序均未签名，`app-update.yml` 不含 `publisherName`。
+- 已发布 GitHub Release `v0.0.8`（Latest），注释标签指向 `75d2b07`（`chore/harness-0.2.2-rc.1` 快进合并到 `main`）；GitHub 记录的安装包摘要与上面的 SHA-256 一致，从发布地址重新下载的安装包摘要相同，公开的 `releases/latest/download/latest.yml` 返回 `0.0.8`。
 
 ### 说明
 
