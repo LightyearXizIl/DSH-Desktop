@@ -9,7 +9,7 @@
 | 定位 | 面向 Windows 的 DeepSeek Harness 社区桌面客户端；Electron 外壳，复用 Harness 的 Agent 运行时与 Web UI，不另建运行时或业务前端 |
 | 作者 | NullPointer（GitHub [@LightyearXizIl](https://github.com/LightyearXizIl)） |
 | 仓库 | [LightyearXizIl/DSH-Desktop](https://github.com/LightyearXizIl/DSH-Desktop) |
-| 当前版本 | Desktop `0.0.7`（2026-11-02 发布）；Harness `@deepseek-ai/dsh@0.2.2-rc.1`；Electron `43.0.0` |
+| 当前版本 | Desktop `0.0.8`（2026-11-16 发布）；Harness `@deepseek-ai/dsh@0.2.2-rc.1`；Electron `43.0.0` |
 | 发布平台 | Windows x64，未签名 NSIS 安装包，发布在 GitHub Releases |
 | 许可证 | MIT（见根目录 `LICENSE`） |
 
@@ -168,18 +168,18 @@ Electron Main ──启动──> Harness 子进程（Electron Node 模式）─
 | 影像生成的 GrsAI 未做真实付费请求 | `packages/dsh-image-generation/` | 接口按文档和本机模拟服务验证；对话内不预览视频，视频不支持参考图、首尾帧和参考音频 |
 | 删除会话时 Harness 日志出现一条 `agent/disposed` 告警 | 上游未打补丁的包（Harness 0.2.2-rc.1） | 告警内容为 `TypeError: Cannot read properties of undefined (reading 'catch')`；删除成功、会话文件已移除，界面无异常。根因未定位，见 [Harness 升级记录](harness/upgrade-history.md) |
 
-## 7. 当前进展（2026-10-30）
+## 7. 当前进展（2026-11-16）
 
 接手开发前先看这一节，再看 [CHANGELOG.md](../CHANGELOG.md) 的最新条目。
 
-- **分支**：0.0.4 到 0.0.7 的改动都在 `feat/liquid-glass` 上开发，已快进合并到 `main`；新工作从 `main` 开分支。
-- **发布**：GitHub Release `v0.0.7` 已发布并标记为 Latest，注释标签指向提交 `35e999c`（现已在 `main` 上）。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 与 CHANGELOG 记录一致。
+- **分支**：0.0.4 到 0.0.7 的改动在 `feat/liquid-glass` 上开发，0.0.8 的 Harness 升级在 `chore/harness-0.2.2-rc.1` 上开发，都已快进合并到 `main`；新工作从 `main` 开分支。
+- **发布**：GitHub Release `v0.0.8` 发布为 Latest，注释标签指向记录 0.0.8 构建与验收的提交（在 `main` 上）。资产为安装包、`.blockmap` 和 `latest.yml`，安装包 SHA-256 以 CHANGELOG 的 0.0.8 条目为准。
 - **打包版验收方式**：在 `dist/win-unpacked` 的副本上把数据目录改为独立名称后启动（同长度替换 `app.asar` 里的 userData 名），不运行安装程序，避免覆盖本机正式安装和 `dsh-desktop` 数据。验收完删除副本和改名后的数据目录（见发布手册“验收”一节）。
-- **未执行的验收**：安装程序本身的安装与覆盖升级、全新机器安装、在出问题的那台电脑上验证 0.0.6 的市场修复、真实模型请求、真实 GrsAI Key 的付费生成、macOS 构建。
+- **未执行的验收**：安装程序本身的安装与覆盖升级、全新机器安装、在出问题的那台电脑上验证 0.0.6 的市场修复、真实模型请求、真实 GrsAI Key 的付费生成、Liquid Glass 8 种外观组合在 0.2.2 内核上的逐一检查、macOS 构建。
 - **0.0.6 的关于页与更新弹窗**：“设置 → 关于”常驻默认折叠的当前版本更新日志卡片，更新弹窗按同样的样式排版，两处都只显示 Release 正文的“更新内容”和“问题修复”（主进程过滤）；详见 [CHANGELOG.md](../CHANGELOG.md) 的 0.0.6 条目与 [运行架构](architecture.md#updates) 的 Updates 一节。
 - **0.0.6 的插件市场修复**：市场基线由 1.65.1 改为 1.71.1，常量统一放在 `src/main/state/market-version.ts`，安装器的 `RECOMMENDED_MARKET_VERSION` 必须与它一致，升级 Harness 时要一起检查 dshmarket 的 peer 范围；安装器只在 dsh-market 侧栏入口打开时才隐藏它的设置分区；窗口按 Harness 启动令牌判断是否需要重新载入。详见 [CHANGELOG.md](../CHANGELOG.md) 的 0.0.6 “问题修复”。
 - **0.0.7 的侧栏与界面修复**：侧栏收起不再掉帧（会话区补丁在列宽动画结束后才发布列宽），“应用 / 编辑”菜单和收起栏新会话按钮等侧栏收完再出现（`src/preload/sidebar-collapse-state.ts`），“聊天”标题复用工作区标题行，搜索只筛选聊天会话；卡片离开窗口后复位、悬停光晕随卡片尺寸重新测量（`spotlight.ts`）；影像生成新增 Agnes AI 与 OpenAI 兼容服务商和生成参数。详见 [CHANGELOG.md](../CHANGELOG.md) 的 0.0.7 条目。实测掉帧时要先让窗口在前台或关闭后台节流，否则 requestAnimationFrame 不推进。
-- **Harness 0.2.2-rc.1 升级**：在分支 `chore/harness-0.2.2-rc.1` 上，尚未合并。依赖、31 个补丁和相关测试已迁移，`npm ci`、`typecheck`、`build`、全量测试、`verify-target` 与 Electron Node 模式探测通过，开发版已在独立 Profile 里实测；未打包、未在安装版上验证。为什么停在 rc.1、各补丁怎么合并的，见 [Harness 升级记录](harness/upgrade-history.md)。
+- **0.0.8 的 Harness 0.2.2-rc.1 升级**：依赖、31 个补丁和相关测试已迁移，开发版与打包版副本都已实测（见 CHANGELOG 的 0.0.8 条目）。为什么停在 rc.1、各补丁怎么合并的，见 [Harness 升级记录](harness/upgrade-history.md)。
 - **主题实测方法**：Liquid Glass 在 8 种组合下的检查方式见 [`packages/dsh-desktop-theme/README.md`](../packages/dsh-desktop-theme/README.md) 的 “Visual audit” 一节。
 
 ## 8. 文档维护规则

@@ -2,6 +2,39 @@
 
 本文件记录 DSH Desktop 自身版本的实质改动。Desktop 与上游 Harness 的版本号独立维护，Harness 升级不自动改变 Desktop 版本号。
 
+## 0.0.8 — 2026-11-16
+
+### 更新内容
+
+#### 内核
+
+- **内置 Harness 升级到 0.2.2-rc.1**：由 0.2.1-rc.4 升级，328 个 Harness 包统一到同一版本，插件运行框架 cordis 同步升级到 4.1。Desktop 的全部定制（品牌、Liquid Glass 主题、侧栏“聊天”分组、PPT / Word / Excel 模式、会话永久删除、未读标记、模型设置增强等）都已迁移到新内核。“设置 → 关于”会显示新的内置 Harness 版本。
+- **会话右键菜单**：右键点会话和点会话行的“…”打开同一个菜单，置顶、重命名、分叉、复制 Session ID、在文件夹显示、标为未读、在文件管理器中打开、永久删除和归档都在其中。
+- **工作区选择器区分同名工作区**：首页选择工作区时，名称相同的工作区会附上路径后缀，悬停可看完整路径。
+- **发送中状态**：消息提交后、模型开始回复前，发送按钮显示“正在发送消息”的转圈，不再像没有响应。
+
+### 问题修复
+
+- **插件自带卸载器卸载后反复进入安全模式**：有些插件（例如 dsh-purge）用自己的卸载器删除插件文件，但不会通知 Desktop 的插件记录，之后每次启动都因“已启用的插件文件不存在”而停在安全模式。现在启动时发现插件文件已不存在、且 Profile 也不再声明这个插件，就把它停用并正常启动；如果插件仍被声明而文件丢失，仍按故障交给恢复流程处理。
+- **自定义服务商的模型容量字段显示英文 key**：在“设置 → 模型”展开自定义服务商的模型时，上下文窗口和最大输出两项的标签显示为 `modelContextWindow` / `modelMaxTokens`，现在显示“上下文窗口”“最大输出 token 数”。
+
+### 验证
+
+- 依赖与补丁：31 个 Harness 补丁按新旧原始包三方合并后重新生成；全新 `npm ci` 的 postinstall 重放全部 35 个补丁并安装品牌资源成功。`scripts/install-brand-assets.mjs` 适配了上游 manifest 改用一组 PNG 图标的变化，新增 `test/install-brand-assets.test.ts`（7 项）。
+- 测试变动：上游改由执行器插件运行工具，`test/tool-execution.mjs` 让影像生成与 Word 测试夹具加载原生执行器；`test/workspace-unread-patch.test.ts` 把“行上的右键处理字符串”改为直接执行新的会话菜单组件，验证未读状态、标记/取消和旧快照兼容；`test/windows-sidebar-collapse.test.ts` 新增窄窗口下 Windows 仍不进入抽屉布局的断言；`test/desktop-theme.test.ts` 的动画标记用例改为要求上游自带该标记、补丁不再修改它；其余十余个文件按上游新结构更新签名、版本号和类名断言，`test/generation-launch.test.ts` 覆盖外部卸载的处理。
+- `npm run typecheck`、`npm run build`、`git diff --check` 通过；在 PowerShell 中运行完整 `npm test` 共 2403 项，2 项为已登记的已知失败（“modal caption”和下载链接）。`node scripts/verify-target.mjs win32 x64` 与 `node scripts/probe-electron-node-runtime.mjs` 通过，本地 Electron 与锁定版本同为 43.0.0。
+- 开发版实测（独立开发 Profile、本机模拟模型服务，未使用真实模型或密钥）：添加自定义服务商并获取模型、模型菜单向上展开、对话收到回复且请求带会话头；聊天会话、聊天搜索、会话右键菜单、标为未读、永久删除（会话文件已移除）、归档；侧栏收起时菜单先停在 48px、收完移到 84px；PPT 模式与关于页；深色和浅色配色下的设置与市场页面。
+- 打包门禁通过：Harness、bootstrap、原生模块、终端和 730 个依赖清单，Office DOCX、PPTX、XLSX 结构及 PDF 转换。
+- 打包版验收在 `win-unpacked` 的副本上进行，数据目录改为独立名称，不覆盖本机正式安装和 `dsh-desktop` 数据：进入主界面且模块系统与桌面接缝都已加载；“关于”显示 Desktop `0.0.8`、Harness `0.2.2-rc.1`；添加模拟服务商并完成一轮对话；侧栏收起与聊天会话正常；安装插件市场得到 dsh-market 1.73.20 并加载其设置分区。验收后副本和数据目录已删除。
+- Windows x64 安装包 `dist/dsh-desktop-windows-x64-setup.exe`：289713982 字节，SHA-256 `56054520DDDA51C0FB70F70217425D31FDEFF450EB984994D758CD18D78E96F7`；`latest.yml` 版本为 `0.0.8`，SHA-512 为 `EJSZiVRDIswVDTMsFJ0lNm6bJHQ9Gz+79vu2u+cCIZmn3VIPu93dBsXQIFYpW9Kvgk7oqeG1i7uHhnaTUwxXNg==`；安装包与主程序均未签名，`app-update.yml` 不含 `publisherName`。
+
+### 说明
+
+- 内置 Harness 停在 0.2.2-rc.1：之后的 rc.2、rc.3 把前端代码发布为压缩后的单行文件，Desktop 的按行补丁无法在其上维护。
+- dsh-market 声明的 Harness 版本区间仍停在 0.2.1，Desktop 只记录一条兼容性告警；实测 1.73.20 可以安装、加载并浏览目录。
+- 在 Desktop 中永久删除会话时，Harness 日志会出现一条 `agent/disposed` 监听器告警，删除本身成功，根因在未修改的上游代码中，尚未定位。
+- 未执行的验收：安装程序本身的安装与覆盖升级、全新机器安装、真实模型请求、Liquid Glass 8 种外观组合的逐一检查、macOS 构建。
+
 ## 0.0.7 — 2026-11-02
 
 ### 更新内容
