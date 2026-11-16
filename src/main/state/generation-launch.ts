@@ -1,10 +1,8 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import {
-  initProfile,
-  PROFILE_TEMPLATES,
-  resolveProfileDir
-} from '@deepseek-ai/dsh-app-boot'
+import { initProfile, resolveProfileDir } from '@deepseek-ai/dsh-app-boot'
+// Harness 0.2.2 moved the official bundle catalog out of app-boot.
+import { PROFILE_TEMPLATES } from '@deepseek-ai/dsh-official-bundles'
 import {
   disableGeneration,
   isGenerationPlugin,

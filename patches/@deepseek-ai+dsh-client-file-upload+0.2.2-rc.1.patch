@@ -1,8 +1,9 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-file-upload/lib/index.js b/node_modules/@deepseek-ai/dsh-client-file-upload/lib/index.js
+index bc630f2..5f420a9 100644
 --- a/node_modules/@deepseek-ai/dsh-client-file-upload/lib/index.js
 +++ b/node_modules/@deepseek-ai/dsh-client-file-upload/lib/index.js
-@@ -229,6 +229,19 @@ let FileUploads = (() => {
- 			return this.stagedFiles.get(agent.session)?.get(receiptId)?.file;
+@@ -289,6 +289,19 @@ let FileUploads = (() => {
+ 			return this.stagedFiles.get(agent.session)?.get(receiptId)?.attachment;
  		}
  		/**
 +		* Find one staged durable file by attachment id inside the Agent scope.

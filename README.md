@@ -22,7 +22,7 @@
 DSH Desktop packages the local DeepSeek Harness experience as an installed desktop application. It starts Harness automatically, keeps profiles, plugins, workspaces, model settings, and sessions outside the application directory, and opens the full Harness interface as soon as the local runtime is ready.
 
 > [!IMPORTANT]
-> DSH Desktop is an early preview built on the rapidly evolving `@deepseek-ai/dsh@0.2.1-rc.4`. The Windows x64 installer is an unsigned community build, so Windows SmartScreen may warn on first launch. This project is not an official DeepSeek product.
+> DSH Desktop is an early preview built on the rapidly evolving `@deepseek-ai/dsh@0.2.2-rc.1`. The Windows x64 installer is an unsigned community build, so Windows SmartScreen may warn on first launch. This project is not an official DeepSeek product.
 
 ## Download
 

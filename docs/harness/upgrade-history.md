@@ -16,7 +16,24 @@ DeepSeek Harness 官方仓库：<https://github.com/deepseek-ai/deepseek-harness
 
 ## 版本时间线
 
-### 0.2.1-rc.4（当前）
+### 0.2.2-rc.1（当前）
+
+- 选择 0.2.2-rc.1 而不是更新的 rc.2/rc.3：从 rc.2 起上游把客户端 bundle 发布成压缩后的单行代码（`dsh-client-ui-layout` 由 802 行变为 2 行），按行合并的 `patch-package` 补丁无法维护。之后升级前先确认目标版本的客户端 bundle 是否仍是未压缩产物。npm 的 `latest` 标签当时就指向 rc.1。
+- 328 个 `@deepseek-ai/dsh*` 包统一到 rc.1；cordis 系列随之升级（cordis 4.1.0、loader/include/group/hmr 1.1.0、timer 1.2.0、cosmokit 1.9.0、schemastery 3.19.0），内置包的 cordis / schemastery 声明一起对齐，PPT 运行包的 cordis peer 改为 `~4.0.4 || ~4.1.0`。
+- 官方 bundle 目录从 `dsh-app-boot` 移到新包 `@deepseek-ai/dsh-official-bundles`（`PROFILE_TEMPLATES`、`OPTIONAL_BUNDLES` 等）。`src/main/state/generation-launch.ts` 改从新包导入，并把它加为直接依赖。上游不再发布 0.2.1 的临时模型徽标 `dsh-client-ui-deepseek-model-label-1017`。
+- 31 个补丁按“旧版原始包 / 旧版打补丁后 / 新版原始包”三方合并后重新生成：9 个无冲突，22 个共约 85 处冲突手工合并。逐项判断后的主要变化：
+  - `dsh-client-ui-layout`：上游在同一次提交里设置 `data-animating`（`animateTracks`），Desktop 的同名修复删除，只保留 `data-dsh-desktop-center` 标记。
+  - `dsh-client-ui-workspace`：会话行改用上游共享的右键菜单（右键和“…”打开同一个菜单），旧的菜单 slot 贡献项在 `SessionMenu` 里渲染。Desktop 的未读标记原来由行传给菜单项，现在由 `SessionMenu` 从浏览器 store 读取；删除工作区的对话框移进上游的 `WorkspaceDialogs`，工作台可见性变化时撤销请求的保护随之移入。
+  - `dsh-client-ui-settings-models`：上游把模型行状态换成 `useModelRows`（按 key 跟踪、支持拖动排序），Desktop 的行内编辑器改接新的行状态；Desktop 行没有拖动手柄，用行内样式固定自己的五列。顺带修正自定义服务商的容量字段使用了不存在的文案 key（`modelContextWindow` / `modelMaxTokens`，界面显示原始 key）。
+  - `dsh-api-session-controller`：上游删除了 `inspectApiSession` 和 `assistantStreamChunks` 的导入，会话删除与附件授权仍需要冷读会话事件，补丁内补回最小实现（`observeSession` + `projectionMode: "none"`）。
+  - `dsh-llm-pi-ai`：上游把请求头改为可由插件参与的 `requestHeaders(configured, options, baseURL, prepare)`，会话头在署名头之后写入；工具调用结束分支保留上游新增的参数错误处理。
+  - `dsh-plugin-manager`：安装流程的 generation 后端接到上游新的 `parsed` / `signal` / `env` 变量之上。
+- 迁移中修复的真实问题：`scripts/install-brand-assets.mjs` 按设计“响亮失败”——上游 manifest 把单个 `favicon.svg` 换成了 `icon-192/512/maskable-512.png` 一组 PNG，脚本现在把这一组替换成 Desktop 图标，并补了 `test/install-brand-assets.test.ts`。
+- 测试适配：`ToolRuntime` 不再自己执行工具，`ctx.tools.execute()` 改为接收整步调用并由执行器插件执行，测试夹具改为加载 `@deepseek-ai/dsh-tool-executor-native` 并通过 `test/tool-execution.mjs` 调用。
+- dshmarket 的 peer 区间仍停在 `^0.2.1-rc.1`，不含 0.2.2；Harness 0.2.2 把插件版本不匹配交给 Desktop 的告警策略处理，实测 `^1.71.1` 解析到的 1.73.20 能安装、加载并拉取目录，市场基线因此不变。
+- 已知：在 Desktop 里永久删除会话时，Harness 日志会出现一条 `agent/disposed listener threw: TypeError: Cannot read properties of undefined (reading 'catch')` 告警，删除本身成功、会话文件已移除。抛错的监听器在未打补丁的上游包里，根因未定位。
+
+### 0.2.1-rc.4
 
 - 219 个直接依赖与锁文件中 304 个 `@deepseek-ai/dsh*` 包统一到 rc.4。升级时 npm 的 `latest` 仍指向 rc.2，rc.4 位于 `next`，因此以 npm 发布包为准。
 - 28 个 Harness 补丁按 rc.4 原始包重新生成；对比 65 个补丁目标文件，52 个无变化。

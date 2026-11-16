@@ -17,9 +17,10 @@ async function loadSessionCommandController(): Promise<SessionCommandControllerC
   const modulePath = path.resolve('node_modules/@deepseek-ai/dsh-api-session-controller/lib/index.js')
   const source = await readFile(modulePath, 'utf8')
   const testModulePath = path.join(path.dirname(modulePath), `.session-command-controller-test-${randomUUID()}.mjs`)
-  const exportLine = 'export { ApiSessionNotFound, SessionController, SessionController as default, SessionFileReferences, SessionSkillCatalog, buildModelCatalog };'
-
-  await writeFile(testModulePath, source.replace(exportLine, 'export { ApiSessionNotFound, SessionCommandController, SessionController, SessionController as default, SessionFileReferences, SessionSkillCatalog, buildModelCatalog };'))
+  // The bundle keeps SessionCommandController module-private. Append an export
+  // instead of rewriting upstream's export list, which changes between Harness
+  // versions (0.2.2 dropped buildModelCatalog); a missing class fails the import.
+  await writeFile(testModulePath, `${source}\nexport { SessionCommandController };\n`)
   try {
     const module = await import(pathToFileURL(testModulePath).href)
     return module.SessionCommandController as SessionCommandControllerConstructor

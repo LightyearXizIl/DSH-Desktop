@@ -34,8 +34,11 @@ it.each(['DeepSeekModelsEditor', 'ModelListEditor'])('%s expands options and edi
   const render = () => { cursor = 0; return editor({ ...props, models }) }
   const flatten = node => !node || typeof node !== 'object' ? [] : Array.isArray(node) ? node.flatMap(flatten) : [node, ...flatten(node.props?.children)]
   const find = (tree, label) => flatten(tree).find(node => node.props?.['aria-label'] === label)
-  const contextLabel = editorName === 'DeepSeekModelsEditor' ? 'contextWindow 1' : 'modelContextWindow 1'
-  const tokensLabel = editorName === 'DeepSeekModelsEditor' ? 'maxTokens 1' : 'modelMaxTokens 1'
+  // Both editors label the capacity fields with the locale keys upstream ships. The
+  // provider editor used to ask for modelContextWindow / modelMaxTokens, which no
+  // Harness locale defines, so the row showed the raw key.
+  const contextLabel = 'contextWindow 1'
+  const tokensLabel = 'maxTokens 1'
   let tree = render()
   expect(find(tree, contextLabel)).toBeUndefined()
   find(tree, 'modelAdvanced 1').props.onClick()

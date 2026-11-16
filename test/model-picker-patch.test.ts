@@ -22,7 +22,7 @@ describe('DSH Desktop available-model picker', () => {
     const client = await readFile(settingsModelsClient, 'utf8')
 
     expect(client).toContain('const allVisibleCandidatesPicked =')
-    expect(client).toContain('visibleCandidates.every((candidate) => picked.has(candidate.id))')
+    expect(client).toContain('visibleCandidates.every((candidate) => isPicked(candidate.id))')
     expect(client).toContain(
       'children: t(allVisibleCandidatesPicked ? "fetchDeselectAll" : "fetchSelectAll")'
     )

@@ -1,8 +1,8 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js
-index c38bfbb..80959a8 100644
+index 1388736..ff4aa95 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-model-selection/lib/client.js
-@@ -1163,6 +1163,15 @@ window.__ModuleLoader__.load({
+@@ -1171,6 +1171,15 @@ window.__ModuleLoader__.load({
  			const triggerRef = (0, react.useRef)(null);
  			const searchRef = (0, react.useRef)(null);
  			const menuRef = (0, react.useRef)(null);
@@ -16,9 +16,9 @@ index c38bfbb..80959a8 100644
 +			/* Height of the model row the effort list covers: its grow animation starts there. */
 +			const coverRef = (0, react.useRef)(0);
  			const groupsRef = (0, react.useRef)(null);
- 			const [menuPos, setMenuPos] = (0, react.useState)(null);
- 			const itemRefs = (0, react.useRef)([]);
-@@ -1479,99 +1488,8 @@ window.__ModuleLoader__.load({
+ 			const menuPos = (0, _deepseek_ai_dsh_client_ui_primitives.useAnchoredPosition)({
+ 				open: open && available,
+@@ -1475,99 +1484,8 @@ window.__ModuleLoader__.load({
  					itemRefs.current[at] = node;
  				};
  			};
@@ -120,7 +120,7 @@ index c38bfbb..80959a8 100644
  								showSearch && (0, react_jsx_runtime.jsxs)("div", {
  									className: ModelSelect_module_css_default.searchRow,
  									children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Input, {
-@@ -1682,8 +1600,8 @@ window.__ModuleLoader__.load({
+@@ -1678,8 +1596,8 @@ window.__ModuleLoader__.load({
  									role: "status",
  									children: t(choices.length === 0 ? "empty.models" : "search.empty")
  								})
@@ -131,12 +131,12 @@ index c38bfbb..80959a8 100644
  								className: ModelSelect_module_css_default.error,
  								children: [(0, react_jsx_runtime.jsx)("span", { children: t("error.action", { message: state.error }) }), (0, react_jsx_runtime.jsx)("button", {
  									type: "button",
-@@ -1714,7 +1632,130 @@ window.__ModuleLoader__.load({
- 									className: ModelSelect_module_css_default.check,
- 									children: pending !== null && pending.provider === state.current?.provider && pending.model === state.current.model && pending.reasoningEffort === level.effort ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }) : effectiveEffort === level.effort ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, {}) : null
- 								})]
--							}, level.key))] })
-+							}, level.key))] });
+@@ -1713,7 +1631,130 @@ window.__ModuleLoader__.load({
+ 										children: pending !== null && pending.provider === state.current?.provider && pending.model === state.current.model && pending.reasoningEffort === level.effort ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.StateDot, { state: "ongoing" }) : effectiveEffort === level.effort ? (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconCheckOutlineRegular, {}) : null
+ 									})]
+ 								}, level.key))
+-							})] })
++							})] });
 +			return (0, react_jsx_runtime.jsxs)("div", {
 +				ref: rootRef,
 +				className: ModelSelect_module_css_default.root,

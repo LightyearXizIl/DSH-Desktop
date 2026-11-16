@@ -65,6 +65,8 @@ describe('rc.2 workbench patch slots', () => {
       usePanels: () => [{ id: 'plugins', label: '插件' }], useEntryPins: () => [], useEntryActions: () => false,
       useShortcuts: () => ({ id: 'session.new', keys: shortcutKeys, aria: 'Control+Alt+N' }),
       usePanelInfo: () => ({}), t: key => key,
+      // Harness 0.2.2 gates the New Session control on the Host granting session/create.
+      useRemoteAccess: () => true,
       renderSlot: (name, owner) => {
         rendered.push({ name, owner })
         return name === 'sidebar.quickSwitcher' ? React.createElement('span', null, 'Workbench switcher') : null
@@ -129,7 +131,10 @@ describe('rc.2 workbench patch slots', () => {
     expect(source).toContain('async startChatSession(prompt)')
     expect(source).toContain('this.view.markChatSession(sessionId)')
     expect(source).toContain('const chat = new Set(list.chatSessionIds ?? []);')
-    expect(source).toContain('function ProjectRowItem({ group, containsCurrentDescendant = false, onToggle, onCreate, chatSearch, actions, drag, home, newShortcut, t })')
+    // Harness 0.2.2 split the row by resource (ungrouped bucket / Workspace) over one
+    // shared ProjectRow, which is where the chat heading and its search now arrive.
+    expect(source).toContain('function ProjectRow({ group, containsCurrentDescendant = false, onToggle, onCreate, chatSearch, drag: offeredDrag, home, newShortcut, t, access, openWorkspaceMenu, useContextMenuTarget, useContextMenu })')
+    expect(source).toContain('(0, react_jsx_runtime.jsx)(UngroupedProjectRow, { ...props })')
     // The chat search is the chat group's own: it no longer opens the
     // workspace section search, which spans every workspace.
     expect(source).toMatch(/\bchatSearch,\s+onToggle: \(\) => \{/)

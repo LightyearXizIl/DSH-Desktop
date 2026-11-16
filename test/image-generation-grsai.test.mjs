@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { LocalCredentialProvider } from '@deepseek-ai/dsh-credentials-local'
 import { ToolRuntime } from '@deepseek-ai/dsh-tools'
+import { NativeToolExecutor, executeTool } from './tool-execution.mjs'
 import { SystemPrompt } from '@deepseek-ai/dsh-system-prompt'
 import { SkillRegistry } from '@deepseek-ai/dsh-skill'
 import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
@@ -103,7 +104,7 @@ async function grsai({ failure, chat } = {}) {
 async function fixture() {
   const home = await temp(); const workspace = await temp()
   const ctx = new Context()
-  for (const [plugin, config] of [[SystemPrompt, {}], [ToolRuntime, {}], [SkillRegistry, {}], [LocalSandboxProvider, {}], [LocalSubprocessRuntime, {}], [LocalCredentialProvider, { dshHome: home, watch: false }]]) {
+  for (const [plugin, config] of [[SystemPrompt, {}], [ToolRuntime, {}], [NativeToolExecutor, {}], [SkillRegistry, {}], [LocalSandboxProvider, {}], [LocalSubprocessRuntime, {}], [LocalCredentialProvider, { dshHome: home, watch: false }]]) {
     const fork = ctx.plugin(plugin, config); await fork; cleanups.push(() => fork.dispose())
   }
   const log = vi.fn()
@@ -128,7 +129,7 @@ async function mountPlugin(f) {
 const save = (f, baseUrl, apiKey = 'grsai-good-key', extra = {}) =>
   f.settings.save({ provider: 'grsai', baseUrl, model: DEFAULTS.grsai.model, videoModel: DEFAULTS.grsai.videoModel, apiKey, revision: 0, ...extra })
 
-const runVideo = (f, args) => f.ctx.tools.execute({ callId: 'video', name: 'video_generate', arguments: args, agent: f.agent, signal: new AbortController().signal })
+const runVideo = (f, args) => executeTool(f.ctx, { callId: 'video', name: 'video_generate', arguments: args, agent: f.agent, signal: new AbortController().signal })
 
 describe('GrsAI provider', () => {
   it('lists GrsAI with image and video models, a host-only base and the mainland default', () => {
@@ -389,7 +390,7 @@ describe('video_generate', () => {
 })
 
 describe('text_generate', () => {
-  const runText = (f, args) => f.ctx.tools.execute({ callId: 'text', name: 'text_generate', arguments: args, agent: f.agent, signal: new AbortController().signal })
+  const runText = (f, args) => executeTool(f.ctx, { callId: 'text', name: 'text_generate', arguments: args, agent: f.agent, signal: new AbortController().signal })
 
   it('sends one chat completion to the saved text model and returns its reply', async () => {
     const f = await fixture(); const s = await grsai()

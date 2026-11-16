@@ -13,7 +13,11 @@ describe('DSH Desktop sidebar branding', () => {
     )
 
     expect(client).toContain('document.documentElement.dataset.platform === "darwin"')
-    expect(client).toContain('document.documentElement.hasAttribute("data-windows-titlebar") ? 0 : 56')
+    // Harness 0.2.2 reads the Windows marker into one flag that also keeps the
+    // narrow-viewport drawer off, then derives the collapsed width from it.
+    expect(client).toContain('const windowsTitlebar = document.documentElement.hasAttribute("data-windows-titlebar")')
+    expect(client).toContain('const drawer = viewport < 768 && !windowsTitlebar')
+    expect(client).toContain('const collapsedWidth = drawer || darwin || windowsTitlebar ? 0 : 56')
     expect(client).toContain('sidebar === 0 ? collapsedWidth')
   })
 

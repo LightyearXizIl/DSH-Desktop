@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js
-index ec0b781..a90d0e1 100644
+index 205a37c..95c3534 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-settings-general/lib/client.js
 @@ -63,7 +63,7 @@ window.__ModuleLoader__.load({
@@ -11,18 +11,15 @@ index ec0b781..a90d0e1 100644
  			document.head.appendChild(tag);
  		}
  		var SettingsRoot_module_css_default = {
-@@ -262,6 +262,10 @@ window.__ModuleLoader__.load({
- 				className: SettingsRoot_module_css_default.navIcon,
- 				size: 16
- 			});
-+			if (id === "about") return (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconInfoOutlineMedium, {
-+				className: SettingsRoot_module_css_default.navIcon,
-+				size: 16
-+			});
- 			return (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSettingsOutlineMedium, {
- 				className: SettingsRoot_module_css_default.navIcon,
- 				size: 16
-@@ -360,10 +364,7 @@ window.__ModuleLoader__.load({
+@@ -251,6 +251,7 @@ window.__ModuleLoader__.load({
+ 			if (id === "agent-presets") return (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconAgentPresetOutlineMedium, { size: 16 });
+ 			if (id === "plugins") return (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconPersonalizationOutlineMedium, { size: 16 });
+ 			if (id === "archived-sessions") return (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconArchiveOutlineMedium, { size: 16 });
++			if (id === "about") return (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconInfoOutlineMedium, { size: 16 });
+ 			return (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconSettingsOutlineMedium, { size: 16 });
+ 		}
+ 		/**
+@@ -364,10 +365,7 @@ window.__ModuleLoader__.load({
  			const connectionState = useConnectionState((state) => state);
  			const previousConnectionState = (0, react.useRef)(connectionState);
  			const onboardingSteps = useOnboardingSteps((s) => s);

@@ -39,6 +39,8 @@ function managerFor(home, dir) {
     profile: { dir, name: 'web', installAnchor: resolve('node_modules/@deepseek-ai/dsh/package.json') },
     ownerContext: { get: name => services.get(name) },
     managementBundles: new Set(),
+    // Harness 0.2.2 split the inventory read out of listBundles(); it is the code under test.
+    readBundles: PluginManager.prototype.readBundles,
     protectsManager: () => false,
     declaredRows: () => ({ rows: [], overrides: [] }),
     bundleRows: () => [{ id: 'demo-row', name: 'demo-plugin' }]

@@ -440,12 +440,22 @@ describe('desktop theme client', () => {
   })
 
   it('carries the sidebar toggle animation marker in the toggle\'s first commit', async () => {
-    const layoutPatch = await readFile(patchPath('@deepseek-ai/dsh-client-ui-layout'), 'utf8')
-    // Upstream marked data-animating one commit after changing the columns, so
-    // a layout read in between settled them without a transition and closing
-    // the right sidebar snapped the cards to full width.
-    expect(layoutPatch).toContain('+\t\t\tconst toggling = previousToggle.current !== trackToggle && previousViewport.current === viewport;')
-    expect(layoutPatch).toContain('+\t\t\t\t"data-animating": animating > 0 || toggling || void 0,')
+    const [layoutPatch, layout] = await Promise.all([
+      readFile(patchPath('@deepseek-ai/dsh-client-ui-layout'), 'utf8'),
+      readFile(
+        path.join(projectRoot, 'node_modules', '@deepseek-ai', 'dsh-client-ui-layout', 'lib', 'client.js'),
+        'utf8'
+      )
+    ])
+    // Through Harness 0.2.1 upstream marked data-animating one commit after
+    // changing the columns, so a layout read in between settled them without a
+    // transition and closing the right sidebar snapped the cards to full width;
+    // Desktop patched the marker into the first commit. 0.2.2 does that itself,
+    // so the composed package must carry it and the patch must stay out of it.
+    expect(layout).toContain('const animateTracks = previousViewport.current === viewport && (animating > 0 || previousToggle.current !== trackToggle);')
+    expect(layout).toContain('"data-animating": animateTracks || void 0,')
+    expect(layoutPatch).not.toContain('toggling')
+    expect(layoutPatch).not.toContain('data-animating')
   })
 
   it('marks the trajectory root so the theme can scope its surfaces', async () => {

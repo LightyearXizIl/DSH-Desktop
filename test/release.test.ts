@@ -13,7 +13,7 @@ const releaseAssets = [
 ]
 
 /** The exact Harness build every `@deepseek-ai/dsh-*` production dep is pinned to. */
-const HARNESS_VERSION = '0.2.1-rc.4'
+const HARNESS_VERSION = '0.2.2-rc.1'
 
 describe('GitHub release contract', () => {
   it('keeps the package and lockfile versions aligned', async () => {
@@ -151,17 +151,20 @@ describe('GitHub release contract', () => {
       expect(packageJson.dependencies[packageName]).toBeUndefined()
       expect(packageLock.packages[`node_modules/${packageName}`]).toBeUndefined()
     }
-    // Official bundles own these, including the rc.2 retrieval API and model badge.
+    // Official bundles own these, including the rc.2 retrieval API.
     for (const packageName of [
       '@deepseek-ai/dsh-tool-terminal',
       '@deepseek-ai/dsh-tool-session-query',
       '@deepseek-ai/dsh-session-title-all-prompts-llm',
-      '@deepseek-ai/dsh-web-deepseek-api',
-      '@deepseek-ai/dsh-client-ui-deepseek-model-label-1017'
+      '@deepseek-ai/dsh-web-deepseek-api'
     ]) {
       expect(packageJson.dependencies[packageName]).toBeUndefined()
       expect(packageLock.packages[`node_modules/${packageName}`]).toBeDefined()
     }
+    // The temporary model badge shipped only on the 0.2.1 line; 0.2.2 publishes
+    // no such package, so a leftover entry would mean a stale closure.
+    expect(packageJson.dependencies['@deepseek-ai/dsh-client-ui-deepseek-model-label-1017']).toBeUndefined()
+    expect(packageLock.packages['node_modules/@deepseek-ai/dsh-client-ui-deepseek-model-label-1017']).toBeUndefined()
     expect(packageLock.packages['node_modules/@anthropic-ai/claude-agent-sdk']).toBeUndefined()
     expect(packageLock.packages['node_modules/@openai/codex']).toBeUndefined()
   })

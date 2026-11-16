@@ -34,16 +34,65 @@ describe('workspace session unread markers', () => {
     expect(olderSnapshot.unreadSessionIds).toEqual([])
   })
 
-  it('offers a right-click menu action in both session list modes', async () => {
+  it('offers the unread action in the session context menu of both list modes', async () => {
     const [workspace, desktop, patch] = await Promise.all([
       readFile(workspacePath, 'utf8'),
       readFile(desktopPath, 'utf8'),
       readFile(patchPath('@deepseek-ai/dsh-client-ui-workspace'), 'utf8')
     ])
-    expect(workspace).toContain('onContextMenu: (event) =>')
-    expect(workspace).toContain('if (!row.blank) setMenuOpen(true)')
-    expect(workspace).toContain('unread: unreadSessionIds.includes(node.id)')
-    expect(workspace).toContain('onUnreadChange')
+    // Harness 0.2.2 opens one shared context menu for a session row (right-click
+    // and the "..." trigger) and renders the legacy menu contributions inside it
+    // from the captured target alone. The row no longer hands them its unread
+    // state, so the patched SessionMenu reads it from the browser store.
+    const start = workspace.indexOf('function SessionMenu(')
+    const end = workspace.indexOf('//#endregion', start)
+    expect(start).toBeGreaterThan(-1)
+    expect(end).toBeGreaterThan(start)
+    type MenuProps = { sessionId: string; displayTitle: string; unread: boolean; onUnreadChange: (id: string, unread: boolean) => void }
+    const SessionMenu = vm.runInNewContext(`(() => { ${workspace.slice(start, end)}; return SessionMenu })()`, {
+      react: { useMemo: (compute: () => unknown) => compute() }
+    }) as (props: Record<string, unknown>) => unknown
+    const marked: string[] = []
+    const read: string[] = []
+    const render = (kind: string, unreadSessionIds: string[] | undefined) => {
+      let captured: { name: string; props: MenuProps } | undefined
+      const output = SessionMenu({
+        target: { kind, value: { sessionId: 'session-1', displayTitle: 'One' } },
+        dismiss: () => {},
+        renderSlot: (name: string, props: MenuProps) => {
+          captured = { name, props }
+          return 'entries'
+        },
+        useStore: (select: (state: { unreadSessionIds?: string[] }) => unknown) => select({ unreadSessionIds }),
+        actions: {
+          markSessionUnread: (id: string) => marked.push(id),
+          markSessionRead: (id: string) => read.push(id)
+        }
+      })
+      return { output, captured }
+    }
+
+    const unread = render('session', ['session-1'])
+    expect(unread.output).toBe('entries')
+    expect(unread.captured?.name).toBe('sidebar.workspaces.session.menu.item')
+    expect(unread.captured?.props).toMatchObject({ sessionId: 'session-1', displayTitle: 'One', unread: true })
+    unread.captured?.props.onUnreadChange('session-1', false)
+    expect(read).toEqual(['session-1'])
+
+    const seen = render('session', ['other'])
+    expect(seen.captured?.props.unread).toBe(false)
+    seen.captured?.props.onUnreadChange('session-1', true)
+    expect(marked).toEqual(['session-1'])
+
+    // A view snapshot persisted before the marker existed has no list yet.
+    expect(render('session', undefined).captured?.props.unread).toBe(false)
+    // The same content slot also serves workspace targets; those get no session entries.
+    expect(render('workspace', ['session-1'])).toEqual({ output: null, captured: undefined })
+
+    // The menu content is registered with the browser store that holds the markers.
+    expect(workspace).toMatch(/name: "contextMenu\.content",\s+key: "session",\s+store: viewStore,/)
+    // Tree and flat rows both still mark an unread title.
+    expect(workspace.match(/unread: unreadSessionIds\.includes\(node\.id\)/g)).toHaveLength(2)
     expect(desktop).toContain("id: 'desktop-unread-session'")
     expect(desktop).toContain("'标为未读'")
     expect(desktop).toContain("'标为已读'")

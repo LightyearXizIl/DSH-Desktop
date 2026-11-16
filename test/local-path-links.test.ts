@@ -80,7 +80,11 @@ describe('assistant local path links', () => {
     expect(primitives).toContain('mention.kind === "folder" ? "folder"')
     expect(primitives).toContain('kind?: "file" | "folder"')
     expect(chat).toContain('options?.revealInFileManager === true')
-    expect(chat).toContain('openWorkspacePath({ path: hostPathForOpen(cwd, path) })')
+    // Harness 0.2.2 resolves a relative mention against the Session's current
+    // working directory before opening it; the folder and file openers follow.
+    expect(chat).toContain('const resolved = resolveWorkspacePath(session.projections.faceOf("workingDirectory").getSnapshot() ?? void 0, path);')
+    expect(chat).toContain('openWorkspacePath({ path: hostPathForOpen(cwd, resolved) })')
+    expect(chat).toContain('openResolvedHostFile(ctx, sessionId, cwd, hostPathForOpen(cwd, resolved), options)')
     expect(chat).toContain('if (!opened.ok) throw opened.error')
     expect(chat).toContain('requestOpenFile(fileOpenError.path, fileOpenError.options)')
     expect(chat).toContain('readonly revealInFileManager?: boolean')

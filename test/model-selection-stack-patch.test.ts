@@ -54,6 +54,8 @@ beforeAll(async () => {
     Toast: () => null,
     rankByName: (items: unknown[]) => items,
     observeStickyMenuGroups: () => () => undefined,
+    // Harness 0.2.2 moved menu placement into a shared primitive; jsdom has no layout to anchor to.
+    useAnchoredPosition: () => ({ position: 'fixed', left: 0, top: 0 }),
   }
   for (const name of ['IconCheckOutlineRegular', 'IconChevronDownOutlineRegular', 'IconChevronRightOutlineRegular',
     'IconCloseFillRegular', 'IconDataOutlineRegular', 'IconWarningOutlineRegular']) primitives[name] = () => null

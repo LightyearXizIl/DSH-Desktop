@@ -1,9 +1,10 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/index.js b/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/index.js
+index f4bc5b6..2a117f1 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/index.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/index.js
-@@ -11652,7 +11652,7 @@ function renderNode(node, key, context) {
- 				"aria-label": mention.label,
+@@ -10487,7 +10487,7 @@ function renderNode(node, key, context) {
  				onClick: mention.open,
+ 				...mention.contextMenuProps,
  				children: [jsx(LinkIconMedium, {
 -					kind: classifyLinkPath(value),
 +					kind: mention.kind === "folder" ? "folder" : classifyLinkPath(value),
@@ -11,10 +12,11 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/index.js b/n
  				}), value]
  			}) }, key);
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/types/markdown/render.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/types/markdown/render.d.ts
+index cd2ddbc..cdebc91 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/types/markdown/render.d.ts
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/types/markdown/render.d.ts
-@@ -85,6 +85,11 @@ export interface MarkdownFileMentions {
-         open: () => void;
+@@ -88,6 +88,11 @@ export interface MarkdownFileMentions {
+         contextMenuProps?: Pick<HTMLAttributes<HTMLElement>, 'onContextMenu' | 'onKeyDown' | 'tabIndex'>;
          label: string;
          title: string;
 +        /**

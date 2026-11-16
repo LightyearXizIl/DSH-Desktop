@@ -21,6 +21,8 @@ function fixture(headers: Record<string, string> = {}) {
       provider: 'opencode-go', displayName: 'OpenCode Go', headers,
       piProvider: opencodeGoProvider(), streamIdleTimeoutMs: 5000,
       configuredMaxTokens: new Map(), maxRequestImageBytes: 1024,
+      // Harness 0.2.2 resolves an image-count limit and its offload quantum per profile.
+      maxRequestImages: 8, imageOffloadCountQuantum: 1,
       requestImagePixelBudget: 1024, requestImageMaxBytes: 1024,
       retryPolicy: resolveRetryPolicy({ mode: 'normal', maxRetries: 0 }, 'test'),
       modelErrors: new Map()

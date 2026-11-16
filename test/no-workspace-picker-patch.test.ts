@@ -27,11 +27,14 @@ async function renderFlow({ noWorkspace = false, workspaces, onPick = () => {} }
   const jsx = (type: unknown, props: Record<string, unknown>): Element => ({ type, props })
   const Menu = function Menu() {}
   const context = {
-    react: { useState: (value: unknown) => [value, () => {}], useCallback: (fn: unknown) => fn, useEffect: () => {} },
+    // Harness 0.2.2 memoises the listed workspaces (it disambiguates equal titles by path).
+    react: { useState: (value: unknown) => [value, () => {}], useCallback: (fn: unknown) => fn, useEffect: () => {}, useMemo: (compute: () => unknown) => compute() },
     react_jsx_runtime: { jsx, jsxs: jsx, Fragment: 'Fragment' },
     _deepseek_ai_dsh_client_ui_primitives: new Proxy({ Menu }, { get: (target, key) => (key in target ? target[key as 'Menu'] : function Icon() {}) }),
     WorkspacePicker_module_css_default: {},
     workspaceDisplayTitle: (title: string) => title,
+    // Defined outside the evaluated slice; no suffixes keeps every label a plain title.
+    distinguishingPathSuffixes: () => new Map<string, string>(),
   }
   const flow = vm.runInNewContext(`(() => { ${body}; return WorkspacePickFlow })()`, context) as (props: Record<string, unknown>) => Element
   const tree = flow({

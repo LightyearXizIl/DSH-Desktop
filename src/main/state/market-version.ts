@@ -5,7 +5,9 @@
  * 0.1.x, so `dsh plugin install` on Harness 0.2 rejects them, and their only
  * way in is a settings section Desktop hides; 1.67.0 adds the Harness 0.2 peer
  * range, its own Built-in plugins tab and the sidebar panel. 1.71.1 is the
- * build exercised against 0.2.1-rc.4. Raise this with every Harness upgrade
+ * build exercised against 0.2.1-rc.4; the 0.2.2-rc.1 upgrade installed 1.73.20
+ * through the same range (its peers still stop at 0.2.1, which Desktop only
+ * reports as a compatibility warning). Raise this with every Harness upgrade
  * that changes the market's peer range, together with
  * RECOMMENDED_MARKET_VERSION in dsh-desktop-market-installer.
  *

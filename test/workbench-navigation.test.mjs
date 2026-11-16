@@ -260,7 +260,10 @@ describe('native Workspace navigation with workbench routing', () => {
 
   it('renders the chat heading with the workspace section header', () => {
     const start = source.indexOf('if (isChat) {')
-    const end = source.indexOf('const [menuOpen', start)
+    // The heading returns before the workspace row's own state; since Harness 0.2.2
+    // that state is the shared context-menu target instead of a local menu flag.
+    const end = source.indexOf('const menuOpen = useContextMenuTarget(', start)
+    expect(end).toBeGreaterThan(start)
     const chatRow = source.slice(start, end)
     // Same header, label, inline search and action classes as "工作区", so
     // the two headings match in size, colour and alignment.

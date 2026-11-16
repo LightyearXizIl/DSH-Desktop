@@ -1,4 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-modules/lib/client.js b/node_modules/@deepseek-ai/dsh-client-modules/lib/client.js
+index 7b933bf..053b6aa 100644
 --- a/node_modules/@deepseek-ai/dsh-client-modules/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-modules/lib/client.js
 @@ -394,7 +394,26 @@ window.__ModuleLoader__.load({
@@ -38,9 +39,10 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-modules/lib/client.js b/node_m
  					this.managed.set(id, loader.resolve(entryId));
  				}
 diff --git a/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js b/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js
+index 2524917..47d7b77 100644
 --- a/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js
 +++ b/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js
-@@ -284,7 +284,7 @@ function readSourceMap(clientPath) {
+@@ -342,7 +342,7 @@ function readSourceMap(clientPath) {
  /** Count generated lines while assembling indexed-map section offsets. */
  function newlineCount(value) {
  	let count = 0;
@@ -49,7 +51,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js b/node_mo
  	return count;
  }
  /** Resolve section sources against their original per-plugin map URL before combo relocation. */
-@@ -306,7 +306,8 @@ function comboSectionMap(resource, original) {
+@@ -364,7 +364,8 @@ function comboSectionMap(resource, original) {
  }
  /** Map each generated line to the same line in a bundled JavaScript source. */
  function identitySectionMap(source, sourceUrl) {
@@ -59,7 +61,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js b/node_mo
  	return {
  		version: 3,
  		names: [],
-@@ -385,6 +386,16 @@ function buildCombo(records, sourceMapOf, revision) {
+@@ -443,6 +444,16 @@ function buildCombo(records, sourceMapOf, revision) {
  		sourceMapBody: lazyBody(() => buildComboSourceMap(resources, sourceMapOf))
  	};
  }
@@ -76,7 +78,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js b/node_mo
  /** Add initial-load scheduling metadata to a combo artifact. */
  function buildBatch(phase, records, sourceMapOf) {
  	const artifact = buildCombo(records, sourceMapOf);
-@@ -685,7 +696,7 @@ var ClientModuleRegistry = class extends Service {
+@@ -748,7 +759,7 @@ var ClientModuleRegistry = class extends Service {
  		}
  		const responses = new Map(batchResponses);
  		for (const record of this.table.values()) {
@@ -85,7 +87,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-client-modules/lib/index.js b/node_mo
  			responses.set(artifact.url, responses.get(artifact.url) ?? this.responses.get(artifact.url) ?? {
  				body: artifact.scriptBody,
  				contentType: "text/javascript; charset=utf-8"
-@@ -786,7 +797,15 @@ var ClientModuleRegistry = class extends Service {
+@@ -839,7 +850,15 @@ var ClientModuleRegistry = class extends Service {
  				attributes: {}
  			}).url : internal.resolveSync(loaderName, baseUrl, {}).url;
  		} catch {

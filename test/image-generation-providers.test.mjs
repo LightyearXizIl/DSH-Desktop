@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { LocalCredentialProvider } from '@deepseek-ai/dsh-credentials-local'
 import { ToolRuntime } from '@deepseek-ai/dsh-tools'
+import { NativeToolExecutor, executeTool } from './tool-execution.mjs'
 import { SystemPrompt } from '@deepseek-ai/dsh-system-prompt'
 import { SkillRegistry } from '@deepseek-ai/dsh-skill'
 import { LocalSandboxProvider } from '@deepseek-ai/dsh-sandbox-local'
@@ -93,7 +94,7 @@ async function compatible({ models = true, answer = 'b64' } = {}) {
 async function fixture() {
   const home = await temp(); const workspace = await temp()
   const ctx = new Context()
-  for (const [plugin, config] of [[SystemPrompt, {}], [ToolRuntime, {}], [SkillRegistry, {}], [LocalSandboxProvider, {}], [LocalSubprocessRuntime, {}], [LocalCredentialProvider, { dshHome: home, watch: false }]]) {
+  for (const [plugin, config] of [[SystemPrompt, {}], [ToolRuntime, {}], [NativeToolExecutor, {}], [SkillRegistry, {}], [LocalSandboxProvider, {}], [LocalSubprocessRuntime, {}], [LocalCredentialProvider, { dshHome: home, watch: false }]]) {
     const fork = ctx.plugin(plugin, config); await fork; cleanups.push(() => fork.dispose())
   }
   const log = vi.fn()
@@ -115,7 +116,7 @@ async function mountPlugin(f) {
   return { route: target => routes.find(route => route.path === target) }
 }
 
-const run = (f, name, args) => f.ctx.tools.execute({ callId: name, name, arguments: args, agent: f.agent, signal: new AbortController().signal })
+const run = (f, name, args) => executeTool(f.ctx, { callId: name, name, arguments: args, agent: f.agent, signal: new AbortController().signal })
 
 describe('Agnes AI', () => {
   it('defaults to the China site gateway with the documented image and video models', () => {

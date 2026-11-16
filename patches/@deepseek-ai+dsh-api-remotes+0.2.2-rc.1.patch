@@ -1,9 +1,10 @@
 diff --git a/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js b/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js
+index efa7b72..459eb9d 100644
 --- a/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js
-@@ -13819,6 +13819,14 @@ window.__ModuleLoader__.load({
- 			"sessionId": zod.z.string().readonly().describe("The created or reused Session, which may differ from the requested `sessionId`."),
- 			"agentPreset": zod.z.string().readonly().optional().describe("Preset the Session runs, when the deployment composes a preset roster.")
+@@ -20335,6 +20335,14 @@ window.__ModuleLoader__.load({
+ 			})).readonly(),
+ 			"hasMore": zod.z.boolean().readonly()
  		});
 +		let _deepseek_ai_dsh_api_session_controller_session_delete_parameter_0$schema$value;
 +		const _deepseek_ai_dsh_api_session_controller_session_delete_parameter_0$schema = () => _deepseek_ai_dsh_api_session_controller_session_delete_parameter_0$schema$value ??= zod.z.object({
@@ -16,7 +17,7 @@ diff --git a/node_modules/@deepseek-ai/dsh-api-remotes/lib/client.js b/node_modu
  		let _deepseek_ai_dsh_api_session_controller_session_follow_parameter_0$schema$value;
  		const _deepseek_ai_dsh_api_session_controller_session_follow_parameter_0$schema = () => _deepseek_ai_dsh_api_session_controller_session_follow_parameter_0$schema$value ??= zod.z.object({
  			"address": zod.z.union([zod.z.object({
-@@ -15352,6 +15360,35 @@ window.__ModuleLoader__.load({
+@@ -22356,6 +22364,35 @@ window.__ModuleLoader__.load({
  						"column": 10
  					}
  				},

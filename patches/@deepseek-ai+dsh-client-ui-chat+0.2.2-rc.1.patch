@@ -1,5 +1,5 @@
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js
-index 9700d03..eaf8057 100644
+index cc97db4..62bbfb2 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js
 @@ -93,6 +93,23 @@ window.__ModuleLoader__.load({
@@ -26,7 +26,7 @@ index 9700d03..eaf8057 100644
  		//#endregion
  		//#region lib/types/client/contract/snapshot.js
  		const EMPTY_LIST$1 = [];
-@@ -2714,6 +2731,12 @@ window.__ModuleLoader__.load({
+@@ -3421,6 +3438,12 @@ window.__ModuleLoader__.load({
  			const message = error instanceof Error ? error.message : String(error);
  			return message === "" ? fallback : message;
  		}
@@ -39,7 +39,7 @@ index 9700d03..eaf8057 100644
  		/**
  		* Durable input identities suppress matching echoes in the same render.
  		* The last input's Turn also distinguishes an empty opening control from
-@@ -2802,6 +2825,7 @@ window.__ModuleLoader__.load({
+@@ -3550,6 +3573,7 @@ window.__ModuleLoader__.load({
  					if (id !== fileOpenRequest.current) return;
  					setFileOpenError({
  						path,
@@ -47,7 +47,7 @@ index 9700d03..eaf8057 100644
  						message: openFailureMessage(error, t("fileOpen.unknown"))
  					});
  					setFileOpenBusy(false);
-@@ -2946,7 +2970,7 @@ window.__ModuleLoader__.load({
+@@ -3710,7 +3734,7 @@ window.__ModuleLoader__.load({
  						busy: fileOpenBusy,
  						onClose: closeFileOpenError,
  						onRetry: () => {
@@ -56,16 +56,16 @@ index 9700d03..eaf8057 100644
  						},
  						t
  					})
-@@ -3709,7 +3733,7 @@ window.__ModuleLoader__.load({
+@@ -4488,7 +4512,7 @@ window.__ModuleLoader__.load({
  		* Policy reads select this seat's own conclusion, so a mode change re-renders
  		* only seats whose visibility actually changes.
  		*/
--		const ChatNodeSeat = (0, react.memo)(function ChatNodeSeat({ nodeKey, groupPart, useChatNode, useChatNodeProcess, usePresentation, cwd, openFile, inspectCall, forkAt, loadImage, fileMentions, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction }) {
-+		const ChatNodeSeat = (0, react.memo)(function ChatNodeSeat({ nodeKey, groupPart, useChatNode, useChatNodeProcess, usePresentation, cwd, openFile, inspectCall, forkAt, loadImage, fileMentions, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction, leadingUserKey = null, messageFooter = null }) {
+-		const ChatNodeSeat = (0, react.memo)(function ChatNodeSeat({ nodeKey, groupPart, useChatNode, useChatNodeProcess, usePresentation, cwd, openFile, inspectCall, forkAt, loadImage, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction }) {
++		const ChatNodeSeat = (0, react.memo)(function ChatNodeSeat({ nodeKey, groupPart, useChatNode, useChatNodeProcess, usePresentation, cwd, openFile, inspectCall, forkAt, loadImage, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction, leadingUserKey = null, messageFooter = null }) {
  			const bottom = useChatNodeBottom(nodeKey);
  			const node = useChatNode(nodeKey);
  			const routedNode = node;
-@@ -3796,6 +3820,7 @@ window.__ModuleLoader__.load({
+@@ -4575,6 +4599,7 @@ window.__ModuleLoader__.load({
  			if (routedNode === void 0 || owner === null) return null;
  			const routedOwner = {
  				...owner,
@@ -73,7 +73,7 @@ index 9700d03..eaf8057 100644
  				node: routedNode
  			};
  			const flowKey = groupPart === void 0 || groupPart === "response" ? routedNode.key : JSON.stringify([routedNode.key, groupPart]);
-@@ -4292,6 +4317,7 @@ window.__ModuleLoader__.load({
+@@ -5072,6 +5097,7 @@ window.__ModuleLoader__.load({
  			"compactionTitle": "Sixlwa_compactionTitle",
  			"contextRow": "Sixlwa_contextRow",
  			"fileCard": "Sixlwa_fileCard",
@@ -81,16 +81,16 @@ index 9700d03..eaf8057 100644
  			"fileContent": "Sixlwa_fileContent",
  			"fileIcon": "Sixlwa_fileIcon",
  			"fileMeta": "Sixlwa_fileMeta",
-@@ -5148,7 +5174,7 @@ window.__ModuleLoader__.load({
+@@ -5928,7 +5954,7 @@ window.__ModuleLoader__.load({
  		}
  		//#endregion
  		//#region \0dsh-css:/home/runner/work/deepseek-harness/deepseek-harness/packages/client/ui-chat/src/client/chat/MessageIconActions.module.css.mjs
--		const css$11 = ".xzv4MW_actions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;display:flex}.xzv4MW_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.xzv4MW_timeEnd{font-size:calc(var(--dsh-content-font-size-secondary,13px) - 1px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:inherit;white-space:nowrap}.xzv4MW_endInfo{min-width:0;color:var(--dsw-alias-label-tertiary);align-items:center;gap:8px;margin-left:8px;display:inline-flex}@media (hover:hover){[data-actions-reveal=hover] .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])) .xzv4MW_actions{opacity:0;transition:opacity 80ms}[data-actions-reveal=hover]:hover .xzv4MW_actions,[data-actions-reveal=hover]:focus-within .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):hover .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):focus-within .xzv4MW_actions{opacity:1}}.xzv4MW_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;justify-content:center;align-items:center;padding:6px;display:inline-flex}.xzv4MW_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.xzv4MW_actions[data-clock=end] .xzv4MW_action svg{width:calc(17px + var(--dsh-content-font-delta,0px));height:calc(17px + var(--dsh-content-font-delta,0px))}.xzv4MW_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.xzv4MW_action[data-unavailable]{cursor:default;opacity:.4}.xzv4MW_action[data-unavailable]:hover{color:var(--dsw-alias-label-tertiary);background:0 0}.xzv4MW_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}";
-+		const css$11 = ".xzv4MW_actions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;display:flex}.xzv4MW_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.xzv4MW_timeEnd{font-size:calc(var(--dsh-content-font-size-secondary,13px) - 1px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:inherit;white-space:nowrap}.xzv4MW_speed{font-size:calc(var(--dsh-content-font-size-secondary,13px) - 1px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:4px}.xzv4MW_endInfo{min-width:0;color:var(--dsw-alias-label-tertiary);align-items:center;gap:8px;margin-left:8px;display:inline-flex}@media (hover:hover){[data-actions-reveal=hover] .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])) .xzv4MW_actions{opacity:0;transition:opacity 80ms}[data-actions-reveal=hover]:hover .xzv4MW_actions,[data-actions-reveal=hover]:focus-within .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):hover .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):focus-within .xzv4MW_actions{opacity:1}}.xzv4MW_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;justify-content:center;align-items:center;padding:6px;display:inline-flex}.xzv4MW_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.xzv4MW_actions[data-clock=end] .xzv4MW_action svg{width:calc(17px + var(--dsh-content-font-delta,0px));height:calc(17px + var(--dsh-content-font-delta,0px))}.xzv4MW_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}.xzv4MW_action[data-unavailable]{cursor:default;opacity:.4}.xzv4MW_action[data-unavailable]:hover{color:var(--dsw-alias-label-tertiary);background:0 0}.xzv4MW_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}";
+-		const css$11 = ".xzv4MW_actions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;display:flex}.xzv4MW_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.xzv4MW_timeEnd{font-size:calc(var(--dsh-content-font-size-secondary,13px) - 1px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:inherit;white-space:nowrap}.xzv4MW_endInfo{min-width:0;color:var(--dsw-alias-label-tertiary);align-items:center;gap:8px;margin-left:8px;display:inline-flex}@media (hover:hover){[data-actions-reveal=hover] .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])) .xzv4MW_actions{opacity:0;transition:opacity 80ms}[data-actions-reveal=hover]:hover .xzv4MW_actions,[data-actions-reveal=hover]:focus-within .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):hover .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):focus-within .xzv4MW_actions{opacity:1}}.xzv4MW_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;justify-content:center;align-items:center;padding:6px;display:inline-flex}.xzv4MW_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.xzv4MW_actions[data-clock=end] .xzv4MW_action svg{width:calc(17px + var(--dsh-content-font-delta,0px));height:calc(17px + var(--dsh-content-font-delta,0px))}@media (hover:hover){.xzv4MW_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}}.xzv4MW_action[data-unavailable]{cursor:default;opacity:.4}@media (hover:hover){.xzv4MW_action[data-unavailable]:hover{color:var(--dsw-alias-label-tertiary);background:0 0}}.xzv4MW_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}";
++		const css$11 = ".xzv4MW_actions{height:calc(28px + var(--dsh-content-font-delta,0px));align-items:center;gap:8px;display:flex}.xzv4MW_timeStart{font-size:var(--dsh-content-font-size-secondary,13px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;padding-right:12px}.xzv4MW_timeEnd{font-size:calc(var(--dsh-content-font-size-secondary,13px) - 1px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:inherit;white-space:nowrap}.xzv4MW_endInfo{min-width:0;color:var(--dsw-alias-label-tertiary);align-items:center;gap:8px;margin-left:8px;display:inline-flex}@media (hover:hover){[data-actions-reveal=hover] .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])) .xzv4MW_actions{opacity:0;transition:opacity 80ms}[data-actions-reveal=hover]:hover .xzv4MW_actions,[data-actions-reveal=hover]:focus-within .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):hover .xzv4MW_actions,:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering]):has(~:is([data-chat-flow-kind=user],[data-chat-flow-kind=steering])):focus-within .xzv4MW_actions{opacity:1}}.xzv4MW_action{width:calc(28px + var(--dsh-content-font-delta,0px));height:calc(28px + var(--dsh-content-font-delta,0px));border-radius:var(--dsw-radius-sm);color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;justify-content:center;align-items:center;padding:6px;display:inline-flex}.xzv4MW_action svg{width:calc(15px + var(--dsh-content-font-delta,0px));height:calc(15px + var(--dsh-content-font-delta,0px))}.xzv4MW_actions[data-clock=end] .xzv4MW_action svg{width:calc(17px + var(--dsh-content-font-delta,0px));height:calc(17px + var(--dsh-content-font-delta,0px))}@media (hover:hover){.xzv4MW_action:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-secondary)}}.xzv4MW_action[data-unavailable]{cursor:default;opacity:.4}@media (hover:hover){.xzv4MW_action[data-unavailable]:hover{color:var(--dsw-alias-label-tertiary);background:0 0}}.xzv4MW_visuallyHidden{clip:rect(0 0 0 0);white-space:nowrap;width:1px;height:1px;position:absolute;overflow:hidden}.xzv4MW_speed{font-size:calc(var(--dsh-content-font-size-secondary,13px) - 1px);line-height:calc(24px + var(--dsh-content-font-delta,0px));color:var(--dsw-alias-label-tertiary);white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:4px}";
  		const tagId$11 = "@deepseek-ai/dsh-client-ui-chat/MessageIconActions.module.css";
  		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify(tagId$11) + "]") === null) {
  			const tag = document.createElement("style");
-@@ -5161,6 +5187,7 @@ window.__ModuleLoader__.load({
+@@ -5941,6 +5967,7 @@ window.__ModuleLoader__.load({
  			"action": "xzv4MW_action",
  			"actions": "xzv4MW_actions",
  			"endInfo": "xzv4MW_endInfo",
@@ -98,7 +98,7 @@ index 9700d03..eaf8057 100644
  			"timeEnd": "xzv4MW_timeEnd",
  			"timeStart": "xzv4MW_timeStart",
  			"visuallyHidden": "xzv4MW_visuallyHidden"
-@@ -5280,6 +5307,7 @@ window.__ModuleLoader__.load({
+@@ -6038,6 +6065,7 @@ window.__ModuleLoader__.load({
  			if (code === "INTERRUPTED") return t("message.failure.interrupted");
  			if (code === "ACCOUNT_SIGN_IN_REQUIRED") return t("message.failure.accountSignInRequired");
  			if (code === "QUOTA" || code === "ACCOUNT_QUOTA") return t("message.failure.quota");
@@ -106,59 +106,63 @@ index 9700d03..eaf8057 100644
  			return code === "AUTH" ? t("message.failure.auth") : message;
  		}
  		function ModelRetryItem({ node, active, t }) {
-@@ -5389,7 +5417,7 @@ window.__ModuleLoader__.load({
- 			});
- 		}
+@@ -6154,7 +6182,7 @@ window.__ModuleLoader__.load({
+ 		/** Occupant used by rows that do not own the message-source seat. */
+ 		const NO_MESSAGE_SOURCE = () => null;
  		/** Right-aligned bubble shared by user and steering rows. */
--		function UserStyleBubble({ content, loadImage, renderFactorySlot, actions, pending = false, echo = false, referenceLabels, skillNames, previewAttachments, facts: inputFacts = EMPTY_TEXT_FACTS, interactive = false }) {
-+		function UserStyleBubble({ content, loadImage, renderFactorySlot, actions, pending = false, echo = false, referenceLabels, skillNames, previewAttachments, facts: inputFacts = EMPTY_TEXT_FACTS, interactive = false, footer = null }) {
+-		function UserStyleBubble({ node, renderSlotChain, content, loadImage, renderFactorySlot, actions, pending = false, echo = false, batchStart = false, referenceLabels, skillNames, previewAttachments, facts: inputFacts = EMPTY_TEXT_FACTS, interactive = false }) {
++		function UserStyleBubble({ node, renderSlotChain, content, loadImage, renderFactorySlot, actions, pending = false, echo = false, batchStart = false, referenceLabels, skillNames, previewAttachments, facts: inputFacts = EMPTY_TEXT_FACTS, interactive = false, footer = null }) {
  			const parts = (0, react.useMemo)(() => contentParts(content), [content]);
  			const prepared = (0, react.useMemo)(() => ({
  				text: parts.text,
-@@ -5416,6 +5444,7 @@ window.__ModuleLoader__.load({
- 				"data-submission-echo": echo || void 0,
- 				children: [renderFactorySlot("conversation.chat.user.content", {
- 					content: prepared,
-+					footer,
- 					loadImage,
- 					facts,
- 					interactive
-@@ -5450,8 +5479,9 @@ window.__ModuleLoader__.load({
+@@ -6187,6 +6215,7 @@ window.__ModuleLoader__.load({
+ 					}, { fallback: null }),
+ 					renderFactorySlot("conversation.chat.user.content", {
+ 						content: prepared,
++						footer,
+ 						loadImage,
+ 						facts,
+ 						interactive
+@@ -6225,10 +6254,11 @@ window.__ModuleLoader__.load({
  		* @param props - the pending submission, authorized image loader, and render seats.
  		* @returns the echoed user bubble.
  		*/
 -		function PendingSubmissionBubble({ submission, loadImage, renderFactorySlot, t }) {
 +		function PendingSubmissionBubble({ submission, loadImage, renderFactorySlot, t, footer = null }) {
  			return (0, react_jsx_runtime.jsx)(UserStyleBubble, {
+ 				node: UNDECORATED_ROW,
+ 				renderSlotChain: NO_MESSAGE_SOURCE,
 +				footer,
  				content: (0, react.useMemo)(() => submission.text === "" ? [] : [{
  					type: "text",
  					text: submission.text
-@@ -5482,10 +5512,11 @@ window.__ModuleLoader__.load({
- 			});
- 		}
- 		/** User and admitted-steering keyed Chat renderer. */
--		const UserMessageNodeView = (0, react.memo)(function UserMessageNodeView({ node, renderFactorySlot, loadImage, t }) {
-+		const UserMessageNodeView = (0, react.memo)(function UserMessageNodeView({ node, renderFactorySlot, loadImage, t, messageFooter = null }) {
+@@ -6265,12 +6295,13 @@ window.__ModuleLoader__.load({
+ 		* declared by the `user` registration alone, so a steering row renders the same
+ 		* bubble without asking for it.
+ 		*/
+-		const UserMessageNodeView = (0, react.memo)(function UserMessageNodeView({ node, renderFactorySlot, loadImage, renderSlotChain, t }) {
++		const UserMessageNodeView = (0, react.memo)(function UserMessageNodeView({ node, renderFactorySlot, loadImage, renderSlotChain, t, messageFooter = null }) {
  			const data = node.data;
  			return (0, react_jsx_runtime.jsx)(UserStyleBubble, {
+ 				node,
+ 				renderSlotChain,
  				content: data.content,
 +				footer: messageFooter,
  				interactive: true,
  				renderFactorySlot,
  				loadImage,
-@@ -5641,6 +5672,10 @@ window.__ModuleLoader__.load({
+@@ -6442,6 +6473,10 @@ window.__ModuleLoader__.load({
  		/** Render the flow without adding a DOM parent or changing keyed row positions. */
- 		const ChatFlow = (0, react.memo)(function ChatFlow({ entries, pendingInputs, lastInputTurn, deferCollapse, useSession, useChat, useChatNode, useChatNodeBottom, useChatNodeProcess, useChatGroup, usePresentation, useStore, actions, renderSlot, renderFactorySlot, t, useGroupAction, useGroupHeaderAction, cwd, openFile, inspectCall, forkAt, loadImage, fileMentions }) {
+ 		const ChatFlow = (0, react.memo)(function ChatFlow({ entries, pendingInputs, lastInputTurn, deferCollapse, useSession, useChat, useChatNode, useChatNodeBottom, useChatNodeProcess, useChatGroup, usePresentation, useConnectionState, useStore, actions, renderSlot, renderFactorySlot, t, useGroupAction, useGroupHeaderAction, cwd, openFile, inspectCall, forkAt, loadImage }) {
  			const nodeStore = useChat((snapshot) => snapshot.nodes);
 +			const hasMore = useChat((snapshot) => snapshot.hasMore);
 +			const order = useChat((snapshot) => snapshot.order);
 +			const { leadingUserKey, leadingPendingId } = openingUserMessageTarget(hasMore, order, (key) => nodeStore.get(key)?.kind, pendingInputs);
 +			const messageFooter = leadingUserKey !== null || leadingPendingId !== null ? renderSlot("conversation.chat.userMessageFooter", { leading: true }) : null;
  			const running = useSession((snapshot) => snapshot.running);
- 			const runningStartTime = useChatNode(useChat((snapshot) => snapshot.navigation.items().at(-1)?.anchorKey) ?? "", (node) => {
- 				const location = node?.location;
-@@ -5671,6 +5706,8 @@ window.__ModuleLoader__.load({
+ 			const disconnected = useConnectionState((state) => state === "disconnected" || state === "connecting");
+ 			const latestTurnAnchor = useChat((snapshot) => snapshot.navigation.items().at(-1)?.anchorKey);
+@@ -6478,6 +6513,8 @@ window.__ModuleLoader__.load({
  						...seatProps,
  						key: chatRenderKey(entry),
  						nodeKey: entry.key,
@@ -167,15 +171,15 @@ index 9700d03..eaf8057 100644
  						...entry.groupPart === void 0 ? {} : { groupPart: entry.groupPart }
  					});
  					case "group": return (0, react.createElement)(ChatGroupSeat, {
-@@ -5685,6 +5722,7 @@ window.__ModuleLoader__.load({
- 			});
- 			const pendingRows = pendingInputs.map((item) => "requestId" in item ? (0, react_jsx_runtime.jsx)(PendingSubmissionBubble, {
- 				submission: item,
-+				footer: item.requestId === leadingPendingId ? messageFooter : null,
- 				loadImage,
- 				renderFactorySlot,
- 				t
-@@ -5880,7 +5918,8 @@ window.__ModuleLoader__.load({
+@@ -6497,6 +6534,7 @@ window.__ModuleLoader__.load({
+ 			for (const [index, item] of pendingInputs.entries()) {
+ 				const row = isLocalSubmission(item) ? (0, react_jsx_runtime.jsx)(PendingSubmissionBubble, {
+ 					submission: item,
++					footer: item.requestId === leadingPendingId ? messageFooter : null,
+ 					loadImage,
+ 					renderFactorySlot,
+ 					t
+@@ -6701,7 +6739,8 @@ window.__ModuleLoader__.load({
  			"message.failure.accountSignedOut": "任务已因退出 DeepSeek 登录而停止。",
  			"message.failure.interrupted": "DSH 进程在本轮完成前退出（例如被强制结束、崩溃或关闭超时），重新启动后本轮已中止。未完成的工具调用结果未知。",
  			"message.failure.accountSignInRequired": "请先登录 DeepSeek，并确认请求地址支持账号认证。",
@@ -185,7 +189,7 @@ index 9700d03..eaf8057 100644
  			"message.turnError": "本轮运行失败",
  			"message.maxTokens": "已达到输出 token 上限",
  			"message.maxTokens.hint": "回答被截断，已有输出保留在对话中。发送“继续”可让模型接着输出。",
-@@ -6074,7 +6113,8 @@ window.__ModuleLoader__.load({
+@@ -6899,7 +6938,8 @@ window.__ModuleLoader__.load({
  			"message.failure.accountSignedOut": "Stopped because you signed out of DeepSeek.",
  			"message.failure.interrupted": "The DSH process exited before this turn finished (for example, it was killed, crashed, or timed out while shutting down), so the turn was closed when DSH restarted. Unfinished tool calls have unknown outcomes.",
  			"message.failure.accountSignInRequired": "Sign in to DeepSeek and ensure the request destination supports account authentication.",
@@ -195,7 +199,7 @@ index 9700d03..eaf8057 100644
  			"message.turnError": "This turn failed",
  			"message.maxTokens": "Output token limit reached",
  			"message.maxTokens.hint": "The reply was cut off; earlier output is preserved in the conversation. Send \"continue\" to let the model resume.",
-@@ -6986,6 +7026,14 @@ window.__ModuleLoader__.load({
+@@ -9039,6 +9079,14 @@ window.__ModuleLoader__.load({
  			});
  			const messageId = closing.finalNode.messageId;
  			const assistantActions = messageId === void 0 ? null : renderSlot("conversation.chat.assistant-actions", { messageId });
@@ -210,7 +214,7 @@ index 9700d03..eaf8057 100644
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: TurnTailNodeView_module_css_default.root,
  				"data-turn-tail": data.turn,
-@@ -6999,7 +7047,9 @@ window.__ModuleLoader__.load({
+@@ -9052,7 +9100,9 @@ window.__ModuleLoader__.load({
  					} : void 0,
  					branchUnavailable: data.branchUnavailable || hasLaterChatNode,
  					className: TurnTailNodeView_module_css_default.actions,
@@ -221,7 +225,7 @@ index 9700d03..eaf8057 100644
  					usageAction: detailed && data.tokenUsage !== void 0 ? (0, react_jsx_runtime.jsx)(TurnUsagePanel, {
  						usage: data.tokenUsage,
  						t
-@@ -7294,11 +7344,12 @@ window.__ModuleLoader__.load({
+@@ -9356,11 +9406,12 @@ window.__ModuleLoader__.load({
  		* @param props - prepared content, facts, authorized image loader, and framework Factory/locale seats.
  		* @returns the content stack using the existing user-message layout.
  		*/
@@ -236,7 +240,7 @@ index 9700d03..eaf8057 100644
  			return (0, react_jsx_runtime.jsxs)("div", {
  				className: MessageItem_module_css_default.userStack,
  				children: [
-@@ -7310,8 +7361,11 @@ window.__ModuleLoader__.load({
+@@ -9372,8 +9423,11 @@ window.__ModuleLoader__.load({
  							loadImage,
  							align: "end",
  							compact: compactImages
@@ -250,7 +254,7 @@ index 9700d03..eaf8057 100644
  							title: attachment.file.name,
  							children: [(0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.FileTypeIcon, {
  								path: attachment.file.name,
-@@ -7339,8 +7393,9 @@ window.__ModuleLoader__.load({
+@@ -9402,8 +9456,9 @@ window.__ModuleLoader__.load({
  							label: t("message.extraBlock"),
  							payload: block,
  							truncatedLabel: truncated
@@ -261,7 +265,7 @@ index 9700d03..eaf8057 100644
  					referenceLabels.length > 0 && (0, react_jsx_runtime.jsx)("div", {
  						className: MessageItem_module_css_default.referenceSummary,
  						children: t("message.referenceSummary", { labels: referenceLabels.join(t("message.referenceSeparator")) })
-@@ -7355,6 +7410,23 @@ window.__ModuleLoader__.load({
+@@ -9418,6 +9473,23 @@ window.__ModuleLoader__.load({
  			const value = usage.outputTokens;
  			return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
  		}
@@ -285,17 +289,17 @@ index 9700d03..eaf8057 100644
  		/**
  		* Read one assistant node's TTFT, decode wall time, and output tokens.
  		* @param node - A settled assistant node.
-@@ -13054,7 +13126,8 @@ window.__ModuleLoader__.load({
- 			"configForms",
+@@ -15276,7 +15348,8 @@ window.__ModuleLoader__.load({
  			"remote",
  			"remote.session",
--			"sidebarRight"
-+			"sidebarRight",
+ 			"sidebarRight",
+-			"fileDrag"
++			"fileDrag",
 +			"sidebarRightTabs"
  		];
  		/**
  		* Mount all Chat-owned contributions.
-@@ -13144,6 +13217,14 @@ window.__ModuleLoader__.load({
+@@ -15372,6 +15445,14 @@ window.__ModuleLoader__.load({
  				}, LinkOpeningRow));
  			});
  			const transcriptView = new TranscriptViewPolicy(chatSettings, "dshDesktop" in globalThis ? "standard" : DEFAULT_TRANSCRIPT_VIEW_MODE);
@@ -307,10 +311,10 @@ index 9700d03..eaf8057 100644
 +				const cwd = ctx.sessions.list.getSnapshot().byId[sessionId]?.cwd;
 +				await openResolvedHostFile(ctx, sessionId, cwd, result.value.path);
 +			} });
- 			const presentation = derivePresentationPolicy(transcriptView.mode, transcriptView.collapseTiming);
+ 			const presentation = derivePresentationPolicy(transcriptView.mode, transcriptView.collapseTiming, transcriptView.foldedReplies);
  			const performancePolicy = new PerformanceUsagePolicy(chatSettings);
  			ctx.effect(() => () => {
-@@ -13156,6 +13237,7 @@ window.__ModuleLoader__.load({
+@@ -15384,6 +15465,7 @@ window.__ModuleLoader__.load({
  				name: "conversation.chat.user.content",
  				scope: "session",
  				locale: NS,
@@ -318,7 +322,7 @@ index 9700d03..eaf8057 100644
  				children: { "conversation.chat.user.images": {
  					kind: "single",
  					scope: "session"
-@@ -13208,7 +13290,7 @@ window.__ModuleLoader__.load({
+@@ -15438,7 +15520,7 @@ window.__ModuleLoader__.load({
  				name: "conversation.chat.flow",
  				locale: NS,
  				store: chatStore,
@@ -327,16 +331,18 @@ index 9700d03..eaf8057 100644
  					kind: "keyed",
  					scope: "session",
  					inject: CHAT_NODE_INJECT
-@@ -13242,10 +13324,22 @@ window.__ModuleLoader__.load({
- 							fileMentions: (owner) => ctx.get("chatFileMentions")?.forClosing(owner, sessionId),
+@@ -15489,10 +15571,24 @@ window.__ModuleLoader__.load({
+ 							dispatchInteraction: (gesture) => ctx.uiConversation.interactions.dispatch(sessionId, gesture),
  							openFile: async (path, options) => {
  								const cwd = ctx.sessions.list.getSnapshot().byId[sessionId]?.cwd;
--								const url = fileAddressFor(sessionId, cwd, path);
+-								const url = fileAddressFor(sessionId, cwd, resolveWorkspacePath(session.projections.faceOf("workingDirectory").getSnapshot() ?? void 0, path));
 -								if (options?.line === void 0) ctx.sidebarRight.openResource(url);
 -								else ctx.sidebarRight.openResource(url, { params: { line: options.line } });
 -								await Promise.resolve();
++								// Relative mentions resolve against the Session's current working directory (upstream 0.2.2).
++								const resolved = resolveWorkspacePath(session.projections.faceOf("workingDirectory").getSnapshot() ?? void 0, path);
 +								if (options?.revealInFileManager === true) {
-+									const opened = await ctx.remote.session.openWorkspacePath({ path: hostPathForOpen(cwd, path) });
++									const opened = await ctx.remote.session.openWorkspacePath({ path: hostPathForOpen(cwd, resolved) });
 +									if (!opened.ok) throw opened.error;
 +									return;
 +								}
@@ -345,20 +351,20 @@ index 9700d03..eaf8057 100644
 +									await openResolvedHostFile(ctx, sessionId, cwd, byName.value.path);
 +									return;
 +								}
-+								await openResolvedHostFile(ctx, sessionId, cwd, hostPathForOpen(cwd, path), options);
++								await openResolvedHostFile(ctx, sessionId, cwd, hostPathForOpen(cwd, resolved), options);
 +							},
 +							openUploadedFile: async (attachmentId) => {
 +								const opener = ctx.get("openUploadedAttachment");
 +								if (opener === void 0) throw new Error("ui-chat: openUploadedAttachment is unavailable");
 +								await opener.open(sessionId, attachmentId);
  							},
+ 							resolveFilePath: sessionFilePath(ctx, sessionId),
  							openExternalLink: (url) => {
- 								if (linkOpening.getSnapshot() === "sidebar" && ctx.get("sidebarRightTabs")?.get("browser") !== void 0) ctx.sidebarRight.openTab("browser", { params: { url } });
 diff --git a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/slots.d.ts b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/slots.d.ts
-index 8a03bd5..4453250 100644
+index bddc00c..ef9ff64 100644
 --- a/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/slots.d.ts
 +++ b/node_modules/@deepseek-ai/dsh-client-ui-chat/lib/types/client/contract/slots.d.ts
-@@ -33,12 +33,18 @@ export type UsePresentation = SnapshotSelectorHook<ChatPresentationPolicy>;
+@@ -36,12 +36,18 @@ export type UsePresentation = SnapshotSelectorHook<ChatPresentationPolicy>;
  export interface OpenFileOptions {
      /** 1-based line to reveal; absent = the file's beginning. */
      readonly line?: number;
@@ -378,7 +384,7 @@ index 8a03bd5..4453250 100644
  }
  /** Owner currency of finalized-assistant actions. */
  export interface AssistantActionOwnerProps {
-@@ -166,6 +172,7 @@ export interface ChatNodeInjected {
+@@ -189,6 +195,7 @@ export interface UserBeforeOwnerProps {
  }
  /** Stable owner currency delivered to a keyed Chat renderer. */
  export interface ChatNodeOwnerProps {
@@ -386,7 +392,7 @@ index 8a03bd5..4453250 100644
      /** Renderer-owned Node portion selected by the grouping Definition. */
      groupPart?: string;
      cwd?: string | undefined;
-@@ -197,6 +204,7 @@ export interface UserContentData {
+@@ -219,6 +226,7 @@ export interface UserContentData {
  }
  /** Public content rendering input; reference renderers own their injected actions. */
  export interface UserContentInput extends Pick<ChatNodeOwnerProps, 'loadImage'>, Pick<UserTextInput, 'interactive' | 'ellipsis'> {
@@ -394,14 +400,14 @@ index 8a03bd5..4453250 100644
      readonly content: UserContentData;
      /** Transform inputs passed unchanged to UserText, separate from summary and rendering props. */
      readonly facts: Readonly<Partial<UserTextFacts>>;
-@@ -281,11 +289,16 @@ export interface ChatFlowOwnerProps extends Pick<ChatNodeOwnerProps, 'cwd' | 'op
+@@ -315,11 +323,16 @@ export interface ChatFlowOwnerProps extends Pick<ChatNodeOwnerProps, 'cwd' | 'op
      readonly deferCollapse: boolean;
  }
  /** Full props of the Chat-owned flow renderer. */
 -export type ChatFlowSlotProps = PropsRuntime<'conversation.chat.flow'> & PropsRenderSlots<'conversation.chat.node'> & PropsRenderFactories & PropsStore<ChatStore> & InjectFace<ChatFlowDataInjected> & PropsLocale<'chat'>;
 +export type ChatFlowSlotProps = PropsRuntime<'conversation.chat.flow'> & PropsRenderSlots<'conversation.chat.node' | 'conversation.chat.userMessageFooter'> & PropsRenderFactories & PropsStore<ChatStore> & InjectFace<ChatFlowDataInjected> & PropsLocale<'chat'>;
  /** Full Chat view props. */
- export type ChatViewSlotProps = PropsRuntime<'conversation.view'> & PropsRenderSlots<'conversation.chat.flow'> & PropsStore<ChatStore> & InjectFace<ChatViewInjected> & PropsLocale<'chat'>;
+ export type ChatViewSlotProps = PropsRuntime<'conversation.view'> & PropsRenderSlots<'conversation.chat.flow' | 'conversation.chat.text-interaction'> & PropsStore<ChatStore> & InjectFace<ChatViewInjected> & PropsLocale<'chat'>;
  /** Full props shared by the user and output image entries. */
  export type MessageImagesProps = PropsRuntime<'conversation.chat.user.images' | 'conversation.chat.message.images'> & PropsRenderFactories;
 +/** Owner currency of the opening user-message footer. */
@@ -412,7 +418,7 @@ index 8a03bd5..4453250 100644
  declare module '@deepseek-ai/dsh-client-ui-slots' {
      interface SessionStandardProps {
          /** Selector hook over the current Conversation binding's Chat target. */
-@@ -357,6 +370,16 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
+@@ -408,6 +421,16 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
              scope: 'session';
              owner: MessageImagesOwnerProps;
          };
