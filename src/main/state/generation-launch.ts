@@ -11,7 +11,10 @@ import {
   resolveEnabledGenerations,
   sweepRegistry
 } from 'dsh-desktop-market-installer/generations/registry'
-import { projectGenerations } from 'dsh-desktop-market-installer/generations/projection'
+import {
+  disableExternallyUninstalledGenerations,
+  projectGenerations
+} from 'dsh-desktop-market-installer/generations/projection'
 
 /**
  * The launch-process half of the generation model. The market plugin installs
@@ -52,6 +55,15 @@ export async function prepareGenerationsForLaunch(dshHome: string, note: Note): 
     initProfile(profileDir, template.bundles)
   }
   try {
+    // After the sweep, so a generation disabled here survives this launch and
+    // only goes on the next cold start, like any other uninstall.
+    const externallyRemoved = await disableExternallyUninstalledGenerations(dshHome)
+    if (externallyRemoved.length > 0) {
+      note(
+        `[desktop] disabled generation(s) uninstalled outside Desktop: ${externallyRemoved.join(', ')}; ` +
+          'package root and Profile dependency were both gone, generation directory kept until the next cold start'
+      )
+    }
     const projection = await projectGenerations(dshHome)
     if (projection.linked.length > 0 || projection.unlinked.length > 0) {
       note(

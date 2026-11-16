@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { lstat, mkdir, readFile, readdir, readlink, realpath, rename, rm, symlink, unlink, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
-import { resolveEnabledGenerations } from './registry.mjs'
+import { disableGeneration, resolveEnabledGenerations } from './registry.mjs'
 
 /**
  * Make the enabled generations visible to Harness without teaching Harness
@@ -366,6 +366,45 @@ export async function exposeMissingGenerationLinks(dshHome, profile = 'web') {
     linked.push(pluginName)
   }
   return linked
+}
+
+/**
+ * Disable enabled generations that something outside Desktop has uninstalled.
+ *
+ * Some plugins ship their own uninstaller (dsh-purge does). It edits the
+ * Profile manifest and deletes the realpath of `node_modules/<plugin>`, which
+ * is the package root inside the generation, but it knows nothing about the
+ * generation registry. `desired` then still enables a generation whose package
+ * is gone, and projection fails closed on every launch, which keeps the normal
+ * Profile in Safe Mode for a plugin the user meant to remove.
+ *
+ * Only the unambiguous case is treated as an uninstall: the package root is
+ * absent (ENOENT, not merely unreadable) AND the Profile manifest no longer
+ * lists the plugin in `dependencies`. A package root that vanished while the
+ * dependency is still declared stays a fault for the recovery flow, and a
+ * dependency removed while the package is intact is still reprojected (#330).
+ * The generation directory itself is kept; the next cold-start sweep removes it.
+ *
+ * Call while Harness is stopped, after the sweep and before projection.
+ * @returns the plugin names whose generation was disabled.
+ */
+export async function disableExternallyUninstalledGenerations(dshHome, profile = 'web') {
+  const { manifest } = await readProfileManifest(profileDir(dshHome, profile))
+  const declared = manifest.dependencies ?? {}
+  const enabled = await resolveEnabledGenerations(dshHome)
+  const disabled = []
+  for (const [pluginName, generation] of enabled) {
+    if (Object.prototype.hasOwnProperty.call(declared, pluginName)) continue
+    const target = resolve(generation.directory, 'node_modules', pluginName)
+    try {
+      await lstat(target)
+      continue
+    } catch (error) {
+      if (error?.code !== 'ENOENT') continue
+    }
+    if (await disableGeneration(dshHome, pluginName)) disabled.push(pluginName)
+  }
+  return disabled
 }
 
 async function prepareGenerationProjection(dshHome, profile) {

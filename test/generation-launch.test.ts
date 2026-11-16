@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { PROFILE_TEMPLATES } from '@deepseek-ai/dsh-app-boot'
@@ -168,6 +168,65 @@ describe('the launch-process half of the generation model', () => {
     const reprojected = JSON.parse(await readFile(manifestPath, 'utf8'))
     expect(await readDesired(home)).toEqual(['widget+1.44.0+af88ab682bc0'])
     expect(reprojected.dsh.profile.bundles).toContain('widget')
+  })
+
+  it('disables a generation a plugin uninstalled itself instead of failing the launch', async () => {
+    const home = await freshHome()
+    await ensureRegistryDirectories(home)
+    await fakeGeneration(home, 'keep+1+x', 'keeper')
+    await fakeGeneration(home, 'widget+1.0.0+abc', 'widget')
+    await writeDesired(home, ['keep+1+x', 'widget+1.0.0+abc'])
+    await prepareGenerationsForLaunch(home, silent)
+
+    // What a plugin-shipped uninstaller (dsh-purge's) leaves: it drops its own
+    // dependency row and deletes the realpath of node_modules/<plugin>, i.e.
+    // the package root inside the generation. Registry and markers untouched.
+    const profile = join(home, 'profiles', 'web')
+    const manifestPath = join(profile, 'package.json')
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+    delete manifest.dependencies.widget
+    await writeFile(manifestPath, JSON.stringify(manifest))
+    const generationDir = join(registryLayout(home).generations, 'widget+1.0.0+abc')
+    await rm(await realpath(join(profile, 'node_modules', 'widget')), { recursive: true })
+
+    const notes: string[] = []
+    await expect(
+      prepareGenerationsForLaunch(home, (line) => notes.push(line))
+    ).resolves.toBeUndefined()
+
+    expect(await readDesired(home)).toEqual(['keep+1+x'])
+    const healed = JSON.parse(await readFile(manifestPath, 'utf8'))
+    expect(healed.dsh.profile.bundles).not.toContain('widget')
+    expect(healed.dsh.profile.bundles).toContain('keeper')
+    expect(healed.pnpm?.overrides ?? {}).not.toHaveProperty('widget')
+    expect(healed.dsh.desktop.generationProjection.plugins).not.toHaveProperty('widget')
+    expect(healed.dependencies.keeper).toBe('1.0.0')
+    const { existsSync } = await import('node:fs')
+    await expect(lstat(join(profile, 'node_modules', 'widget'))).rejects.toMatchObject({
+      code: 'ENOENT'
+    })
+    // Disabled, not deleted: the sweep on the next cold start owns removal.
+    expect(existsSync(generationDir)).toBe(true)
+    expect(notes.join('\n')).toContain('uninstalled outside Desktop: widget')
+
+    await prepareGenerationsForLaunch(home, silent)
+    expect(existsSync(generationDir)).toBe(false)
+  })
+
+  it('still fails closed when a package root vanished but its dependency is declared', async () => {
+    const home = await freshHome()
+    await ensureRegistryDirectories(home)
+    await fakeGeneration(home, 'widget+1.0.0+abc', 'widget')
+    await writeDesired(home, ['widget+1.0.0+abc'])
+    await prepareGenerationsForLaunch(home, silent)
+
+    const generationDir = join(registryLayout(home).generations, 'widget+1.0.0+abc')
+    await rm(join(generationDir, 'node_modules', 'widget'), { recursive: true })
+
+    await expect(prepareGenerationsForLaunch(home, silent)).rejects.toThrow(
+      /Enabled generation package root is missing or unreadable for widget/
+    )
+    expect(await readDesired(home)).toEqual(['widget+1.0.0+abc'])
   })
 
   it('does not retain or restore generations from a stale rollback pointer', async () => {

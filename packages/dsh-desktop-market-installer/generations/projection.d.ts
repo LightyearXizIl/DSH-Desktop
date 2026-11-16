@@ -18,6 +18,10 @@ export function publishGenerationManifest(
   profile?: string,
   options?: { syncBundles?: boolean }
 ): Promise<PublishedGenerationManifest>
+export function disableExternallyUninstalledGenerations(
+  dshHome: string,
+  profile?: string
+): Promise<string[]>
 export function exposeMissingGenerationLinks(dshHome: string, profile?: string): Promise<string[]>
 
 export function publishInstalledGeneration(dshHome: string, pluginName: string, profile?: string, options?: { allowRealDirectory?: boolean; syncBundles?: boolean }): Promise<PublishedGenerationManifest>
